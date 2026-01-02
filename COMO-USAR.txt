@@ -1,0 +1,100 @@
+═══════════════════════════════════════════════════════════
+  CÓMO USAR EL SISTEMA DE TURNOS
+═══════════════════════════════════════════════════════════
+
+PASO 1: INICIAR LA APLICACIÓN
+------------------------------
+
+Haz doble clic en: iniciar.bat
+
+Esto abrirá DOS ventanas:
+- Servidor (ventana negra)
+- Cliente (otra ventana negra)
+
+Espera a que aparezca:
+"Servidor corriendo en http://localhost:3000"
+
+
+PASO 2: ABRIR LA PÁGINA WEB
+----------------------------
+
+Abre tu navegador (Chrome, Edge, Firefox) y ve a:
+
+    http://localhost:5173
+
+
+PASO 3: AGREGAR CLIENTES
+-------------------------
+
+1. En la página web, ve a la pestaña "Clientes"
+2. Completa el formulario:
+   - Nombre: María García
+   - Teléfono: +5491123456789 (con código de país)
+   - Email: (opcional)
+3. Clic en "Agregar Cliente"
+
+
+PASO 4: CREAR UN TURNO
+-----------------------
+
+1. Ve a la pestaña "Nuevo Turno"
+2. Selecciona el cliente
+3. Selecciona el tratamiento
+4. Elige fecha y hora
+5. Agrega notas (opcional)
+6. Clic en "Crear Turno y Enviar WhatsApp"
+
+
+PASO 5: COPIAR EL MENSAJE
+--------------------------
+
+El mensaje aparecerá en DOS lugares:
+
+A) En la ventana negra del servidor (consola)
+B) En el archivo: mensajes-pendientes.txt
+
+Copia el mensaje y envíalo por WhatsApp al cliente.
+
+
+═══════════════════════════════════════════════════════════
+
+EJEMPLO DE MENSAJE:
+
+Hola María García! 👋
+
+Tu turno ha sido confirmado:
+
+📅 Fecha: 15/01/2026
+⏰ Hora: 14:00
+💆 Tratamiento: Alisado
+
+¡Te esperamos!
+
+═══════════════════════════════════════════════════════════
+
+GESTIONAR TURNOS
+-----------------
+
+En la pestaña "Turnos" puedes:
+- Ver todos los turnos
+- Cambiar el estado (pendiente/confirmado/completado)
+- Eliminar turnos
+
+═══════════════════════════════════════════════════════════
+
+CERRAR LA APLICACIÓN
+---------------------
+
+1. Cierra el navegador
+2. En las ventanas negras, presiona Ctrl+C
+3. O simplemente cierra las ventanas
+
+═══════════════════════════════════════════════════════════
+
+¿PROBLEMAS?
+
+- Si no abre la página: Verifica que ambas ventanas estén corriendo
+- Si da error: Ejecuta instalar.bat primero
+- Si no guarda mensajes: Verifica permisos de escritura
+
+═══════════════════════════════════════════════════════════

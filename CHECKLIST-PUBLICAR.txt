@@ -1,0 +1,95 @@
+═══════════════════════════════════════════════════════════
+  ✅ CHECKLIST - PUBLICAR EN RENDER
+═══════════════════════════════════════════════════════════
+
+Sigue estos pasos en orden:
+
+[ ] PASO 1: CREAR CUENTA EN GITHUB (5 min)
+    └─ Ir a: https://github.com
+    └─ Clic en "Sign up"
+    └─ Completar registro
+    └─ Verificar email
+
+[ ] PASO 2: INSTALAR GITHUB DESKTOP (5 min)
+    └─ Ir a: https://desktop.github.com
+    └─ Descargar e instalar
+    └─ Iniciar sesión con tu cuenta de GitHub
+
+[ ] PASO 3: SUBIR PROYECTO A GITHUB (5 min)
+    └─ Abrir GitHub Desktop
+    └─ File > Add local repository
+    └─ Seleccionar: C:\Users\TATY\Desktop\HAIRSTYLE
+    └─ Create repository
+    └─ Commit: "Primera versión"
+    └─ Publish repository
+
+[ ] PASO 4: CREAR CUENTA EN RENDER (3 min)
+    └─ Ir a: https://render.com
+    └─ Clic en "Get Started"
+    └─ Registrarse con GitHub
+    └─ Autorizar Render
+
+[ ] PASO 5: CONFIGURAR SERVICIO EN RENDER (10 min)
+    └─ New + > Web Service
+    └─ Conectar repositorio "hairstyleabii"
+    └─ Name: hairstyleabii
+    └─ Environment: Node
+    └─ Build Command: 
+        npm install && cd client && npm install && npm run build && cd ../server && npm install
+    └─ Start Command: 
+        cd server && npm start
+    └─ Plan: Free
+    └─ Create Web Service
+
+[ ] PASO 6: ESPERAR DESPLIEGUE (5-10 min)
+    └─ Ver logs en tiempo real
+    └─ Esperar mensaje "Live"
+    └─ Copiar URL: https://hairstyleabii.onrender.com
+
+[ ] PASO 7: PROBAR LA APP
+    └─ Abrir la URL en el navegador
+    └─ Crear un cliente de prueba
+    └─ Crear un turno de prueba
+    └─ ¡Funciona!
+
+═══════════════════════════════════════════════════════════
+
+TIEMPO TOTAL: ~30-40 minutos
+
+TU URL FINAL SERÁ:
+https://hairstyleabii.onrender.com
+
+(o el nombre que elijas)
+
+═══════════════════════════════════════════════════════════
+
+ARCHIVOS DE AYUDA:
+
+📄 GUIA-RENDER-PASO-A-PASO.md  → Guía detallada con capturas
+📄 PUBLICAR-ONLINE.md          → Todas las opciones disponibles
+📄 render.yaml                 → Configuración automática
+
+═══════════════════════════════════════════════════════════
+
+¿PROBLEMAS?
+
+❌ Build failed
+   → Revisa los logs en Render
+   → Verifica que los comandos sean correctos
+
+❌ App no carga
+   → Espera 30 segundos (puede estar "despertando")
+   → Refresca la página
+
+❌ Error en GitHub Desktop
+   → Asegúrate de estar en la carpeta correcta
+   → Verifica que tengas permisos de escritura
+
+═══════════════════════════════════════════════════════════
+
+¡ÉXITO! 🎉
+
+Una vez publicada, tu app estará disponible 24/7 desde cualquier
+lugar del mundo. Cualquier persona con la URL podrá acceder.
+
+═══════════════════════════════════════════════════════════
