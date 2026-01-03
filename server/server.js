@@ -87,9 +87,15 @@ app.post('/api/turnos', async (req, res) => {
     hora
   );
   
+  // Generar mensaje para mostrar en la app
+  const mensaje = `Hola ${cliente.nombre}! 👋\n\nTu turno ha sido confirmado:\n\n📅 Fecha: ${fecha}\n⏰ Hora: ${hora}\n💆 Tratamiento: ${tratamiento}\n\n¡Te esperamos!`;
+  
   res.json({ 
     id: result.lastInsertRowid, 
-    whatsappEnviado: whatsappResult.success 
+    whatsappEnviado: whatsappResult.success,
+    mensaje: mensaje,
+    cliente: cliente.nombre,
+    telefono: cliente.telefono
   });
 });
 

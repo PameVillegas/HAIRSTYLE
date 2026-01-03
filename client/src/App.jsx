@@ -24,6 +24,7 @@ function App() {
     hora: '',
     notas: ''
   });
+  const [mensajesWhatsApp, setMensajesWhatsApp] = useState([]);
 
   useEffect(() => {
     cargarClientes();
@@ -95,7 +96,20 @@ function App() {
       body: JSON.stringify(nuevoTurno)
     });
     const data = await res.json();
-    alert(data.whatsappEnviado ? 'Turno creado y WhatsApp enviado!' : 'Turno creado (error al enviar WhatsApp)');
+    
+    // Guardar mensaje de WhatsApp
+    if (data.mensaje) {
+      const nuevoMensaje = {
+        id: Date.now(),
+        fecha: new Date().toLocaleString('es-AR'),
+        cliente: data.cliente,
+        telefono: data.telefono,
+        mensaje: data.mensaje
+      };
+      setMensajesWhatsApp([nuevoMensaje, ...mensajesWhatsApp]);
+    }
+    
+    alert(data.whatsappEnviado ? 'Turno creado! Ve a "Mensajes WhatsApp" para copiar el mensaje.' : 'Turno creado');
     setNuevoTurno({ cliente_id: '', tratamiento: '', fecha: '', hora: '', notas: '' });
     cargarTurnos();
   };
@@ -129,6 +143,9 @@ function App() {
         </button>
         <button className={`tab ${tab === 'nuevo' ? 'active' : ''}`} onClick={() => setTab('nuevo')}>
           ➕ Nuevo Turno
+        </button>
+        <button className={`tab ${tab === 'mensajes' ? 'active' : ''}`} onClick={() => setTab('mensajes')}>
+          💬 Mensajes WhatsApp
         </button>
         <button className={`tab ${tab === 'clientes' ? 'active' : ''}`} onClick={() => setTab('clientes')}>
           👤 Agregar Cliente
@@ -175,6 +192,53 @@ function App() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {tab === 'mensajes' && (
+        <div className="card">
+          <h2 style={{ marginBottom: '20px' }}>💬 Mensajes para WhatsApp</h2>
+          {mensajesWhatsApp.length === 0 ? (
+            <p style={{ textAlign: 'center', color: '#666', padding: '40px' }}>
+              No hay mensajes pendientes. Cuando crees un turno, el mensaje aparecerá aquí.
+            </p>
+          ) : (
+            <div style={{ display: 'grid', gap: '15px' }}>
+              {mensajesWhatsApp.map(msg => (
+                <div key={msg.id} className="turno-item">
+                  <div style={{ marginBottom: '10px' }}>
+                    <strong>📞 {msg.cliente}</strong>
+                    <span style={{ marginLeft: '10px', color: '#666', fontSize: '14px' }}>
+                      {msg.telefono}
+                    </span>
+                    <div style={{ fontSize: '12px', color: '#999', marginTop: '5px' }}>
+                      {msg.fecha}
+                    </div>
+                  </div>
+                  <div style={{ 
+                    background: '#f0f0f0', 
+                    padding: '15px', 
+                    borderRadius: '8px',
+                    whiteSpace: 'pre-wrap',
+                    fontFamily: 'monospace',
+                    fontSize: '14px',
+                    marginBottom: '10px'
+                  }}>
+                    {msg.mensaje}
+                  </div>
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(msg.mensaje);
+                      alert('✅ Mensaje copiado! Ahora pégalo en WhatsApp');
+                    }}
+                    style={{ width: '100%' }}
+                  >
+                    📋 Copiar Mensaje
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
