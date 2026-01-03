@@ -125,13 +125,16 @@ function App() {
       
       <div className="tabs">
         <button className={`tab ${tab === 'turnos' ? 'active' : ''}`} onClick={() => setTab('turnos')}>
-          Turnos
+          📅 Turnos
         </button>
         <button className={`tab ${tab === 'nuevo' ? 'active' : ''}`} onClick={() => setTab('nuevo')}>
-          Nuevo Turno
+          ➕ Nuevo Turno
         </button>
         <button className={`tab ${tab === 'clientes' ? 'active' : ''}`} onClick={() => setTab('clientes')}>
-          Clientes
+          👤 Agregar Cliente
+        </button>
+        <button className={`tab ${tab === 'lista-clientes' ? 'active' : ''}`} onClick={() => setTab('lista-clientes')}>
+          📋 Lista Clientes
         </button>
       </div>
 
@@ -239,7 +242,7 @@ function App() {
       {tab === 'clientes' && (
         <div className="card">
           <h2 style={{ marginBottom: '20px' }}>
-            {editandoCliente ? 'Editar Cliente' : 'Agregar Cliente'}
+            {editandoCliente ? '✏️ Editar Cliente' : '➕ Agregar Nuevo Cliente'}
           </h2>
           <form onSubmit={agregarCliente}>
             <div className="form-group">
@@ -271,50 +274,63 @@ function App() {
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button type="submit">
-                {editandoCliente ? 'Actualizar Cliente' : 'Agregar Cliente'}
+                {editandoCliente ? '💾 Actualizar Cliente' : '➕ Agregar Cliente'}
               </button>
               {editandoCliente && (
                 <button type="button" onClick={cancelarEdicion} style={{ background: '#6c757d' }}>
-                  Cancelar
+                  ❌ Cancelar
                 </button>
               )}
             </div>
           </form>
+        </div>
+      )}
 
-          <h3 style={{ marginTop: '30px', marginBottom: '15px' }}>Lista de Clientes</h3>
-          <div style={{ display: 'grid', gap: '10px' }}>
-            {clientes.map(c => (
-              <div key={c.id} className="turno-item">
-                <div className="turno-header">
-                  <div>
-                    <strong>{c.nombre}</strong>
-                    <div style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>
-                      📱 {c.telefono}
-                      {c.email && <span> • ✉️ {c.email}</span>}
+      {tab === 'lista-clientes' && (
+        <div className="card">
+          <h2 style={{ marginBottom: '20px' }}>📋 Lista de Clientes</h2>
+          {clientes.length === 0 ? (
+            <p style={{ textAlign: 'center', color: '#666', padding: '40px' }}>
+              No hay clientes registrados. Ve a "Agregar Cliente" para crear uno.
+            </p>
+          ) : (
+            <div style={{ display: 'grid', gap: '10px' }}>
+              {clientes.map(c => (
+                <div key={c.id} className="turno-item">
+                  <div className="turno-header">
+                    <div>
+                      <strong>{c.nombre}</strong>
+                      <div style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>
+                        📱 {c.telefono}
+                        {c.email && <span> • ✉️ {c.email}</span>}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button 
+                        onClick={() => {
+                          editarCliente(c);
+                          setTab('clientes');
+                        }}
+                        style={{ 
+                          background: 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)',
+                          padding: '8px 16px',
+                          fontSize: '14px'
+                        }}
+                      >
+                        ✏️ Editar
+                      </button>
+                      <button 
+                        className="delete" 
+                        onClick={() => eliminarCliente(c.id)}
+                      >
+                        🗑️ Eliminar
+                      </button>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button 
-                      onClick={() => editarCliente(c)}
-                      style={{ 
-                        background: 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)',
-                        padding: '8px 16px',
-                        fontSize: '14px'
-                      }}
-                    >
-                      ✏️ Editar
-                    </button>
-                    <button 
-                      className="delete" 
-                      onClick={() => eliminarCliente(c.id)}
-                    >
-                      🗑️ Eliminar
-                    </button>
-                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
