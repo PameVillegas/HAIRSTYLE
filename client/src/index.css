@@ -41,7 +41,39 @@ h1 {
   color: #ff1493;
   font-size: 2.5rem;
   margin-bottom: 10px;
-  text-shadow: 2px 2px 4px rgba(255, 105, 180, 0.2);
+  font-family: 'Brush Script MT', 'Lucida Handwriting', cursive;
+  background: linear-gradient(45deg, #ff1493, #ff69b4, #ffc0cb, #ff69b4, #ff1493);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient 3s ease infinite, sparkle 2s ease-in-out infinite;
+  text-shadow: 0 0 20px rgba(255, 105, 180, 0.5),
+               0 0 40px rgba(255, 105, 180, 0.3),
+               0 0 60px rgba(255, 105, 180, 0.2);
+  filter: drop-shadow(0 0 10px rgba(255, 105, 180, 0.8));
+  letter-spacing: 2px;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px rgba(255, 105, 180, 0.8)) brightness(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(255, 105, 180, 1)) brightness(1.2);
+  }
 }
 
 h2 {
