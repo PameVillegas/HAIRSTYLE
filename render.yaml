@@ -1,13 +1,36 @@
 services:
   - type: web
-    name: hairstyleabii
+    name: hairstyle-abi
     env: node
-    region: oregon
     plan: free
-    buildCommand: npm install && cd client && npm install && npm run build && cd ../server && npm install
+    buildCommand: cd client && npm install && npm run build && cd ../server && npm install
     startCommand: cd server && npm start
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
+      - key: DB_HOST
+        fromDatabase:
+          name: hairstyle-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: hairstyle-db
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: hairstyle-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: hairstyle-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: hairstyle-db
+          property: database
+
+databases:
+  - name: hairstyle-db
+    databaseName: hairstyle_db
+    user: hairstyle_user
+    plan: free

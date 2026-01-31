@@ -3,8 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import db from './database.js';
-import { enviarMensajeTurno, inicializarWhatsApp, getWhatsAppStatus } from './whatsapp.js';
+import { initializeDatabase } from './database.js';
 
 dotenv.config();
 
@@ -12,118 +11,48 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Servir archivos estáticos del cliente en producción
+// Servir frontend en producción (opcional)
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(join(__dirname, '../client/dist')));
 }
 
-// Inicializar WhatsApp al arrancar el servidor
-console.log('🚀 Iniciando servidor...\n');
-inicializarWhatsApp();
-
-// Estado de WhatsApp
-app.get('/api/whatsapp/status', (req, res) => {
-  res.json(getWhatsAppStatus());
+// Ruta de prueba
+app.get('/', (req, res) => {
+  res.send('✅ Servidor funcionando y base de datos lista!');
 });
 
-// Obtener todos los clientes
-app.get('/api/clientes', (req, res) => {
-  const clientes = db.prepare('SELECT * FROM clientes').all();
-  res.json(clientes);
-});
+// Inicializar servidor
+async function startServer(port = 3000) {
+  try {
+    // Inicializar base de datos
+    await initializeDatabase();
+    console.log('✅ Base de datos inicializada');
 
-// Crear cliente
-app.post('/api/clientes', (req, res) => {
-  const { nombre, telefono, email } = req.body;
-  const result = db.prepare('INSERT INTO clientes (nombre, telefono, email) VALUES (?, ?, ?)').run(nombre, telefono, email);
-  res.json({ id: result.lastInsertRowid, nombre, telefono, email });
-});
+    // Intentar arrancar en el puerto indicado
+    const server = app.listen(port, '0.0.0.0', () => {
+      console.log(`✅ Servidor corriendo en http://localhost:${port}`);
+    });
 
-// Actualizar cliente
-app.put('/api/clientes/:id', (req, res) => {
-  const { id } = req.params;
-  const { nombre, telefono, email } = req.body;
-  db.prepare('UPDATE clientes SET nombre = ?, telefono = ?, email = ? WHERE id = ?').run(nombre, telefono, email, id);
-  res.json({ success: true });
-});
+    // Manejar error de puerto ocupado
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.warn(`⚠ Puerto ${port} ocupado. Probando puerto ${port + 1}...`);
+        startServer(port + 1); // intenta con el siguiente puerto
+      } else {
+        console.error('❌ Error al iniciar el servidor:', err);
+      }
+    });
 
-// Eliminar cliente
-app.delete('/api/clientes/:id', (req, res) => {
-  const { id } = req.params;
-  db.prepare('DELETE FROM clientes WHERE id = ?').run(id);
-  res.json({ success: true });
-});
-
-// Obtener todos los turnos
-app.get('/api/turnos', (req, res) => {
-  const turnos = db.prepare(`
-    SELECT t.*, c.nombre as cliente_nombre, c.telefono 
-    FROM turnos t 
-    JOIN clientes c ON t.cliente_id = c.id 
-    ORDER BY t.fecha DESC, t.hora DESC
-  `).all();
-  res.json(turnos);
-});
-
-// Crear turno y enviar WhatsApp
-app.post('/api/turnos', async (req, res) => {
-  const { cliente_id, tratamiento, fecha, hora, notas } = req.body;
-  
-  const result = db.prepare('INSERT INTO turnos (cliente_id, tratamiento, fecha, hora, notas) VALUES (?, ?, ?, ?, ?)').run(cliente_id, tratamiento, fecha, hora, notas);
-  
-  const cliente = db.prepare('SELECT * FROM clientes WHERE id = ?').get(cliente_id);
-  
-  // Enviar WhatsApp
-  const whatsappResult = await enviarMensajeTurno(
-    cliente.telefono,
-    cliente.nombre,
-    tratamiento,
-    fecha,
-    hora
-  );
-  
-  // Generar mensaje para mostrar en la app
-  const mensaje = `Hola ${cliente.nombre}! 👋\n\nTu turno ha sido confirmado:\n\n📅 Fecha: ${fecha}\n⏰ Hora: ${hora}\n💆 Tratamiento: ${tratamiento}\n\n¡Te esperamos!`;
-  
-  res.json({ 
-    id: result.lastInsertRowid, 
-    whatsappEnviado: whatsappResult.success,
-    mensaje: mensaje,
-    cliente: cliente.nombre,
-    telefono: cliente.telefono
-  });
-});
-
-// Actualizar estado del turno
-app.patch('/api/turnos/:id', (req, res) => {
-  const { id } = req.params;
-  const { estado } = req.body;
-  db.prepare('UPDATE turnos SET estado = ? WHERE id = ?').run(estado, id);
-  res.json({ success: true });
-});
-
-// Eliminar turno
-app.delete('/api/turnos/:id', (req, res) => {
-  const { id } = req.params;
-  db.prepare('DELETE FROM turnos WHERE id = ?').run(id);
-  res.json({ success: true });
-});
-
-// Servir el frontend en producción
-if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
-    res.sendFile(join(__dirname, '../client/dist/index.html'));
-  });
+  } catch (error) {
+    console.error('❌ Error iniciando servidor:', error);
+    process.exit(1);
+  }
 }
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-  console.log(`\n🌐 Para acceder desde otra computadora en la misma red:`);
-  console.log(`   Usa la IP de esta computadora en el puerto ${PORT}`);
-  console.log(`   Ejemplo: http://192.168.1.X:${PORT}\n`);
-});
+// Arrancar servidor en puerto 3000
+startServer();

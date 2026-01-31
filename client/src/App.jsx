@@ -1,68 +1,134 @@
 import { useState, useEffect } from 'react';
+import Login from './components/auth/Login';
+import Dashboard from './components/auth/Dashboard';
+import ClientePortal from './components/auth/ClientePortal';
+import Header from './components/auth/Header';
+import Tabs from './components/auth/Tabs';
+import MobileNav from './components/auth/MobileNav';
+import TurnosList from './components/auth/TurnosList';
+import NuevoTurnoForm from './components/auth/NuevoTurnoForm';
+import ClienteForm from './components/auth/ClienteForm';
+import ClientesList from './components/auth/ClientesList';
+import EditarTurnoModal from './components/auth/EditarTurnoModal';
+import GestionPromociones from './components/auth/GestionPromociones';
+import GestionGaleria from './components/auth/GestionGaleria';
+import useIsMobile from './hooks/useIsMobile';
 
-const API_URL = '/api';
-
-const TRATAMIENTOS = [
-  'Alisado',
-  'Tratamiento Capilar',
-  'Depilación Facial',
-  'Botox Capilar',
-  'Keratina',
-  'Nutrición Capilar'
-];
+const API_URL = import.meta.env.PROD ? '/api' : '/api';
 
 function App() {
-  const [tab, setTab] = useState('turnos');
+  // Hook para detectar dispositivos móviles
+  const { isMobile, isTablet } = useIsMobile();
+
+  // Estado de autenticación
+  const [usuario, setUsuario] = useState(null);
+  const [tipoUsuario, setTipoUsuario] = useState(null); // 'admin' o 'cliente'
+
+  // Estados para admin
+  const [tab, setTab] = useState('dashboard');
   const [clientes, setClientes] = useState([]);
+  const [tratamientos, setTratamientos] = useState([]);
   const [turnos, setTurnos] = useState([]);
   const [nuevoCliente, setNuevoCliente] = useState({ nombre: '', telefono: '', email: '' });
   const [editandoCliente, setEditandoCliente] = useState(null);
+  const [editandoTurno, setEditandoTurno] = useState(null);
   const [nuevoTurno, setNuevoTurno] = useState({
     cliente_id: '',
-    tratamiento: '',
+    tratamiento_id: '',
     fecha: '',
     hora: '',
     notas: ''
   });
   const [mensajesWhatsApp, setMensajesWhatsApp] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    cargarClientes();
-    cargarTurnos();
-  }, []);
+    if (tipoUsuario === 'admin') {
+      cargarDatos();
+    }
+  }, [tipoUsuario]);
+
+  const handleLogin = (user, tipo) => {
+    setUsuario(user);
+    setTipoUsuario(tipo);
+    if (tipo === 'admin') {
+      setTab('dashboard');
+    }
+  };
+
+  const handleLogout = () => {
+    setUsuario(null);
+    setTipoUsuario(null);
+    setTab('dashboard');
+  };
+
+  const cargarDatos = async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        cargarClientes(),
+        cargarTratamientos(),
+        cargarTurnos()
+      ]);
+    } catch (err) {
+      setError('Error cargando datos: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const cargarClientes = async () => {
     const res = await fetch(`${API_URL}/clientes`);
+    if (!res.ok) throw new Error('Error cargando clientes');
     const data = await res.json();
     setClientes(data);
   };
 
+  const cargarTratamientos = async () => {
+    const res = await fetch(`${API_URL}/tratamientos`);
+    if (!res.ok) throw new Error('Error cargando tratamientos');
+    const data = await res.json();
+    setTratamientos(data);
+  };
+
   const cargarTurnos = async () => {
     const res = await fetch(`${API_URL}/turnos`);
+    if (!res.ok) throw new Error('Error cargando turnos');
     const data = await res.json();
     setTurnos(data);
   };
 
   const agregarCliente = async (e) => {
     e.preventDefault();
-    if (editandoCliente) {
-      // Actualizar cliente existente
-      await fetch(`${API_URL}/clientes/${editandoCliente.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nuevoCliente)
-      });
-      setEditandoCliente(null);
-    } else {
-      // Crear nuevo cliente
-      await fetch(`${API_URL}/clientes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nuevoCliente)
-      });
+    setLoading(true);
+    setError('');
+    
+    try {
+      if (editandoCliente) {
+        await fetch(`${API_URL}/clientes/${editandoCliente.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(nuevoCliente)
+        });
+        setSuccess('Cliente actualizado correctamente');
+        setEditandoCliente(null);
+      } else {
+        await fetch(`${API_URL}/clientes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(nuevoCliente)
+        });
+        setSuccess('Cliente agregado correctamente');
+      }
+      setNuevoCliente({ nombre: '', telefono: '', email: '' });
+      cargarClientes();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-    setNuevoCliente({ nombre: '', telefono: '', email: '' });
-    cargarClientes();
   };
 
   const editarCliente = (cliente) => {
@@ -72,7 +138,7 @@ function App() {
       email: cliente.email || ''
     });
     setEditandoCliente(cliente);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTab('clientes');
   };
 
   const cancelarEdicion = () => {
@@ -82,321 +148,337 @@ function App() {
 
   const eliminarCliente = async (id) => {
     if (confirm('¿Eliminar este cliente? Se eliminarán también todos sus turnos.')) {
-      await fetch(`${API_URL}/clientes/${id}`, { method: 'DELETE' });
-      cargarClientes();
-      cargarTurnos();
+      try {
+        await fetch(`${API_URL}/clientes/${id}`, { method: 'DELETE' });
+        setSuccess('Cliente eliminado correctamente');
+        cargarClientes();
+        cargarTurnos();
+      } catch (err) {
+        setError(err.message);
+      }
     }
   };
 
   const agregarTurno = async (e) => {
     e.preventDefault();
-    const res = await fetch(`${API_URL}/turnos`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(nuevoTurno)
-    });
-    const data = await res.json();
+    setLoading(true);
+    setError('');
     
-    // Guardar mensaje de WhatsApp
-    if (data.mensaje) {
-      const nuevoMensaje = {
-        id: Date.now(),
-        fecha: new Date().toLocaleString('es-AR'),
-        cliente: data.cliente,
-        telefono: data.telefono,
-        mensaje: data.mensaje
-      };
-      setMensajesWhatsApp([nuevoMensaje, ...mensajesWhatsApp]);
+    try {
+      const res = await fetch(`${API_URL}/turnos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(nuevoTurno)
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Error creando turno');
+      }
+      
+      const data = await res.json();
+      
+      if (data.mensaje) {
+        const nuevoMensaje = {
+          id: Date.now(),
+          fecha: new Date().toLocaleString('es-AR'),
+          cliente: data.cliente,
+          telefono: data.telefono,
+          mensaje: data.mensaje
+        };
+        setMensajesWhatsApp([nuevoMensaje, ...mensajesWhatsApp]);
+      }
+      
+      setSuccess(data.whatsappEnviado ? 'Turno creado! Ve a "Mensajes" para copiar el mensaje.' : 'Turno creado correctamente');
+      setNuevoTurno({ cliente_id: '', tratamiento_id: '', fecha: '', hora: '', notas: '' });
+      cargarTurnos();
+      setTab('turnos');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-    
-    alert(data.whatsappEnviado ? 'Turno creado! Ve a "Mensajes WhatsApp" para copiar el mensaje.' : 'Turno creado');
-    setNuevoTurno({ cliente_id: '', tratamiento: '', fecha: '', hora: '', notas: '' });
-    cargarTurnos();
   };
 
   const cambiarEstado = async (id, estado) => {
-    await fetch(`${API_URL}/turnos/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ estado })
-    });
-    cargarTurnos();
+    try {
+      await fetch(`${API_URL}/turnos/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado })
+      });
+      cargarTurnos();
+      setSuccess('Estado actualizado correctamente');
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   const eliminarTurno = async (id) => {
     if (confirm('¿Eliminar este turno?')) {
-      await fetch(`${API_URL}/turnos/${id}`, { method: 'DELETE' });
-      cargarTurnos();
+      try {
+        await fetch(`${API_URL}/turnos/${id}`, { method: 'DELETE' });
+        setSuccess('Turno eliminado correctamente');
+        cargarTurnos();
+      } catch (err) {
+        setError(err.message);
+      }
     }
   };
 
+  const editarTurno = (turno) => {
+    setEditandoTurno(turno);
+  };
+
+  const guardarTurnoEditado = async (id, formData) => {
+    try {
+      const res = await fetch(`${API_URL}/turnos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Error actualizando turno');
+      }
+
+      setSuccess('Turno actualizado correctamente');
+      setEditandoTurno(null);
+      cargarTurnos();
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  // Auto-hide alerts
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError('');
+        setSuccess('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, success]);
+
+  // Si no hay usuario logueado, mostrar login
+  if (!usuario) {
+    return <Login onLogin={handleLogin} />;
+  }
+
+  // Si es cliente, mostrar portal de cliente
+  if (tipoUsuario === 'cliente') {
+    const clienteTabs = [
+      { id: 'inicio', icon: '🏠', label: 'Inicio' },
+      { id: 'solicitar', icon: '➕', label: 'Solicitar' },
+      { id: 'mis-turnos', icon: '📅', label: 'Mis Turnos' },
+      { id: 'galeria', icon: '📸', label: 'Galería' }
+    ];
+
+    return (
+      <div className={`app-container ${isMobile ? 'mobile' : ''}`}>
+        {isMobile && (
+          <MobileNav
+            activeTab={tab}
+            onTabChange={setTab}
+            tabs={clienteTabs}
+            onLogout={handleLogout}
+            usuario={usuario}
+            tipoUsuario={tipoUsuario}
+          />
+        )}
+        <div className={`main-content ${isMobile ? 'mobile-content' : ''}`}>
+          <ClientePortal 
+            cliente={usuario} 
+            onLogout={handleLogout}
+            isMobile={isMobile}
+            currentTab={tab}
+            onTabChange={setTab}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Si es admin, mostrar panel completo
+  const adminTabs = [
+    { id: 'dashboard', icon: '📊', label: 'Dashboard' },
+    { id: 'turnos', icon: '📅', label: 'Turnos' },
+    { id: 'nuevo', icon: '➕', label: 'Nuevo Turno' },
+    { id: 'clientes', icon: '👤', label: 'Agregar Cliente' },
+    { id: 'lista-clientes', icon: '📋', label: 'Clientes' },
+    { id: 'promociones', icon: '🎉', label: 'Promociones' },
+    { id: 'galeria', icon: '📸', label: 'Galería' },
+    { id: 'mensajes', icon: '💬', label: 'Mensajes' }
+  ];
+
   return (
-    <div className="container">
-      <div className="header">
-        <img src="/logo.jpg" alt="HairStyleAbii Logo" className="logo" />
-        <h1>💇 HairStyleAbii</h1>
-      </div>
-      
-      <div className="tabs">
-        <button className={`tab ${tab === 'turnos' ? 'active' : ''}`} onClick={() => setTab('turnos')}>
-          📅 Turnos
-        </button>
-        <button className={`tab ${tab === 'nuevo' ? 'active' : ''}`} onClick={() => setTab('nuevo')}>
-          ➕ Nuevo Turno
-        </button>
-        <button className={`tab ${tab === 'mensajes' ? 'active' : ''}`} onClick={() => setTab('mensajes')}>
-          💬 Mensajes WhatsApp
-        </button>
-        <button className={`tab ${tab === 'clientes' ? 'active' : ''}`} onClick={() => setTab('clientes')}>
-          👤 Agregar Cliente
-        </button>
-        <button className={`tab ${tab === 'lista-clientes' ? 'active' : ''}`} onClick={() => setTab('lista-clientes')}>
-          📋 Lista Clientes
-        </button>
-      </div>
+    <div className={`app-container ${isMobile ? 'mobile' : ''}`}>
+      {isMobile ? (
+        <MobileNav
+          activeTab={tab}
+          onTabChange={setTab}
+          tabs={adminTabs}
+          onLogout={handleLogout}
+          usuario={usuario}
+          tipoUsuario={tipoUsuario}
+        />
+      ) : (
+        <div className="admin-header">
+          <Header />
+          <button onClick={handleLogout} className="btn-logout">
+            🚪 Cerrar Sesión
+          </button>
+        </div>
+      )}
+
+      <div className={`main-content ${isMobile ? 'mobile-content' : ''}`}>
+        <div className="container">
+          {error && (
+            <div className="alert alert-error">
+              ❌ {error}
+            </div>
+          )}
+          
+          {success && (
+            <div className="alert alert-success">
+              ✅ {success}
+            </div>
+          )}
+          
+          {loading && (
+            <div className="alert alert-info">
+              🔄 Cargando...
+            </div>
+          )}
+          
+          {!isMobile && <Tabs activeTab={tab} onTabChange={setTab} />}
+
+      {tab === 'dashboard' && <Dashboard />}
 
       {tab === 'turnos' && (
         <div className="card">
-          <h2 style={{ marginBottom: '20px' }}>Lista de Turnos</h2>
-          <div className="turnos-list">
-            {turnos.map(turno => (
-              <div key={turno.id} className="turno-item">
-                <div className="turno-header">
-                  <div>
-                    <strong>{turno.cliente_nombre}</strong>
-                    <span className={`estado ${turno.estado}`} style={{ marginLeft: '10px' }}>
-                      {turno.estado}
-                    </span>
-                  </div>
-                  <div>
-                    <select 
-                      value={turno.estado} 
-                      onChange={(e) => cambiarEstado(turno.id, e.target.value)}
-                      style={{ marginRight: '10px', width: 'auto' }}
-                    >
-                      <option value="pendiente">Pendiente</option>
-                      <option value="confirmado">Confirmado</option>
-                      <option value="completado">Completado</option>
-                    </select>
-                    <button className="delete" onClick={() => eliminarTurno(turno.id)}>
-                      Eliminar
-                    </button>
-                  </div>
-                </div>
-                <div className="turno-info">
-                  <p>📅 {turno.fecha} - ⏰ {turno.hora}</p>
-                  <p>💆 {turno.tratamiento}</p>
-                  <p>📱 {turno.telefono}</p>
-                  {turno.notas && <p>📝 {turno.notas}</p>}
-                </div>
-              </div>
-            ))}
+          <div className="card-header">
+            <h2>📅 Lista de Turnos</h2>
+            <p className="card-subtitle">Gestiona todos los turnos agendados</p>
           </div>
+          <TurnosList 
+            turnos={turnos}
+            onEstadoChange={cambiarEstado}
+            onDelete={eliminarTurno}
+            onEdit={editarTurno}
+          />
         </div>
+      )}
+
+      {editandoTurno && (
+        <EditarTurnoModal
+          turno={editandoTurno}
+          clientes={clientes}
+          tratamientos={tratamientos}
+          onClose={() => setEditandoTurno(null)}
+          onSave={guardarTurnoEditado}
+        />
+      )}
+
+      {tab === 'nuevo' && (
+        <NuevoTurnoForm
+          clientes={clientes}
+          tratamientos={tratamientos}
+          turno={nuevoTurno}
+          onChange={setNuevoTurno}
+          onSubmit={agregarTurno}
+          loading={loading}
+        />
       )}
 
       {tab === 'mensajes' && (
         <div className="card">
-          <h2 style={{ marginBottom: '20px' }}>💬 Mensajes para WhatsApp</h2>
+          <div className="card-header">
+            <h2>💬 Mensajes para WhatsApp</h2>
+            <p className="card-subtitle">Copia y envía los mensajes a tus clientes</p>
+          </div>
           {mensajesWhatsApp.length === 0 ? (
-            <p style={{ textAlign: 'center', color: '#666', padding: '40px' }}>
-              No hay mensajes pendientes. Cuando crees un turno, el mensaje aparecerá aquí.
-            </p>
+            <div className="empty-state">
+              <div className="empty-icon">💬</div>
+              <h3>No hay mensajes pendientes</h3>
+              <p>Cuando crees un turno, el mensaje aparecerá aquí</p>
+            </div>
           ) : (
             <div style={{ display: 'grid', gap: '15px' }}>
               {mensajesWhatsApp.map(msg => (
-                <div key={msg.id} className="turno-item">
-                  <div style={{ marginBottom: '10px' }}>
-                    <strong>📞 {msg.cliente}</strong>
-                    <span style={{ marginLeft: '10px', color: '#666', fontSize: '14px' }}>
-                      {msg.telefono}
-                    </span>
-                    <div style={{ fontSize: '12px', color: '#999', marginTop: '5px' }}>
-                      {msg.fecha}
+                <div key={msg.id} className="turno-card">
+                  <div className="turno-card-header">
+                    <div>
+                      <strong>📞 {msg.cliente}</strong>
+                      <div style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>
+                        {msg.telefono} • {msg.fecha}
+                      </div>
                     </div>
                   </div>
-                  <div style={{ 
-                    background: '#f0f0f0', 
-                    padding: '15px', 
-                    borderRadius: '8px',
-                    whiteSpace: 'pre-wrap',
-                    fontFamily: 'monospace',
-                    fontSize: '14px',
-                    marginBottom: '10px'
-                  }}>
-                    {msg.mensaje}
+                  <div className="turno-card-body">
+                    <div style={{ 
+                      background: '#f0f0f0', 
+                      padding: '15px', 
+                      borderRadius: '8px',
+                      whiteSpace: 'pre-wrap',
+                      fontFamily: 'monospace',
+                      fontSize: '14px'
+                    }}>
+                      {msg.mensaje}
+                    </div>
                   </div>
-                  <button 
-                    onClick={() => {
-                      navigator.clipboard.writeText(msg.mensaje);
-                      alert('✅ Mensaje copiado! Ahora pégalo en WhatsApp');
-                    }}
-                    style={{ width: '100%' }}
-                  >
-                    📋 Copiar Mensaje
-                  </button>
+                  <div className="turno-card-footer">
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(msg.mensaje);
+                        setSuccess('Mensaje copiado al portapapeles');
+                      }}
+                      className="btn-primary"
+                      style={{ width: '100%' }}
+                    >
+                      📋 Copiar Mensaje
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
-      )}
-
-      {tab === 'nuevo' && (
-        <div className="card">
-          <h2 style={{ marginBottom: '20px' }}>Crear Nuevo Turno</h2>
-          <form onSubmit={agregarTurno}>
-            <div className="form-group">
-              <label>Cliente</label>
-              <select 
-                value={nuevoTurno.cliente_id} 
-                onChange={(e) => setNuevoTurno({...nuevoTurno, cliente_id: e.target.value})}
-                required
-              >
-                <option value="">Seleccionar cliente</option>
-                {clientes.map(c => (
-                  <option key={c.id} value={c.id}>{c.nombre} - {c.telefono}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Tratamiento</label>
-              <select 
-                value={nuevoTurno.tratamiento} 
-                onChange={(e) => setNuevoTurno({...nuevoTurno, tratamiento: e.target.value})}
-                required
-              >
-                <option value="">Seleccionar tratamiento</option>
-                {TRATAMIENTOS.map(t => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Fecha</label>
-              <input 
-                type="date" 
-                value={nuevoTurno.fecha}
-                onChange={(e) => setNuevoTurno({...nuevoTurno, fecha: e.target.value})}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Hora</label>
-              <input 
-                type="time" 
-                value={nuevoTurno.hora}
-                onChange={(e) => setNuevoTurno({...nuevoTurno, hora: e.target.value})}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Notas (opcional)</label>
-              <textarea 
-                value={nuevoTurno.notas}
-                onChange={(e) => setNuevoTurno({...nuevoTurno, notas: e.target.value})}
-                rows="3"
-              />
-            </div>
-            <button type="submit">Crear Turno y Enviar WhatsApp</button>
-          </form>
         </div>
       )}
 
       {tab === 'clientes' && (
-        <div className="card">
-          <h2 style={{ marginBottom: '20px' }}>
-            {editandoCliente ? '✏️ Editar Cliente' : '➕ Agregar Nuevo Cliente'}
-          </h2>
-          <form onSubmit={agregarCliente}>
-            <div className="form-group">
-              <label>Nombre</label>
-              <input 
-                type="text" 
-                value={nuevoCliente.nombre}
-                onChange={(e) => setNuevoCliente({...nuevoCliente, nombre: e.target.value})}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Teléfono (con código de país, ej: +5491123456789)</label>
-              <input 
-                type="tel" 
-                value={nuevoCliente.telefono}
-                onChange={(e) => setNuevoCliente({...nuevoCliente, telefono: e.target.value})}
-                placeholder="+5491123456789"
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Email (opcional)</label>
-              <input 
-                type="email" 
-                value={nuevoCliente.email}
-                onChange={(e) => setNuevoCliente({...nuevoCliente, email: e.target.value})}
-              />
-            </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button type="submit">
-                {editandoCliente ? '💾 Actualizar Cliente' : '➕ Agregar Cliente'}
-              </button>
-              {editandoCliente && (
-                <button type="button" onClick={cancelarEdicion} style={{ background: '#6c757d' }}>
-                  ❌ Cancelar
-                </button>
-              )}
-            </div>
-          </form>
-        </div>
+        <ClienteForm
+          cliente={nuevoCliente}
+          onChange={setNuevoCliente}
+          onSubmit={agregarCliente}
+          onCancel={cancelarEdicion}
+          isEditing={!!editandoCliente}
+          loading={loading}
+        />
       )}
 
       {tab === 'lista-clientes' && (
         <div className="card">
-          <h2 style={{ marginBottom: '20px' }}>📋 Lista de Clientes</h2>
-          {clientes.length === 0 ? (
-            <p style={{ textAlign: 'center', color: '#666', padding: '40px' }}>
-              No hay clientes registrados. Ve a "Agregar Cliente" para crear uno.
-            </p>
-          ) : (
-            <div style={{ display: 'grid', gap: '10px' }}>
-              {clientes.map(c => (
-                <div key={c.id} className="turno-item">
-                  <div className="turno-header">
-                    <div>
-                      <strong>{c.nombre}</strong>
-                      <div style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>
-                        📱 {c.telefono}
-                        {c.email && <span> • ✉️ {c.email}</span>}
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button 
-                        onClick={() => {
-                          editarCliente(c);
-                          setTab('clientes');
-                        }}
-                        style={{ 
-                          background: 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)',
-                          padding: '8px 16px',
-                          fontSize: '14px'
-                        }}
-                      >
-                        ✏️ Editar
-                      </button>
-                      <button 
-                        className="delete" 
-                        onClick={() => eliminarCliente(c.id)}
-                      >
-                        🗑️ Eliminar
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="card-header">
+            <h2>📋 Lista de Clientes</h2>
+            <p className="card-subtitle">Gestiona la información de tus clientes</p>
+          </div>
+          <ClientesList
+            clientes={clientes}
+            onEdit={editarCliente}
+            onDelete={eliminarCliente}
+          />
         </div>
       )}
+
+      {tab === 'promociones' && <GestionPromociones />}
+
+      {tab === 'galeria' && <GestionGaleria />}
+        </div>
+      </div>
     </div>
   );
 }
