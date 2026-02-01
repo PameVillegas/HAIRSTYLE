@@ -7,6 +7,14 @@ import { initializeDatabase } from './database.js';
 import systemRoutes from './routes/system.routes.js';
 import appointmentRoutes from './routes/appointments.routes.js';
 
+// Inicializar la base de datos
+initializeDatabase()
+  .then(() => {
+    console.log('Base de datos lista ✅');
+  })
+  .catch(err => {
+    console.error('Error al inicializar la base de datos:', err);
+  });
 
 dotenv.config();
 
