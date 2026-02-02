@@ -6,6 +6,7 @@ import { dirname, join } from 'path';
 import { initializeDatabase } from './database.js';
 import systemRoutes from './routes/system.routes.js';
 import appointmentRoutes from './routes/appointments.routes.js';
+import authRoutes from './routes/auth.routes.js';
 
 // Inicializar la base de datos
 initializeDatabase()
@@ -34,6 +35,7 @@ app.get('/test', (req, res) => {
 
 app.use('/', systemRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/auth', authRoutes);
 
 
 
