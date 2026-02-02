@@ -26,6 +26,12 @@ const app = express();
 // Middlewares
 app.use(cors());
 app.use(express.json());
+
+// Ruta de prueba
+app.get('/test', (req, res) => {
+  res.json({ message: 'Servidor funcionando correctamente', timestamp: new Date() });
+});
+
 app.use('/', systemRoutes);
 app.use('/api/appointments', appointmentRoutes);
 
@@ -33,14 +39,13 @@ app.use('/api/appointments', appointmentRoutes);
 
 // Servir frontend en producción
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(join(__dirname, '../client/dist')));
+  // Manejar rutas de la API que no existen
+  app.get('/api/*', (req, res) => {
+    res.status(404).json({ error: 'API endpoint not found' });
+  });
   
-  // Manejar rutas del frontend (SPA)
+  // Todas las demás rutas las maneja el frontend (SPA)
   app.get('*', (req, res) => {
-    // No servir archivos estáticos como rutas de la app
-    if (req.path.startsWith('/api/')) {
-      return res.status(404).json({ error: 'API endpoint not found' });
-    }
     res.sendFile(join(__dirname, '../client/dist/index.html'));
   });
 }
