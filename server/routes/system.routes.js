@@ -7,13 +7,13 @@ const __dirname = dirname(__filename);
 
 const router = express.Router();
 
-// Ruta de estado del servidor - v2
+// Ruta de estado del servidor - v3
 router.get('/status', (req, res) => {
   res.json({ 
     message: '✅ Servidor funcionando y base de datos lista!',
     timestamp: new Date(),
     environment: process.env.NODE_ENV || 'development',
-    version: '2.0'
+    version: '3.0'
   });
 });
 
