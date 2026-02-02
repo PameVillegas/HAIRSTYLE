@@ -118,7 +118,7 @@ async function createTables(client) {
   if (parseInt(adminResult.rows[0].count) === 0) {
     await client.query(
       'INSERT INTO usuarios (username, password, nombre, rol) VALUES ($1, $2, $3, $4)',
-      ['admin', 'admin123', 'Administrador', 'admin']
+      ['Abitu', 'Abitu26', 'Administrador', 'admin']
     );
   }
 }

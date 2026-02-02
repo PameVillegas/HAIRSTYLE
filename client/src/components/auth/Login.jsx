@@ -81,7 +81,7 @@ export default function Login({ onLogin }) {
 
         {tipo === 'admin' && (
           <p className="admin-hint">
-            💡 Admin: usa "admin" como email y "admin123" como contraseña
+            💡 Admin: usa "Abitu" como email y "Abitu26" como contraseña
           </p>
         )}
       </form>
