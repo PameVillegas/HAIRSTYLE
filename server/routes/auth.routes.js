@@ -81,6 +81,30 @@ router.post('/cliente', async (req, res) => {
   }
 });
 
+// Listar usuarios admin (solo para debug)
+router.get('/list-admins', async (req, res) => {
+  try {
+    const client = await pool.connect();
+    
+    const result = await client.query(
+      'SELECT username, nombre, rol FROM usuarios WHERE rol = $1',
+      ['admin']
+    );
+    
+    client.release();
+    res.json({ 
+      success: true, 
+      users: result.rows 
+    });
+  } catch (error) {
+    console.error('Error listando admins:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error del servidor' 
+    });
+  }
+});
+
 // Crear usuario admin adicional
 router.post('/create-admin', async (req, res) => {
   try {
