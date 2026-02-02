@@ -1,5 +1,4 @@
 node_modules/
-dist/
 .env
 *.db
 .DS_Store
@@ -8,3 +7,6 @@ dist/
 .wwebjs_auth/
 .wwebjs_cache/
 mensajes-pendientes.txt
+
+# Ignorar dist solo en la raíz, no en client/
+/dist/
