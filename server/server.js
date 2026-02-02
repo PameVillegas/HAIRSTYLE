@@ -31,9 +31,14 @@ app.use('/api/appointments', appointmentRoutes);
 
 
 
-// Servir frontend en producción (opcional)
+// Servir frontend en producción
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(join(__dirname, '../client/dist')));
+  
+  // Manejar rutas del frontend (SPA)
+  app.get('*', (req, res) => {
+    res.sendFile(join(__dirname, '../client/dist/index.html'));
+  });
 }
 
 
@@ -46,19 +51,16 @@ async function startServer(port = 3000) {
     await initializeDatabase();
     console.log('✅ Base de datos inicializada');
 
-    // Intentar arrancar en el puerto indicado
+    // Arrancar servidor
     const server = app.listen(port, '0.0.0.0', () => {
-      console.log(`✅ Servidor corriendo en http://localhost:${port}`);
+      console.log(`✅ Servidor corriendo en puerto ${port}`);
+      console.log(`🌐 Accede en: http://localhost:${port}`);
     });
 
-    // Manejar error de puerto ocupado
+    // Manejar errores del servidor
     server.on('error', (err) => {
-      if (err.code === 'EADDRINUSE') {
-        console.warn(`⚠ Puerto ${port} ocupado. Probando puerto ${port + 1}...`);
-        startServer(port + 1); // intenta con el siguiente puerto
-      } else {
-        console.error('❌ Error al iniciar el servidor:', err);
-      }
+      console.error('❌ Error del servidor:', err);
+      process.exit(1);
     });
 
   } catch (error) {
@@ -67,5 +69,6 @@ async function startServer(port = 3000) {
   }
 }
 
-// Arrancar servidor en puerto 3000
-startServer();
+// Arrancar servidor en puerto de Render o 3000
+const PORT = process.env.PORT || 3000;
+startServer(PORT);

@@ -8,26 +8,10 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: DB_HOST
+      - key: DATABASE_URL
         fromDatabase:
           name: hairstyle-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: hairstyle-db
-          property: port
-      - key: DB_USER
-        fromDatabase:
-          name: hairstyle-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: hairstyle-db
-          property: password
-      - key: DB_NAME
-        fromDatabase:
-          name: hairstyle-db
-          property: database
+          property: connectionString
 
 databases:
   - name: hairstyle-db

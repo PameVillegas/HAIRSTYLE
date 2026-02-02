@@ -40,6 +40,10 @@ echo 4. Configura las variables de entorno
 echo 5. ¡Despliega!
 echo.
 echo Tu app estara disponible en:
-echo https://hairstyle-abi.onrender.com
+echo https://tu-app-name.onrender.com
+echo.
+echo 📋 Comandos para Render:
+echo Build: npm install ^&^& cd client ^&^& npm install ^&^& npm run build ^&^& cd ../server ^&^& npm install
+echo Start: cd server ^&^& npm start
 echo.
 pause

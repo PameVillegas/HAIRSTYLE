@@ -1,36 +1,27 @@
-import mysql from 'mysql2/promise';
+import pkg from 'pg';
+const { Pool } = pkg;
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Configuración de la conexión MySQL
+// Configuración de la conexión PostgreSQL
 const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER || 'hairstyle_user', // tu usuario
-  password: process.env.DB_PASSWORD || 'Teito2009', // tu contraseña
-  database: process.env.DB_NAME || 'hairstyle_db',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 };
 
 // Crear pool de conexiones
-const pool = mysql.createPool(dbConfig);
+const pool = new Pool(dbConfig);
 
 // Función para inicializar la base de datos
 export async function initializeDatabase() {
   try {
-    const connection = await pool.getConnection();
-    
-    // Crear base de datos si no existe y usarla
-    await connection.query(`CREATE DATABASE IF NOT EXISTS ${dbConfig.database}`);
-    await connection.query(`USE ${dbConfig.database}`);
+    const client = await pool.connect();
     
     // Crear tablas
-    await createTables(connection);
+    await createTables(client);
 
-    connection.release();
+    client.release();
 
     console.log('✅ Base de datos inicializada correctamente');
     
@@ -40,60 +31,60 @@ export async function initializeDatabase() {
   }
 }
 
-async function createTables(connection) {
+async function createTables(client) {
   const tables = [
     // Tabla usuarios (admin)
     `CREATE TABLE IF NOT EXISTS usuarios (
-      id INT AUTO_INCREMENT PRIMARY KEY,
+      id SERIAL PRIMARY KEY,
       username VARCHAR(100) NOT NULL UNIQUE,
       password VARCHAR(255) NOT NULL,
       nombre VARCHAR(255) NOT NULL,
-      rol ENUM('admin') DEFAULT 'admin',
+      rol VARCHAR(20) DEFAULT 'admin',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
 
     // Tabla clientes
     `CREATE TABLE IF NOT EXISTS clientes (
-      id INT AUTO_INCREMENT PRIMARY KEY,
+      id SERIAL PRIMARY KEY,
       nombre VARCHAR(255) NOT NULL,
       telefono VARCHAR(50) NOT NULL,
       email VARCHAR(255),
       password VARCHAR(255),
       activo BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
 
     // Tabla tratamientos
     `CREATE TABLE IF NOT EXISTS tratamientos (
-      id INT AUTO_INCREMENT PRIMARY KEY,
+      id SERIAL PRIMARY KEY,
       nombre VARCHAR(255) NOT NULL,
       precio DECIMAL(10,2) NOT NULL DEFAULT 0,
-      duracion INT DEFAULT 60,
+      duracion INTEGER DEFAULT 60,
       descripcion TEXT,
       activo BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
 
     // Tabla turnos
     `CREATE TABLE IF NOT EXISTS turnos (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      cliente_id INT NOT NULL,
-      tratamiento_id INT NOT NULL,
+      id SERIAL PRIMARY KEY,
+      cliente_id INTEGER NOT NULL,
+      tratamiento_id INTEGER NOT NULL,
       fecha DATE NOT NULL,
       hora TIME NOT NULL,
-      estado ENUM('pendiente','confirmado','completado','cancelado') DEFAULT 'pendiente',
+      estado VARCHAR(20) DEFAULT 'pendiente',
       notas TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE,
       FOREIGN KEY (tratamiento_id) REFERENCES tratamientos(id)
     )`,
 
     // Tabla promociones
     `CREATE TABLE IF NOT EXISTS promociones (
-      id INT AUTO_INCREMENT PRIMARY KEY,
+      id SERIAL PRIMARY KEY,
       titulo VARCHAR(255) NOT NULL,
       descripcion TEXT,
       descuento DECIMAL(5,2),
@@ -103,12 +94,12 @@ async function createTables(connection) {
       imagen_url VARCHAR(500),
       activo BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
 
     // Tabla galería
     `CREATE TABLE IF NOT EXISTS galeria (
-      id INT AUTO_INCREMENT PRIMARY KEY,
+      id SERIAL PRIMARY KEY,
       titulo VARCHAR(255) NOT NULL,
       descripcion TEXT,
       imagen_url VARCHAR(500) NOT NULL,
@@ -119,14 +110,14 @@ async function createTables(connection) {
   ];
 
   for (const table of tables) {
-    await connection.query(table);
+    await client.query(table);
   }
 
   // Crear usuario admin por defecto
-  const [adminRows] = await connection.query('SELECT COUNT(*) as count FROM usuarios');
-  if (adminRows[0].count === 0) {
-    await connection.query(
-      'INSERT INTO usuarios (username, password, nombre, rol) VALUES (?, ?, ?, ?)',
+  const adminResult = await client.query('SELECT COUNT(*) as count FROM usuarios');
+  if (parseInt(adminResult.rows[0].count) === 0) {
+    await client.query(
+      'INSERT INTO usuarios (username, password, nombre, rol) VALUES ($1, $2, $3, $4)',
       ['admin', 'admin123', 'Administrador', 'admin']
     );
   }
@@ -136,35 +127,35 @@ async function createTables(connection) {
 export const db = {
   // Autenticación Admin
   async loginAdmin(username, password) {
-    const [rows] = await pool.query(
-      'SELECT id, username, nombre, rol FROM usuarios WHERE username = ? AND password = ? AND rol = "admin"',
-      [username, password]
+    const result = await pool.query(
+      'SELECT id, username, nombre, rol FROM usuarios WHERE username = $1 AND password = $2 AND rol = $3',
+      [username, password, 'admin']
     );
-    return rows[0];
+    return result.rows[0];
   },
 
   // Autenticación Cliente
   async loginCliente(telefono, password) {
-    const [rows] = await pool.query(
-      'SELECT id, nombre, telefono, email FROM clientes WHERE telefono = ? AND password = ? AND activo = TRUE',
+    const result = await pool.query(
+      'SELECT id, nombre, telefono, email FROM clientes WHERE telefono = $1 AND password = $2 AND activo = TRUE',
       [telefono, password]
     );
-    return rows[0];
+    return result.rows[0];
   },
 
   // Registrar cliente
   async registrarCliente(nombre, telefono, email, password) {
-    const [result] = await pool.query(
-      'INSERT INTO clientes (nombre, telefono, email, password) VALUES (?, ?, ?, ?)',
+    const result = await pool.query(
+      'INSERT INTO clientes (nombre, telefono, email, password) VALUES ($1, $2, $3, $4) RETURNING id',
       [nombre, telefono, email, password]
     );
-    return result.insertId;
+    return result.rows[0].id;
   },
 
   // Ejemplo: obtener todos los clientes
   async getAllClientes() {
-    const [rows] = await pool.query('SELECT * FROM clientes ORDER BY nombre');
-    return rows;
+    const result = await pool.query('SELECT * FROM clientes ORDER BY nombre');
+    return result.rows;
   }
 
   // Aquí podés copiar el resto de tus funciones (tratamientos, turnos, promociones, galería)
