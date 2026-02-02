@@ -37,6 +37,10 @@ if (process.env.NODE_ENV === 'production') {
   
   // Manejar rutas del frontend (SPA)
   app.get('*', (req, res) => {
+    // No servir archivos estáticos como rutas de la app
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ error: 'API endpoint not found' });
+    }
     res.sendFile(join(__dirname, '../client/dist/index.html'));
   });
 }
