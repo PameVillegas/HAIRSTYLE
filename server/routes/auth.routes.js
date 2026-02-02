@@ -1,5 +1,13 @@
 import express from 'express';
 import { db } from '../database.js';
+import pkg from 'pg';
+const { Pool } = pkg;
+
+// Usar la misma configuración de conexión
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
 
 const router = express.Router();
 
@@ -69,6 +77,45 @@ router.post('/cliente', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Error del servidor'
+    });
+  }
+});
+
+// Crear usuario admin adicional
+router.post('/create-admin', async (req, res) => {
+  try {
+    const client = await pool.connect();
+    
+    // Verificar si el usuario Abitu ya existe
+    const existingUser = await client.query(
+      'SELECT COUNT(*) as count FROM usuarios WHERE username = $1',
+      ['Abitu']
+    );
+    
+    if (parseInt(existingUser.rows[0].count) === 0) {
+      // Crear el nuevo usuario admin
+      await client.query(
+        'INSERT INTO usuarios (username, password, nombre, rol) VALUES ($1, $2, $3, $4)',
+        ['Abitu', 'Abitu26', 'Administrador Abitu', 'admin']
+      );
+      
+      client.release();
+      res.json({ 
+        success: true, 
+        message: 'Usuario Abitu creado exitosamente' 
+      });
+    } else {
+      client.release();
+      res.json({ 
+        success: true, 
+        message: 'Usuario Abitu ya existe' 
+      });
+    }
+  } catch (error) {
+    console.error('Error creando admin:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error del servidor' 
     });
   }
 });
