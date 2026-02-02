@@ -53,8 +53,8 @@ export default function Login({ onLogin }) {
         {error && <div className="error-message">{error}</div>}
 
         <input
-          type="email"
-          placeholder="Email"
+          type="text"
+          placeholder="Usuario o Email"
           value={email}
           onChange={e => setEmail(e.target.value)}
           required
@@ -81,7 +81,7 @@ export default function Login({ onLogin }) {
 
         {tipo === 'admin' && (
           <p className="admin-hint">
-            💡 Admin: usa "Abitu" como email y "Abitu26" como contraseña
+            💡 Admin: usa "Abitu" como usuario y "Abitu26" como contraseña
           </p>
         )}
       </form>
