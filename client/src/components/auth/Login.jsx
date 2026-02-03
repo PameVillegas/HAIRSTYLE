@@ -81,7 +81,7 @@ export default function Login({ onLogin }) {
 
         {tipo === 'admin' && (
           <p className="admin-hint">
-            💡 Admin: usa "admin"/"admin123" (conectado a base de datos real)
+            💡 Admin: usa "admin"/"admin123" o "Abitu"/"Abitu26" (base de datos real)
           </p>
         )}
       </form>

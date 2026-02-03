@@ -13,6 +13,9 @@ const dbConfig = {
 // Crear pool de conexiones
 const pool = new Pool(dbConfig);
 
+// Exportar el pool para uso directo
+export { pool };
+
 // Función para inicializar la base de datos
 export async function initializeDatabase() {
   try {
