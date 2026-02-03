@@ -116,13 +116,74 @@ async function createTables(client) {
     await client.query(table);
   }
 
-  // Crear usuario admin por defecto
+  // Crear usuarios admin por defecto
   const adminResult = await client.query('SELECT COUNT(*) as count FROM usuarios');
   if (parseInt(adminResult.rows[0].count) === 0) {
+    // Crear usuario Abitu
     await client.query(
       'INSERT INTO usuarios (username, password, nombre, rol) VALUES ($1, $2, $3, $4)',
       ['Abitu', 'Abitu26', 'Administrador', 'admin']
     );
+    
+    // Crear usuario admin
+    await client.query(
+      'INSERT INTO usuarios (username, password, nombre, rol) VALUES ($1, $2, $3, $4)',
+      ['admin', 'admin123', 'Administrador', 'admin']
+    );
+    
+    console.log('✅ Usuarios admin creados: Abitu y admin');
+  }
+  
+  // Cargar tratamientos por defecto
+  const tratamientosResult = await client.query('SELECT COUNT(*) as count FROM tratamientos');
+  if (parseInt(tratamientosResult.rows[0].count) === 0) {
+    const tratamientos = [
+      {
+        nombre: 'LIFTING DE PESTAÑAS',
+        precio: 14000,
+        duracion: 90,
+        descripcion: 'Lifting profesional de pestañas para una mirada más expresiva'
+      },
+      {
+        nombre: 'Diseño y perfilado de cejas',
+        precio: 10000,
+        duracion: 45,
+        descripcion: 'Diseño personalizado y perfilado profesional de cejas'
+      },
+      {
+        nombre: 'Alisados',
+        precio: 0,
+        duracion: 180,
+        descripcion: 'Consultar precio - Alisados profesionales'
+      },
+      {
+        nombre: 'Peinados',
+        precio: 0,
+        duracion: 60,
+        descripcion: 'Consultar precio - Peinados para eventos especiales'
+      },
+      {
+        nombre: 'Baños de crema',
+        precio: 15000,
+        duracion: 60,
+        descripcion: 'Tratamiento nutritivo e hidratante para el cabello'
+      },
+      {
+        nombre: 'Limpiezas faciales',
+        precio: 20000,
+        duracion: 75,
+        descripcion: 'Limpieza facial profunda y tratamiento de la piel'
+      }
+    ];
+
+    for (const tratamiento of tratamientos) {
+      await client.query(
+        'INSERT INTO tratamientos (nombre, precio, duracion, descripcion, activo) VALUES ($1, $2, $3, $4, $5)',
+        [tratamiento.nombre, tratamiento.precio, tratamiento.duracion, tratamiento.descripcion, true]
+      );
+    }
+    
+    console.log('✅ Tratamientos cargados con precios');
   }
 }
 
