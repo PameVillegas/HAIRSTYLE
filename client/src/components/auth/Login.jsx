@@ -16,29 +16,44 @@ export default function Login({ onLogin }) {
     try {
       const endpoint = tipo === 'admin' ? '/api/auth/admin' : '/api/auth/cliente';
       
+      // Preparar datos según el tipo de usuario
+      let requestData;
+      if (tipo === 'admin') {
+        requestData = {
+          username: email, // Para admin, el campo "email" del form es realmente el username
+          password: password
+        };
+      } else {
+        requestData = {
+          telefono: email, // Para cliente, el campo "email" del form es realmente el teléfono
+          password: password
+        };
+      }
+      
+      console.log('Intentando login:', { endpoint, requestData, tipo });
+      
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email: email,
-          username: email, // Para admin, usar email como username
-          telefono: email, // Para cliente, usar email como teléfono temporalmente
-          password: password
-        })
+        body: JSON.stringify(requestData)
       });
 
+      console.log('Response status:', response.status);
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (response.ok && data.success) {
+        console.log('Login exitoso:', data.user);
         onLogin(data.user, tipo);
       } else {
+        console.log('Login falló:', data);
         setError(data.error || 'Error al iniciar sesión');
       }
     } catch (error) {
-      console.error('Error:', error);
-      setError('Error de conexión');
+      console.error('Error de conexión:', error);
+      setError('Error de conexión: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -54,7 +69,7 @@ export default function Login({ onLogin }) {
 
         <input
           type="text"
-          placeholder="Usuario o Email"
+          placeholder={tipo === 'admin' ? "Usuario" : "Teléfono"}
           value={email}
           onChange={e => setEmail(e.target.value)}
           required
