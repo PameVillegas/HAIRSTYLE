@@ -81,6 +81,96 @@ router.post('/cliente', async (req, res) => {
   }
 });
 
+// Debug: probar login admin
+router.post('/debug-admin', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    console.log('Debug login - Usuario:', username, 'Password:', password);
+    
+    const client = await pool.connect();
+    
+    // Buscar usuario exacto
+    const result = await client.query(
+      'SELECT * FROM usuarios WHERE username = $1 AND password = $2 AND rol = $3',
+      [username, password, 'admin']
+    );
+    
+    console.log('Resultado query:', result.rows);
+    
+    client.release();
+    
+    if (result.rows.length > 0) {
+      res.json({ 
+        success: true, 
+        message: 'Login exitoso',
+        user: result.rows[0]
+      });
+    } else {
+      res.json({ 
+        success: false, 
+        message: 'Credenciales incorrectas',
+        debug: { username, password }
+      });
+    }
+  } catch (error) {
+    console.error('Error en debug login:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
+// Ruta de prueba para debug del login
+router.post('/test-login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    const client = await pool.connect();
+    
+    // Buscar el usuario exacto
+    const result = await client.query(
+      'SELECT username, password, nombre, rol FROM usuarios WHERE username = $1',
+      [username]
+    );
+    
+    client.release();
+    
+    if (result.rows.length > 0) {
+      const user = result.rows[0];
+      const passwordMatch = user.password === password;
+      
+      res.json({
+        success: true,
+        found: true,
+        username: user.username,
+        storedPassword: user.password,
+        providedPassword: password,
+        passwordMatch: passwordMatch,
+        user: passwordMatch ? {
+          id: user.id,
+          username: user.username,
+          nombre: user.nombre,
+          rol: user.rol
+        } : null
+      });
+    } else {
+      res.json({
+        success: true,
+        found: false,
+        message: `Usuario '${username}' no encontrado`
+      });
+    }
+  } catch (error) {
+    console.error('Error en test login:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
 // Listar usuarios admin (solo para debug)
 router.get('/list-admins', async (req, res) => {
   try {
