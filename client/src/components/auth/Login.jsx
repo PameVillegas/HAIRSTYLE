@@ -13,35 +13,38 @@ export default function Login({ onLogin }) {
     setLoading(true);
     setError('');
 
-    try {
-      const endpoint = tipo === 'admin' ? '/api/auth/admin' : '/api/auth/cliente';
-      
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          username: email, // Para admin, usar email como username
-          telefono: email, // Para cliente, usar email como teléfono temporalmente
-          password: password
-        })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        onLogin(data.user, tipo);
+    // Login temporal mientras arreglamos la base de datos
+    if (tipo === 'admin') {
+      if ((email === 'admin' && password === 'admin123') || 
+          (email === 'Abitu' && password === 'Abitu26')) {
+        onLogin({
+          id: 1,
+          username: email,
+          nombre: email === 'admin' ? 'Administrador' : 'Administrador Abitu',
+          rol: 'admin'
+        }, tipo);
+        setLoading(false);
+        return;
       } else {
-        setError(data.error || 'Error al iniciar sesión');
+        setError('Credenciales incorrectas. Usa: admin/admin123 o Abitu/Abitu26');
+        setLoading(false);
+        return;
       }
-    } catch (error) {
-      console.error('Error:', error);
-      setError('Error de conexión');
-    } finally {
-      setLoading(false);
     }
+
+    // Para clientes, permitir cualquier credencial por ahora
+    if (tipo === 'cliente') {
+      onLogin({
+        id: 2,
+        nombre: 'Cliente Demo',
+        telefono: email,
+        email: email
+      }, tipo);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -81,7 +84,7 @@ export default function Login({ onLogin }) {
 
         {tipo === 'admin' && (
           <p className="admin-hint">
-            💡 Admin: usa "Abitu" como usuario y "Abitu26" como contraseña
+            💡 Admin: usa "admin"/"admin123" o "Abitu"/"Abitu26"
           </p>
         )}
       </form>
