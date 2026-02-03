@@ -7,6 +7,7 @@ import { initializeDatabase } from './database.js';
 import systemRoutes from './routes/system.routes.js';
 import appointmentRoutes from './routes/appointments.routes.js';
 import authRoutes from './routes/auth.routes.js';
+import mainRoutes from './routes/main.routes.js';
 
 // Inicializar la base de datos
 initializeDatabase()
@@ -36,6 +37,7 @@ app.get('/test', (req, res) => {
 app.use('/', systemRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api', mainRoutes);
 
 
 
