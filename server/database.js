@@ -1,28 +1,17 @@
 import pkg from 'pg';
 const { Pool } = pkg;
 
-// 🔹 configuración conexión PostgreSQL
+const connectionString = process.env.DATABASE_URL;
+
 const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'hairstyle',
-  password: 'Teito2009',
-  port: 5432,
+  connectionString,
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
 
-// 🔹 función para inicializar conexión
-export async function initializeDatabase() {
-  try {
-    const client = await pool.connect();
-    client.release();
-    console.log('🐘 PostgreSQL conectado correctamente');
-  } catch (error) {
-    console.error('❌ Error conectando a la base de datos:', error.message);
-    throw error;
-  }
-}
+pool.connect()
+  .then(() => console.log('🐘 PostgreSQL conectado correctamente'))
+  .catch(err => console.error('❌ Error conectando a PostgreSQL:', err));
 
-// ✅ EXPORTS IMPORTANTES
-export const db = pool;
-export { pool };
 export default pool;
