@@ -1,19 +1,24 @@
-import pkg from 'pg';
+﻿import pkg from 'pg';
 const { Pool } = pkg;
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 // Configuración de la conexión PostgreSQL
-const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME || 'hairstyle_db',
-  // Solo usar SSL en producción (Render)
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-};
+// Priorizar DATABASE_URL si existe (para Supabase/Render)
+const dbConfig = process.env.DATABASE_URL 
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
+    }
+  : {
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 5432,
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME || 'hairstyle_db',
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    };
 
 export const pool = new Pool(dbConfig);
 
@@ -21,8 +26,13 @@ export async function initializeDatabase() {
   try {
     const client = await pool.connect();
     console.log('🐘 PostgreSQL conectado correctamente');
-    console.log(`📊 Base de datos: ${dbConfig.database}`);
-    console.log(`🖥️  Host: ${dbConfig.host}:${dbConfig.port}`);
+    
+    if (process.env.DATABASE_URL) {
+      console.log('📊 Conectado usando DATABASE_URL');
+    } else {
+      console.log(📊 Base de datos: );
+      console.log(🖥️  Host: :);
+    }
     
     // Crear tablas si no existen
     await createTables(client);
@@ -122,12 +132,12 @@ async function createTables(client) {
   const adminResult = await client.query('SELECT COUNT(*) as count FROM usuarios');
   if (parseInt(adminResult.rows[0].count) === 0) {
     await client.query(
-      'INSERT INTO usuarios (username, password, nombre, rol) VALUES ($1, $2, $3, $4)',
+      'INSERT INTO usuarios (username, password, nombre, rol) VALUES (, , , )',
       ['Abitu', 'Abitu26', 'Administrador', 'admin']
     );
     
     await client.query(
-      'INSERT INTO usuarios (username, password, nombre, rol) VALUES ($1, $2, $3, $4)',
+      'INSERT INTO usuarios (username, password, nombre, rol) VALUES (, , , )',
       ['admin', 'admin123', 'Administrador', 'admin']
     );
     
@@ -148,7 +158,7 @@ async function createTables(client) {
 
     for (const t of tratamientos) {
       await client.query(
-        'INSERT INTO tratamientos (nombre, precio, duracion, descripcion, activo) VALUES ($1, $2, $3, $4, $5)',
+        'INSERT INTO tratamientos (nombre, precio, duracion, descripcion, activo) VALUES (, , , , )',
         [t.nombre, t.precio, t.duracion, t.descripcion, true]
       );
     }
@@ -161,7 +171,7 @@ async function createTables(client) {
 export const db = {
   async loginAdmin(username, password) {
     const result = await pool.query(
-      'SELECT id, username, nombre, rol FROM usuarios WHERE username = $1 AND password = $2 AND rol = $3',
+      'SELECT id, username, nombre, rol FROM usuarios WHERE username =  AND password =  AND rol = ',
       [username, password, 'admin']
     );
     return result.rows[0];
@@ -169,7 +179,7 @@ export const db = {
 
   async loginCliente(telefono, password) {
     const result = await pool.query(
-      'SELECT id, nombre, telefono, email FROM clientes WHERE telefono = $1 AND password = $2 AND activo = TRUE',
+      'SELECT id, nombre, telefono, email FROM clientes WHERE telefono =  AND password =  AND activo = TRUE',
       [telefono, password]
     );
     return result.rows[0];
@@ -177,7 +187,7 @@ export const db = {
 
   async registrarCliente(nombre, telefono, email, password) {
     const result = await pool.query(
-      'INSERT INTO clientes (nombre, telefono, email, password) VALUES ($1, $2, $3, $4) RETURNING id',
+      'INSERT INTO clientes (nombre, telefono, email, password) VALUES (, , , ) RETURNING id',
       [nombre, telefono, email, password]
     );
     return result.rows[0].id;
