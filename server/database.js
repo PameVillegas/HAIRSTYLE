@@ -1,11 +1,9 @@
-import pkg from 'pg';
+ï»¿import pkg from 'pg';
 const { Pool } = pkg;
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Configuración de la conexión PostgreSQL
-// Priorizar DATABASE_URL si existe (para Supabase/Render)
 const dbConfig = process.env.DATABASE_URL 
   ? {
       connectionString: process.env.DATABASE_URL,
@@ -25,28 +23,26 @@ export const pool = new Pool(dbConfig);
 export async function initializeDatabase() {
   try {
     const client = await pool.connect();
-    console.log('?? PostgreSQL conectado correctamente');
+    console.log('PostgreSQL conectado correctamente');
     
     if (process.env.DATABASE_URL) {
-      console.log('?? Conectado usando DATABASE_URL');
+      console.log('Conectado usando DATABASE_URL');
     } else {
-      console.log(?? Base de datos: );
-      console.log(???  Host: :);
+      console.log('Base de datos:', dbConfig.database);
+      console.log('Host:', dbConfig.host + ':' + dbConfig.port);
     }
     
-    // Crear tablas si no existen
     await createTables(client);
     
     client.release();
   } catch (error) {
-    console.error('? Error conectando a PostgreSQL:', error);
+    console.error('Error conectando a PostgreSQL:', error);
     throw error;
   }
 }
 
 async function createTables(client) {
   const tables = [
-    // Tabla usuarios (admin)
     `CREATE TABLE IF NOT EXISTS usuarios (
       id SERIAL PRIMARY KEY,
       username VARCHAR(100) NOT NULL UNIQUE,
@@ -56,7 +52,6 @@ async function createTables(client) {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
 
-    // Tabla clientes
     `CREATE TABLE IF NOT EXISTS clientes (
       id SERIAL PRIMARY KEY,
       nombre VARCHAR(255) NOT NULL,
@@ -68,7 +63,6 @@ async function createTables(client) {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
 
-    // Tabla tratamientos
     `CREATE TABLE IF NOT EXISTS tratamientos (
       id SERIAL PRIMARY KEY,
       nombre VARCHAR(255) NOT NULL,
@@ -80,7 +74,6 @@ async function createTables(client) {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
 
-    // Tabla turnos
     `CREATE TABLE IF NOT EXISTS turnos (
       id SERIAL PRIMARY KEY,
       cliente_id INTEGER NOT NULL,
@@ -95,7 +88,6 @@ async function createTables(client) {
       FOREIGN KEY (tratamiento_id) REFERENCES tratamientos(id)
     )`,
 
-    // Tabla promociones
     `CREATE TABLE IF NOT EXISTS promociones (
       id SERIAL PRIMARY KEY,
       titulo VARCHAR(255) NOT NULL,
@@ -110,7 +102,6 @@ async function createTables(client) {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
 
-    // Tabla galería
     `CREATE TABLE IF NOT EXISTS galeria (
       id SERIAL PRIMARY KEY,
       titulo VARCHAR(255) NOT NULL,
@@ -126,52 +117,49 @@ async function createTables(client) {
     await client.query(table);
   }
   
-  console.log('? Tablas creadas/verificadas');
+  console.log('Tablas creadas/verificadas');
 
-  // Crear usuarios admin por defecto
   const adminResult = await client.query('SELECT COUNT(*) as count FROM usuarios');
   if (parseInt(adminResult.rows[0].count) === 0) {
     await client.query(
-      'INSERT INTO usuarios (username, password, nombre, rol) VALUES (, , , )',
+      'INSERT INTO usuarios (username, password, nombre, rol) VALUES ($1, $2, $3, $4)',
       ['Abitu', 'Abitu26', 'Administrador', 'admin']
     );
     
     await client.query(
-      'INSERT INTO usuarios (username, password, nombre, rol) VALUES (, , , )',
+      'INSERT INTO usuarios (username, password, nombre, rol) VALUES ($1, $2, $3, $4)',
       ['admin', 'admin123', 'Administrador', 'admin']
     );
     
-    console.log('? Usuarios admin creados');
+    console.log('Usuarios admin creados');
   }
   
-  // Cargar tratamientos por defecto
   const tratamientosResult = await client.query('SELECT COUNT(*) as count FROM tratamientos');
   if (parseInt(tratamientosResult.rows[0].count) === 0) {
     const tratamientos = [
-      { nombre: 'LIFTING DE PESTAÑAS', precio: 14000, duracion: 90, descripcion: 'Lifting profesional de pestañas' },
-      { nombre: 'Diseño y perfilado de cejas', precio: 10000, duracion: 45, descripcion: 'Diseño personalizado de cejas' },
+      { nombre: 'LIFTING DE PESTAÃ‘AS', precio: 14000, duracion: 90, descripcion: 'Lifting profesional de pestaÃ±as' },
+      { nombre: 'DiseÃ±o y perfilado de cejas', precio: 10000, duracion: 45, descripcion: 'DiseÃ±o personalizado de cejas' },
       { nombre: 'Alisados', precio: 0, duracion: 180, descripcion: 'Consultar precio' },
       { nombre: 'Peinados', precio: 0, duracion: 60, descripcion: 'Consultar precio' },
-      { nombre: 'Baños de crema', precio: 15000, duracion: 60, descripcion: 'Tratamiento nutritivo' },
+      { nombre: 'BaÃ±os de crema', precio: 15000, duracion: 60, descripcion: 'Tratamiento nutritivo' },
       { nombre: 'Limpiezas faciales', precio: 20000, duracion: 75, descripcion: 'Limpieza facial profunda' }
     ];
 
     for (const t of tratamientos) {
       await client.query(
-        'INSERT INTO tratamientos (nombre, precio, duracion, descripcion, activo) VALUES (, , , , )',
+        'INSERT INTO tratamientos (nombre, precio, duracion, descripcion, activo) VALUES ($1, $2, $3, $4, $5)',
         [t.nombre, t.precio, t.duracion, t.descripcion, true]
       );
     }
     
-    console.log('? Tratamientos cargados');
+    console.log('Tratamientos cargados');
   }
 }
 
-// Funciones de la base de datos
 export const db = {
   async loginAdmin(username, password) {
     const result = await pool.query(
-      'SELECT id, username, nombre, rol FROM usuarios WHERE username =  AND password =  AND rol = ',
+      'SELECT id, username, nombre, rol FROM usuarios WHERE username = $1 AND password = $2 AND rol = $3',
       [username, password, 'admin']
     );
     return result.rows[0];
@@ -179,7 +167,7 @@ export const db = {
 
   async loginCliente(telefono, password) {
     const result = await pool.query(
-      'SELECT id, nombre, telefono, email FROM clientes WHERE telefono =  AND password =  AND activo = TRUE',
+      'SELECT id, nombre, telefono, email FROM clientes WHERE telefono = $1 AND password = $2 AND activo = TRUE',
       [telefono, password]
     );
     return result.rows[0];
@@ -187,7 +175,7 @@ export const db = {
 
   async registrarCliente(nombre, telefono, email, password) {
     const result = await pool.query(
-      'INSERT INTO clientes (nombre, telefono, email, password) VALUES (, , , ) RETURNING id',
+      'INSERT INTO clientes (nombre, telefono, email, password) VALUES ($1, $2, $3, $4) RETURNING id',
       [nombre, telefono, email, password]
     );
     return result.rows[0].id;
