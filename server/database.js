@@ -1,10 +1,10 @@
-﻿import pkg from 'pg';
+import pkg from 'pg';
 const { Pool } = pkg;
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Configuración de la conexión PostgreSQL
+// Configuraci�n de la conexi�n PostgreSQL
 // Priorizar DATABASE_URL si existe (para Supabase/Render)
 const dbConfig = process.env.DATABASE_URL 
   ? {
@@ -25,13 +25,13 @@ export const pool = new Pool(dbConfig);
 export async function initializeDatabase() {
   try {
     const client = await pool.connect();
-    console.log('🐘 PostgreSQL conectado correctamente');
+    console.log('?? PostgreSQL conectado correctamente');
     
     if (process.env.DATABASE_URL) {
-      console.log('📊 Conectado usando DATABASE_URL');
+      console.log('?? Conectado usando DATABASE_URL');
     } else {
-      console.log(📊 Base de datos: );
-      console.log(🖥️  Host: :);
+      console.log(?? Base de datos: );
+      console.log(???  Host: :);
     }
     
     // Crear tablas si no existen
@@ -39,7 +39,7 @@ export async function initializeDatabase() {
     
     client.release();
   } catch (error) {
-    console.error('❌ Error conectando a PostgreSQL:', error);
+    console.error('? Error conectando a PostgreSQL:', error);
     throw error;
   }
 }
@@ -110,7 +110,7 @@ async function createTables(client) {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,
 
-    // Tabla galería
+    // Tabla galer�a
     `CREATE TABLE IF NOT EXISTS galeria (
       id SERIAL PRIMARY KEY,
       titulo VARCHAR(255) NOT NULL,
@@ -126,7 +126,7 @@ async function createTables(client) {
     await client.query(table);
   }
   
-  console.log('✅ Tablas creadas/verificadas');
+  console.log('? Tablas creadas/verificadas');
 
   // Crear usuarios admin por defecto
   const adminResult = await client.query('SELECT COUNT(*) as count FROM usuarios');
@@ -141,18 +141,18 @@ async function createTables(client) {
       ['admin', 'admin123', 'Administrador', 'admin']
     );
     
-    console.log('✅ Usuarios admin creados');
+    console.log('? Usuarios admin creados');
   }
   
   // Cargar tratamientos por defecto
   const tratamientosResult = await client.query('SELECT COUNT(*) as count FROM tratamientos');
   if (parseInt(tratamientosResult.rows[0].count) === 0) {
     const tratamientos = [
-      { nombre: 'LIFTING DE PESTAÑAS', precio: 14000, duracion: 90, descripcion: 'Lifting profesional de pestañas' },
-      { nombre: 'Diseño y perfilado de cejas', precio: 10000, duracion: 45, descripcion: 'Diseño personalizado de cejas' },
+      { nombre: 'LIFTING DE PESTA�AS', precio: 14000, duracion: 90, descripcion: 'Lifting profesional de pesta�as' },
+      { nombre: 'Dise�o y perfilado de cejas', precio: 10000, duracion: 45, descripcion: 'Dise�o personalizado de cejas' },
       { nombre: 'Alisados', precio: 0, duracion: 180, descripcion: 'Consultar precio' },
       { nombre: 'Peinados', precio: 0, duracion: 60, descripcion: 'Consultar precio' },
-      { nombre: 'Baños de crema', precio: 15000, duracion: 60, descripcion: 'Tratamiento nutritivo' },
+      { nombre: 'Ba�os de crema', precio: 15000, duracion: 60, descripcion: 'Tratamiento nutritivo' },
       { nombre: 'Limpiezas faciales', precio: 20000, duracion: 75, descripcion: 'Limpieza facial profunda' }
     ];
 
@@ -163,7 +163,7 @@ async function createTables(client) {
       );
     }
     
-    console.log('✅ Tratamientos cargados');
+    console.log('? Tratamientos cargados');
   }
 }
 
