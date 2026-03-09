@@ -6,7 +6,11 @@ dotenv.config();
 
 const dbConfig = process.env.DATABASE_URL 
   ? {
-      connectionString: process.env.DATABASE_URL,
+      host: 'db.jvdcmmkbfbdtchupwcrh.supabase.co',
+      port: 5432,
+      user: 'postgres',
+      password: 'Ianfer.2022',
+      database: 'postgres',
       ssl: { rejectUnauthorized: false }
     }
   : {
@@ -188,4 +192,5 @@ export const db = {
 };
 
 export default db;
+
 
