@@ -9,7 +9,6 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
   const [promociones, setPromociones] = useState([]);
   const [galeria, setGaleria] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     if (cliente && cliente.id) {
@@ -20,28 +19,33 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
   const cargarDatos = async () => {
     setLoading(true);
     try {
-      const [turnosRes, tratamientosRes, promocionesRes, galeriaRes] = await Promise.all([
-        fetch(`${API_URL}/auth/cliente/${cliente.id}`),
-        fetch(`${API_URL}/tratamientos`),
-        fetch(`${API_URL}/promociones`),
-        fetch(`${API_URL}/galeria`)
+      const [tratamientosRes, promocionesRes, galeriaRes] = await Promise.all([
+        fetch(`${API_URL}/tratamientos`).catch(() => ({ ok: false, json: () => [] })),
+        fetch(`${API_URL}/promociones`).catch(() => ({ ok: false, json: () => [] })),
+        fetch(`${API_URL}/galeria`).catch(() => ({ ok: false, json: () => [] }))
       ]);
 
-      if (turnosRes.ok) {
-        const turnosData = await turnosRes.json();
-        setMisTurnos(turnosData.turnos || []);
-      }
       if (tratamientosRes.ok) {
-        const tratData = await tratamientosRes.json();
-        setTratamientos(tratData);
+        setTratamientos(await tratamientosRes.json());
       }
       if (promocionesRes.ok) {
-        const promoData = await promocionesRes.json();
-        setPromociones(promoData);
+        setPromociones(await promocionesRes.json());
       }
       if (galeriaRes.ok) {
-        const galeriaData = await galeriaRes.json();
-        setGaleria(galeriaData);
+        setGaleria(await galeriaRes.json());
+      }
+      
+      // Cargar turnos del cliente
+      if (cliente.id) {
+        try {
+          const turnosRes = await fetch(`${API_URL}/auth/cliente/${cliente.id}`);
+          if (turnosRes.ok) {
+            const data = await turnosRes.json();
+            setMisTurnos(data.turnos || []);
+          }
+        } catch (e) {
+          console.log('No se pudieron cargar turnos');
+        }
       }
     } catch (err) {
       console.error('Error cargando datos:', err);
@@ -351,16 +355,84 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
     { id: 'quiensoy', icon: '👩', label: 'Quien soy' },
     { id: 'servicios', icon: '💆', label: 'Servicios' },
     { id: 'promociones', icon: '🎉', label: 'Promos' },
-    { id: 'galeria', icon: '📸', label: 'Galería' },
-    { id: 'mis-turnos', icon: '📅', label: 'Mis Turnos' },
-    { id: 'instagram', icon: '📱', label: 'Instagram' },
+    { id: 'mis-turnos', icon: '📅', label: 'Turnos' },
     { id: 'solicitar', icon: '➕', label: 'Turno' }
   ];
 
   if (isMobile) {
     return (
-      <div className="cliente-portal">
-        {renderContent()}
+      <div className="cliente-portal" style={{ minHeight: '100vh', background: '#f5f5f5' }}>
+        <div style={{ 
+          background: 'white', 
+          padding: '15px', 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 100
+        }}>
+          <div>
+            <h3 style={{ margin: 0, color: '#e91e63' }}>👋 {cliente?.nombre}</h3>
+            <small style={{ color: '#666' }}>Cliente</small>
+          </div>
+          <button 
+            onClick={onLogout} 
+            style={{ 
+              background: '#f44336', 
+              color: 'white', 
+              border: 'none', 
+              padding: '8px 12px', 
+              borderRadius: '8px',
+              fontSize: '0.85rem'
+            }}
+          >
+            🚪
+          </button>
+        </div>
+        
+        <div style={{ padding: '10px' }}>
+          {renderContent()}
+        </div>
+        
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: 'white',
+          display: 'flex',
+          overflowX: 'auto',
+          boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
+          padding: '8px 5px',
+          gap: '5px',
+          zIndex: 100
+        }}>
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              style={{
+                flexShrink: 0,
+                padding: '10px 12px',
+                border: currentTab === tab.id ? '2px solid #e91e63' : '2px solid #ddd',
+                background: currentTab === tab.id ? '#fce4ec' : 'white',
+                borderRadius: '10px',
+                fontSize: '0.75rem',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: 'pointer',
+                color: currentTab === tab.id ? '#e91e63' : '#666'
+              }}
+            >
+              <span style={{ fontSize: '1.2rem' }}>{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
     );
   }
