@@ -58,27 +58,10 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
     switch (currentTab) {
       case 'inicio':
         return (
-          <div className="card">
-            <div className="card-header">
-              <h2>👋 ¡Bienvenida, {cliente.nombre}!</h2>
-            </div>
-            <div style={{ padding: '20px' }}>
-              <div style={{ marginBottom: '20px' }}>
-                <strong>📱 Teléfono:</strong> {cliente.telefono || 'No registrado'}
-              </div>
-              {cliente.email && (
-                <div style={{ marginBottom: '20px' }}>
-                  <strong>📧 Email:</strong> {cliente.email}
-                </div>
-              )}
-              <div style={{ marginBottom: '20px' }}>
-                <strong>📅 Tus turnos:</strong> {misTurnos.length}
-              </div>
-              <button onClick={onLogout} className="btn-secondary" style={{ marginTop: '10px' }}>
-                🚪 Cerrar Sesión
-              </button>
-            </div>
-          </div>
+          <SolicitarTurnoForm 
+            cliente={cliente} 
+            tratamientos={tratamientos}
+          />
         );
 
       case 'quiensoy':
@@ -357,8 +340,7 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
     { id: 'servicios', icon: '💆', label: 'Servicios' },
     { id: 'promociones', icon: '🎉', label: 'Promos' },
     { id: 'galeria', icon: '📸', label: 'Galería' },
-    { id: 'quiensoy', icon: '👩', label: 'Quien soy' },
-    { id: 'instagram', icon: '📱', label: 'Instagram' }
+    { id: 'quiensoy', icon: '👩', label: 'Quien soy' }
   ];
 
   if (isMobile) {
@@ -366,20 +348,22 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
       <div className="cliente-portal" style={{ minHeight: '100vh', background: '#f5f5f5', display: 'flex', flexDirection: 'column' }}>
         <div style={{ 
           background: 'white', 
-          padding: '15px 20px', 
+          padding: '12px 20px', 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center',
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          position: 'sticky',
+          position: 'fixed',
           top: 0,
+          left: 0,
+          right: 0,
           zIndex: 100
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <img src="/logo.jpg" alt="Logo" style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #e91e63' }} />
+            <img src="/logo.jpg" alt="Logo" style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #e91e63' }} />
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#e91e63', fontWeight: '700' }}>HairStyle</h3>
-              <small style={{ color: '#666', fontSize: '0.8rem' }}>👋 {cliente?.nombre}</small>
+              <h3 style={{ margin: 0, fontSize: '1rem', color: '#e91e63', fontWeight: '700' }}>HairStyle</h3>
+              <small style={{ color: '#666', fontSize: '0.75rem' }}>👋 {cliente?.nombre}</small>
             </div>
           </div>
           <button 

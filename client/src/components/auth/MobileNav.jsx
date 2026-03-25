@@ -1,8 +1,6 @@
 import { useState } from "react";
 
 export default function MobileNav({ activeTab, onTabChange, tabs, onLogout, usuario, tipoUsuario }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-
   return (
     <div style={{ 
       minHeight: '100vh', 
@@ -10,16 +8,18 @@ export default function MobileNav({ activeTab, onTabChange, tabs, onLogout, usua
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* Header */}
+      {/* Header fijo arriba */}
       <div style={{
         background: 'white',
-        padding: '15px 20px',
+        padding: '12px 20px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        position: 'sticky',
+        position: 'fixed',
         top: 0,
+        left: 0,
+        right: 0,
         zIndex: 100
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -45,9 +45,8 @@ export default function MobileNav({ activeTab, onTabChange, tabs, onLogout, usua
         </button>
       </div>
 
-      {/* Main Content */}
-      <div style={{ flex: 1, padding: '15px', paddingBottom: '90px' }}>
-        {/* Contenido se renderiza aquí desde el padre */}
+      {/* Main Content - con espacio para header y bottom nav */}
+      <div style={{ flex: 1, padding: '80px 15px 90px', marginTop: '60px' }}>
       </div>
 
       {/* Bottom Navigation */}
