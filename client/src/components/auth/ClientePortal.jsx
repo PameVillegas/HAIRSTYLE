@@ -345,82 +345,9 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
 
   if (isMobile) {
     return (
-      <div className="cliente-portal" style={{ minHeight: '100vh', background: '#f5f5f5', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ 
-          background: 'white', 
-          padding: '12px 20px', 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 100
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <img src="/logo.jpg" alt="Logo" style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #e91e63' }} />
-            <div>
-              <h3 style={{ margin: 0, fontSize: '1rem', color: '#e91e63', fontWeight: '700' }}>HairStyle</h3>
-              <small style={{ color: '#666', fontSize: '0.75rem' }}>👋 {cliente?.nombre}</small>
-            </div>
-          </div>
-          <button 
-            onClick={onLogout} 
-            style={{ 
-              background: '#f44336', 
-              color: 'white', 
-              border: 'none', 
-              padding: '8px 12px', 
-              borderRadius: '8px',
-              fontSize: '0.85rem'
-            }}
-          >
-            🚪
-          </button>
-        </div>
-        
-        <div style={{ padding: '10px' }}>
+      <div className="cliente-portal" style={{ flex: 1 }}>
+        <div style={{ padding: '10px 10px 90px 10px' }}>
           {renderContent()}
-        </div>
-        
-        <div style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: 'white',
-          display: 'flex',
-          overflowX: 'auto',
-          boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
-          padding: '8px 5px',
-          gap: '5px',
-          zIndex: 100
-        }}>
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              style={{
-                flexShrink: 0,
-                padding: '10px 12px',
-                border: currentTab === tab.id ? '2px solid #e91e63' : '2px solid #ddd',
-                background: currentTab === tab.id ? '#fce4ec' : 'white',
-                borderRadius: '10px',
-                fontSize: '0.75rem',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '4px',
-                cursor: 'pointer',
-                color: currentTab === tab.id ? '#e91e63' : '#666'
-              }}
-            >
-              <span style={{ fontSize: '1.2rem' }}>{tab.icon}</span>
-              <span>{tab.label}</span>
-            </button>
-          ))}
         </div>
       </div>
     );

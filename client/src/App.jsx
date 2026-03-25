@@ -55,6 +55,8 @@ function App() {
     setTipoUsuario(tipo);
     if (tipo === 'admin') {
       setTab('dashboard');
+    } else {
+      setTab('inicio');
     }
   };
 
@@ -322,7 +324,7 @@ function App() {
   ];
 
   return (
-    <div className={`app-container ${isMobile ? 'mobile' : ''}`}>
+    <div className={`app-container ${isMobile ? 'mobile' : ''}`} style={isMobile ? { paddingTop: '0' } : {}}>
       {isMobile ? (
         <MobileNav
           activeTab={tab}
