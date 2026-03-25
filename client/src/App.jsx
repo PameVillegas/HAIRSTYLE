@@ -333,8 +333,14 @@ function App() {
           tipoUsuario={tipoUsuario}
         />
       ) : (
-        <div className="admin-header">
-          <Header />
+        <div className="admin-header" style={{ background: 'white', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.1)', borderRadius: '12px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <img src="/logo.jpg" alt="Logo" style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #e91e63' }} />
+            <div>
+              <h2 style={{ margin: 0, fontSize: '1.5rem', background: 'linear-gradient(135deg, #e91e63, #9c27b0)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>HairStyle</h2>
+              <small style={{ color: '#666' }}>Panel de Administración</small>
+            </div>
+          </div>
           <button onClick={handleLogout} className="btn-logout">
             🚪 Cerrar Sesión
           </button>
