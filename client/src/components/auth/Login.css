@@ -3,7 +3,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #f8cdda, #1d2b64);
+  background: url('/fotos/fondo.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .login-card {
@@ -75,4 +78,11 @@
   opacity: 0.7;
   cursor: not-allowed;
   background: #999;
+}
+
+.btn-link {
+  background: transparent !important;
+  color: #1d2b64 !important;
+  border: 1px solid #1d2b64 !important;
+  margin-top: 5px !important;
 }

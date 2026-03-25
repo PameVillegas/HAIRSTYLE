@@ -6,11 +6,7 @@ dotenv.config();
 
 const dbConfig = process.env.DATABASE_URL 
   ? {
-      host: 'db.jvdcmmkbfbdtchupwcrh.supabase.co',
-      port: 5432,
-      user: 'postgres',
-      password: 'Ianfer.2022',
-      database: 'postgres',
+      connectionString: process.env.DATABASE_URL,
       ssl: { rejectUnauthorized: false }
     }
   : {
@@ -46,6 +42,24 @@ export async function initializeDatabase() {
 }
 
 async function createTables(client) {
+  try {
+    await client.query(`
+      ALTER TABLE clientes 
+      ADD COLUMN IF NOT EXISTS username VARCHAR(100) UNIQUE
+    `);
+  } catch (err) {
+    console.log('Columna username ya existe o no se pudo agregar');
+  }
+
+  try {
+    await client.query(`
+      ALTER TABLE tratamientos 
+      ADD COLUMN IF NOT EXISTS imagen_url VARCHAR(500)
+    `);
+  } catch (err) {
+    console.log('Columna imagen_url ya existe o no se pudo agregar');
+  }
+
   const tables = [
     `CREATE TABLE IF NOT EXISTS usuarios (
       id SERIAL PRIMARY KEY,
@@ -58,10 +72,11 @@ async function createTables(client) {
 
     `CREATE TABLE IF NOT EXISTS clientes (
       id SERIAL PRIMARY KEY,
+      username VARCHAR(100) UNIQUE NOT NULL,
       nombre VARCHAR(255) NOT NULL,
-      telefono VARCHAR(50) NOT NULL,
+      telefono VARCHAR(50),
       email VARCHAR(255),
-      password VARCHAR(255),
+      password VARCHAR(255) NOT NULL,
       activo BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -73,6 +88,7 @@ async function createTables(client) {
       precio DECIMAL(10,2) NOT NULL DEFAULT 0,
       duracion INTEGER DEFAULT 60,
       descripcion TEXT,
+      imagen_url VARCHAR(500),
       activo BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

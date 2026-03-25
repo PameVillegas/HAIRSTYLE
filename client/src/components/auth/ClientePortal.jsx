@@ -1,62 +1,398 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import SolicitarTurnoForm from './SolicitarTurnoForm';
 
-export default function ClientePortal() {
-  const [turnos, setTurnos] = useState([]);
+const API_URL = '/api';
+
+export default function ClientePortal({ cliente, onLogout, isMobile, currentTab, onTabChange }) {
+  const [misTurnos, setMisTurnos] = useState([]);
+  const [tratamientos, setTratamientos] = useState([]);
+  const [promociones, setPromociones] = useState([]);
+  const [galeria, setGaleria] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // Reemplazá con la URL correcta de tu backend
-  const API_URL = "http://localhost:3001/api/appointments";
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchTurnos = async () => {
-      try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw new Error("Error al cargar los turnos");
-        const data = await response.json();
-        setTurnos(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+    if (cliente && cliente.id) {
+      cargarDatos();
+    }
+  }, [cliente]);
+
+  const cargarDatos = async () => {
+    setLoading(true);
+    try {
+      const [turnosRes, tratamientosRes, promocionesRes, galeriaRes] = await Promise.all([
+        fetch(`${API_URL}/auth/cliente/${cliente.id}`),
+        fetch(`${API_URL}/tratamientos`),
+        fetch(`${API_URL}/promociones`),
+        fetch(`${API_URL}/galeria`)
+      ]);
+
+      if (turnosRes.ok) {
+        const turnosData = await turnosRes.json();
+        setMisTurnos(turnosData.turnos || []);
       }
-    };
+      if (tratamientosRes.ok) {
+        const tratData = await tratamientosRes.json();
+        setTratamientos(tratData);
+      }
+      if (promocionesRes.ok) {
+        const promoData = await promocionesRes.json();
+        setPromociones(promoData);
+      }
+      if (galeriaRes.ok) {
+        const galeriaData = await galeriaRes.json();
+        setGaleria(galeriaData);
+      }
+    } catch (err) {
+      console.error('Error cargando datos:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchTurnos();
-  }, []);
+  const renderContent = () => {
+    switch (currentTab) {
+      case 'inicio':
+        return (
+          <div className="card">
+            <div className="card-header">
+              <h2>👋 ¡Bienvenida, {cliente.nombre}!</h2>
+            </div>
+            <div style={{ padding: '20px' }}>
+              <div style={{ marginBottom: '20px' }}>
+                <strong>📱 Teléfono:</strong> {cliente.telefono || 'No registrado'}
+              </div>
+              {cliente.email && (
+                <div style={{ marginBottom: '20px' }}>
+                  <strong>📧 Email:</strong> {cliente.email}
+                </div>
+              )}
+              <div style={{ marginBottom: '20px' }}>
+                <strong>📅 Tus turnos:</strong> {misTurnos.length}
+              </div>
+              <button onClick={onLogout} className="btn-secondary" style={{ marginTop: '10px' }}>
+                🚪 Cerrar Sesión
+              </button>
+            </div>
+          </div>
+        );
 
-  if (loading) return <p>Cargando turnos...</p>;
-  if (error) return <p>Error: {error}</p>;
+      case 'quiensoy':
+        return (
+          <div className="card">
+            <div className="card-header">
+              <h2>👩 Quien soy</h2>
+              <p className="card-subtitle">Conocé a quien te va a atender</p>
+            </div>
+            <div style={{ padding: '30px', textAlign: 'center' }}>
+              <img 
+                src="/fotos/abi.jpg" 
+                alt="Abigail Berenice Villegas"
+                style={{ 
+                  width: '200px', 
+                  height: '200px', 
+                  borderRadius: '50%', 
+                  objectFit: 'cover',
+                  border: '4px solid var(--primary)',
+                  marginBottom: '20px'
+                }}
+              />
+              <h3 style={{ marginBottom: '15px', color: 'var(--primary)' }}>Abigail Berenice Villegas</h3>
+              <p style={{ marginBottom: '10px', fontSize: '1.1rem' }}>✨ Tengo 21 años</p>
+              <p style={{ marginBottom: '10px', fontSize: '1.1rem' }}>📍 Soy de Florentino Ameghino</p>
+              <p style={{ marginBottom: '10px', fontSize: '1.1rem' }}>💇‍♀️ Me formé en peluquería en <strong>Instituto de Belleza</strong></p>
+              <p style={{ marginBottom: '10px', fontSize: '1.1rem' }}>📚 Complementando mi formación con diversos cursos de especialización</p>
+              <p style={{ marginBottom: '20px', fontSize: '1rem', color: 'var(--gray)', fontStyle: 'italic' }}>
+                Me encuentro en constante capacitación con el objetivo de brindar un servicio de calidad y actualizado a las nuevas tendencias.
+              </p>
+              <div style={{ 
+                background: 'var(--primary-light)', 
+                padding: '20px', 
+                borderRadius: '12px',
+                marginTop: '15px'
+              }}>
+                <p style={{ fontSize: '1rem', color: 'var(--dark)' }}>
+                  Agradezco profundamente la confianza de cada clienta, sus recomendaciones y el acompañamiento en mi crecimiento profesional. 💕
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'servicios':
+        return (
+          <div className="card">
+            <div className="card-header">
+              <h2>💆 Nuestros Servicios</h2>
+              <p className="card-subtitle">Conocé todos nuestros servicios</p>
+            </div>
+            {loading ? (
+              <div style={{ padding: '40px', textAlign: 'center' }}>Cargando...</div>
+            ) : tratamientos.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">💆</div>
+                <h3>Próximamente</h3>
+                <p>Estamos preparando nuestros servicios</p>
+              </div>
+            ) : (
+              <div className="tratamientos-grid" style={{ padding: '20px' }}>
+                {tratamientos.map(trat => (
+                  <div key={trat.id} className="tratamiento-card">
+                    {trat.imagen_url && (
+                      <img 
+                        src={trat.imagen_url} 
+                        alt={trat.nombre}
+                        style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px', marginBottom: '10px' }}
+                      />
+                    )}
+                    <div className="tratamiento-header">
+                      <h3>{trat.nombre}</h3>
+                      <span className="tratamiento-precio">
+                        {parseFloat(trat.precio) > 0 ? `$${trat.precio}` : 'Consultar'}
+                      </span>
+                    </div>
+                    <div className="tratamiento-info">
+                      ⏱️ {trat.duracion} minutos
+                    </div>
+                    {trat.descripcion && (
+                      <div className="tratamiento-descripcion">
+                        {trat.descripcion}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      case 'promociones':
+        return (
+          <div className="card">
+            <div className="card-header">
+              <h2>🎉 Promociones</h2>
+              <p className="card-subtitle">Aprovechá nuestras ofertas</p>
+            </div>
+            {loading ? (
+              <div style={{ padding: '40px', textAlign: 'center' }}>Cargando...</div>
+            ) : promociones.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">🎉</div>
+                <h3>No hay promociones activas</h3>
+                <p>Visitá pronto para ver nuestras ofertas</p>
+              </div>
+            ) : (
+              <div className="promociones-grid" style={{ padding: '20px' }}>
+                {promociones.map(promo => (
+                  <div key={promo.id} className="promocion-card">
+                    {promo.imagen_url && (
+                      <div className="promocion-imagen">
+                        <img src={promo.imagen_url} alt={promo.titulo} />
+                      </div>
+                    )}
+                    <div className="promocion-content">
+                      <h3>{promo.titulo}</h3>
+                      {promo.descripcion && <p>{promo.descripcion}</p>}
+                      {promo.precio_especial && (
+                        <div className="promocion-precio">
+                          <span className="precio-especial">${promo.precio_especial}</span>
+                        </div>
+                      )}
+                      {promo.fecha_fin && (
+                        <div className="promocion-vigencia">
+                          ⏰ Válido hasta: {new Date(promo.fecha_fin).toLocaleDateString('es-AR')}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      case 'galeria':
+        return (
+          <div className="card">
+            <div className="card-header">
+              <h2>📸 Galería</h2>
+              <p className="card-subtitle">Nuestros trabajos</p>
+            </div>
+            {loading ? (
+              <div style={{ padding: '40px', textAlign: 'center' }}>Cargando...</div>
+            ) : galeria.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">📸</div>
+                <h3>Galería vacía</h3>
+                <p>Visitá pronto para ver nuestras fotos</p>
+              </div>
+            ) : (
+              <div className="galeria-grid" style={{ padding: '20px' }}>
+                {galeria.map(item => (
+                  <div key={item.id} className="galeria-item">
+                    <img src={item.imagen_url} alt={item.titulo || 'Trabajo'} />
+                    {item.titulo && (
+                      <div className="galeria-overlay">
+                        <h4>{item.titulo}</h4>
+                        {item.categoria && <span className="galeria-categoria">{item.categoria}</span>}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      case 'instagram':
+        return (
+          <div className="card">
+            <div className="card-header">
+              <h2>📱 Seguinos en Instagram</h2>
+              <p className="card-subtitle">Mirás nuestros trabajos y novedades</p>
+            </div>
+            <div style={{ padding: '40px', textAlign: 'center' }}>
+              <div style={{ fontSize: '5rem', marginBottom: '20px' }}>📸</div>
+              <h3 style={{ marginBottom: '15px' }}>@hairstyleabii</h3>
+              <p style={{ marginBottom: '30px', fontSize: '1.1rem', color: 'var(--gray)' }}>
+                Seguinos para ver nuestras últimas creaciones, promociones exclusivas y consejos de belleza
+              </p>
+              <a 
+                href="https://www.instagram.com/hairstyleabii?igsh=NGZ1dGxzdmJodHZz" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="btn-primary"
+                style={{ 
+                  display: 'inline-flex', 
+                  padding: '16px 40px', 
+                  fontSize: '1.1rem',
+                  textDecoration: 'none'
+                }}
+              >
+                📸 Ir a Instagram
+              </a>
+            </div>
+          </div>
+        );
+
+      case 'mis-turnos':
+        return (
+          <div className="card">
+            <div className="card-header">
+              <h2>📋 Mis Turnos</h2>
+              <p className="card-subtitle">Historial de tus turnos</p>
+            </div>
+            {loading ? (
+              <div style={{ padding: '40px', textAlign: 'center' }}>Cargando...</div>
+            ) : misTurnos.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">📅</div>
+                <h3>No tenés turnos</h3>
+                <p>Solicitá tu primer turno</p>
+              </div>
+            ) : (
+              <div style={{ padding: '10px' }}>
+                {misTurnos.map(turno => (
+                  <div key={turno.id} className="turno-card" style={{ marginBottom: '15px' }}>
+                    <div className="turno-card-header">
+                      <strong>{turno.tratamiento}</strong>
+                      <span className={`estado estado-${turno.estado}`}>{turno.estado}</span>
+                    </div>
+                    <div className="turno-card-body">
+                      <div>📅 {new Date(turno.fecha).toLocaleDateString('es-AR')}</div>
+                      <div>🕐 {turno.hora}</div>
+                      <div>💰 {parseFloat(turno.precio) > 0 ? `$${turno.precio}` : 'Consultar'}</div>
+                      {turno.notas && <div>📝 {turno.notas}</div>}
+                    </div>
+                    {turno.estado !== 'cancelado' && turno.estado !== 'completado' && (
+                      <div className="turno-card-footer" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                        <a 
+                          href={`https://wa.me/543388673804?text=Hola! Quiero modificar mi turno del ${new Date(turno.fecha).toLocaleDateString('es-AR')} a las ${turno.hora} - ${turno.tratamiento}. Mi nombre es ${cliente.nombre}. ¿Podemos cambiar el horario o fecha?`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-edit-small"
+                          style={{ textDecoration: 'none', background: 'var(--info)', color: 'white' }}
+                        >
+                          ✏️ Editar
+                        </a>
+                        <a 
+                          href={`https://wa.me/543388673804?text=Hola! Quiero cancelar mi turno del ${new Date(turno.fecha).toLocaleDateString('es-AR')} a las ${turno.hora}. Mi nombre es ${cliente.nombre}.`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-delete"
+                          style={{ textDecoration: 'none' }}
+                        >
+                          ❌ Cancelar
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      case 'solicitar':
+        return (
+          <SolicitarTurnoForm 
+            cliente={cliente} 
+            tratamientos={tratamientos}
+          />
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const tabs = [
+    { id: 'inicio', icon: '🏠', label: 'Inicio' },
+    { id: 'quiensoy', icon: '👩', label: 'Quien soy' },
+    { id: 'servicios', icon: '💆', label: 'Servicios' },
+    { id: 'promociones', icon: '🎉', label: 'Promos' },
+    { id: 'galeria', icon: '📸', label: 'Galería' },
+    { id: 'mis-turnos', icon: '📅', label: 'Mis Turnos' },
+    { id: 'instagram', icon: '📱', label: 'Instagram' },
+    { id: 'solicitar', icon: '➕', label: 'Turno' }
+  ];
+
+  if (isMobile) {
+    return (
+      <div className="cliente-portal">
+        {renderContent()}
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <h1>Portal del Cliente</h1>
-      {turnos.length === 0 ? (
-        <p>No tienes turnos programados.</p>
-      ) : (
-        <table border="1" cellPadding="8">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Tratamiento</th>
-              <th>Fecha</th>
-              <th>Hora</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {turnos.map((turno) => (
-              <tr key={turno.id}>
-                <td>{turno.id}</td>
-                <td>{turno.tratamiento_id}</td>
-                <td>{turno.fecha}</td>
-                <td>{turno.hora}</td>
-                <td>{turno.estado}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+    <div className="cliente-portal" style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px' }}>
+      <div className="card" style={{ marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px' }}>
+          <div>
+            <h3 style={{ margin: 0 }}>👋 {cliente.nombre}</h3>
+            <small>Cliente</small>
+          </div>
+          <button onClick={onLogout} className="btn-secondary">
+            🚪 Cerrar Sesión
+          </button>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => onTabChange(tab.id)}
+            className={currentTab === tab.id ? 'btn-primary' : 'btn-secondary'}
+            style={{ flex: '1', minWidth: '120px', fontSize: '14px', padding: '10px' }}
+          >
+            {tab.icon} {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {renderContent()}
     </div>
   );
 }

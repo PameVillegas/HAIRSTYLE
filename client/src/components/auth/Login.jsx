@@ -1,12 +1,24 @@
 import { useState } from 'react';
+import Registro from './Registro';
+import RegistroAdmin from './RegistroAdmin';
 import './Login.css';
 
 export default function Login({ onLogin }) {
+  const [mostrarRegistro, setMostrarRegistro] = useState(false);
+  const [mostrarRegistroAdmin, setMostrarRegistroAdmin] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [tipo, setTipo] = useState('cliente');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  if (mostrarRegistro) {
+    return <Registro onBack={() => setMostrarRegistro(false)} />;
+  }
+
+  if (mostrarRegistroAdmin) {
+    return <RegistroAdmin onBack={() => setMostrarRegistroAdmin(false)} />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,7 +37,7 @@ export default function Login({ onLogin }) {
         };
       } else {
         requestData = {
-          telefono: email, // Para cliente, el campo "email" del form es realmente el teléfono
+          username: email,
           password: password
         };
       }
@@ -69,7 +81,7 @@ export default function Login({ onLogin }) {
 
         <input
           type="text"
-          placeholder={tipo === 'admin' ? "Usuario" : "Teléfono"}
+          placeholder={tipo === 'admin' ? "Usuario" : "Nombre de usuario"}
           value={email}
           onChange={e => setEmail(e.target.value)}
           required
@@ -94,10 +106,24 @@ export default function Login({ onLogin }) {
           {loading ? 'Ingresando...' : 'Ingresar'}
         </button>
 
+        {tipo === 'cliente' && (
+          <button 
+            type="button" 
+            className="btn-link"
+            onClick={() => setMostrarRegistro(true)}
+          >
+            📝 ¿No tenés cuenta? Registrate
+          </button>
+        )}
+
         {tipo === 'admin' && (
-          <p className="admin-hint">
-            💡 Admin: usa "admin"/"admin123" o "Abitu"/"Abitu26" (base de datos real)
-          </p>
+          <button 
+            type="button" 
+            className="btn-link"
+            onClick={() => setMostrarRegistroAdmin(true)}
+          >
+            📝 ¿No tenés cuenta? Registrate como admin
+          </button>
         )}
       </form>
     </div>

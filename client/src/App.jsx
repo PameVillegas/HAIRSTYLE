@@ -159,16 +159,28 @@ function App() {
     }
   };
 
-  const agregarTurno = async (e) => {
-    e.preventDefault();
+  const agregarTurno = async (formData) => {
     setLoading(true);
     setError('');
     
     try {
+      const cliente = clientes.find(c => c.id === parseInt(formData.cliente_id));
+      const tratamiento = tratamientos.find(t => t.id === parseInt(formData.tratamiento_id));
+      
+      const fechaFormateada = new Date(formData.fecha).toLocaleDateString('es-AR');
+      
+      // Registrar turno en la base de datos
       const res = await fetch(`${API_URL}/turnos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nuevoTurno)
+        body: JSON.stringify({
+          cliente_id: formData.cliente_id,
+          tratamiento_id: formData.tratamiento_id,
+          fecha: formData.fecha,
+          hora: formData.hora,
+          notas: formData.notas,
+          estado: 'pendiente'
+        })
       });
       
       if (!res.ok) {
@@ -176,23 +188,14 @@ function App() {
         throw new Error(errorData.error || 'Error creando turno');
       }
       
-      const data = await res.json();
+      // Abrir WhatsApp con mensaje
+      const mensajeWhatsApp = `Hola! Quiero reservar un turno:%0A%0A📅 Fecha: ${fechaFormateada}%0A🕐 Horario: ${formData.hora}%0A💇‍♀️ Servicio: ${tratamiento?.nombre || 'Por confirmar'}%0A👤 Cliente: ${cliente?.nombre || 'Por confirmar'}${formData.notas ? '%0A📝 Notas: ' + formData.notas : ''}`;
       
-      if (data.mensaje) {
-        const nuevoMensaje = {
-          id: Date.now(),
-          fecha: new Date().toLocaleString('es-AR'),
-          cliente: data.cliente,
-          telefono: data.telefono,
-          mensaje: data.mensaje
-        };
-        setMensajesWhatsApp([nuevoMensaje, ...mensajesWhatsApp]);
-      }
+      window.open(`https://wa.me/543388673804?text=${mensajeWhatsApp}`, '_blank');
       
-      setSuccess(data.whatsappEnviado ? 'Turno creado! Ve a "Mensajes" para copiar el mensaje.' : 'Turno creado correctamente');
-      setNuevoTurno({ cliente_id: '', tratamiento_id: '', fecha: '', hora: '', notas: '' });
+      setSuccess('Turno registrado y esperando confirmación por WhatsApp');
       cargarTurnos();
-      setTab('turnos');
+      
     } catch (err) {
       setError(err.message);
     } finally {
@@ -272,9 +275,13 @@ function App() {
   if (tipoUsuario === 'cliente') {
     const clienteTabs = [
       { id: 'inicio', icon: '🏠', label: 'Inicio' },
-      { id: 'solicitar', icon: '➕', label: 'Solicitar' },
+      { id: 'quiensoy', icon: '👩', label: 'Quien soy' },
+      { id: 'servicios', icon: '💆', label: 'Servicios' },
+      { id: 'promociones', icon: '🎉', label: 'Promos' },
+      { id: 'galeria', icon: '📸', label: 'Galería' },
       { id: 'mis-turnos', icon: '📅', label: 'Mis Turnos' },
-      { id: 'galeria', icon: '📸', label: 'Galería' }
+      { id: 'instagram', icon: '📱', label: 'Instagram' },
+      { id: 'solicitar', icon: '➕', label: 'Turno' }
     ];
 
     return (
@@ -387,8 +394,6 @@ function App() {
         <NuevoTurnoForm
           clientes={clientes}
           tratamientos={tratamientos}
-          turno={nuevoTurno}
-          onChange={setNuevoTurno}
           onSubmit={agregarTurno}
           loading={loading}
         />

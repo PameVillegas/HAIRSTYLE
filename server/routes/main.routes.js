@@ -83,13 +83,58 @@ router.delete('/clientes/:id', async (req, res) => {
 
 // ==================== TRATAMIENTOS ====================
 
-// Obtener todos los tratamientos
 router.get('/tratamientos', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM tratamientos WHERE activo = TRUE ORDER BY nombre');
     res.json(result.rows);
   } catch (error) {
     console.error('Error obteniendo tratamientos:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.post('/tratamientos', async (req, res) => {
+  try {
+    const { nombre, precio, duracion, descripcion, imagen_url } = req.body;
+    if (!nombre) {
+      return res.status(400).json({ error: 'Nombre es requerido' });
+    }
+    const result = await pool.query(
+      'INSERT INTO tratamientos (nombre, precio, duracion, descripcion, imagen_url) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [nombre, precio || 0, duracion || 60, descripcion || null, imagen_url || null]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creando tratamiento:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.put('/tratamientos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre, precio, duracion, descripcion, imagen_url } = req.body;
+    const result = await pool.query(
+      'UPDATE tratamientos SET nombre = $1, precio = $2, duracion = $3, descripcion = $4, imagen_url = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6 RETURNING *',
+      [nombre, precio, duracion, descripcion, imagen_url, id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Tratamiento no encontrado' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error actualizando tratamiento:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.delete('/tratamientos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('UPDATE tratamientos SET activo = FALSE WHERE id = $1', [id]);
+    res.json({ message: 'Tratamiento eliminado' });
+  } catch (error) {
+    console.error('Error eliminando tratamiento:', error);
     res.status(500).json({ error: 'Error del servidor' });
   }
 });
@@ -239,6 +284,34 @@ router.delete('/turnos/:id', async (req, res) => {
     res.json({ message: 'Turno eliminado correctamente' });
   } catch (error) {
     console.error('Error eliminando turno:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// ==================== PROMOCIONES ====================
+
+router.get('/promociones', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM promociones WHERE activo = TRUE ORDER BY created_at DESC'
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error obteniendo promociones:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// ==================== GALERIA ====================
+
+router.get('/galeria', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM galeria WHERE activo = TRUE ORDER BY created_at DESC'
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error obteniendo galeria:', error);
     res.status(500).json({ error: 'Error del servidor' });
   }
 });
