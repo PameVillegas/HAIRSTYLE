@@ -25,15 +25,17 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: url('/fotos/fondo.jpg');
-  background-size: cover;
-  background-position: center;
+  background: linear-gradient(135deg, #f8cdda 0%, #e91e63 100%);
   background-attachment: fixed;
   min-height: 100vh;
   margin: 0;
   padding: 20px;
   color: var(--dark);
-  a {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
   text-decoration: none;
   color: inherit;
 }
@@ -44,6 +46,7 @@ button {
   border-radius: var(--radius);
   cursor: pointer;
   transition: var(--transition);
+  -webkit-tap-highlight-color: transparent;
 }
 
 button:hover {
@@ -55,8 +58,17 @@ input, select {
   border-radius: var(--radius);
   border: 1px solid var(--border);
   font-family: inherit;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
+@media (min-width: 769px) {
+  body {
+    background: url('/fotos/fondo.jpg');
+    background-size: cover;
+    background-position: center;
+  }
 }
 
 .container {
@@ -520,21 +532,34 @@ input, select {
 
 /* Responsive */
 @media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+  
   .header {
     flex-direction: column;
     text-align: center;
+    padding: 20px;
   }
 
   .header-content h1 {
-    font-size: 2rem;
+    font-size: 1.5rem;
   }
 
   .tabs {
-    flex-direction: column;
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 10px;
+    -webkit-overflow-scrolling: touch;
   }
 
   .tab {
-    min-width: 100%;
+    min-width: auto;
+    flex-shrink: 0;
+    padding: 12px 16px;
+    font-size: 0.9rem;
   }
 
   .turnos-grid, .clientes-grid {
@@ -543,6 +568,15 @@ input, select {
 
   .form-row {
     grid-template-columns: 1fr;
+  }
+  
+  .card {
+    padding: 20px;
+    border-radius: 12px;
+  }
+  
+  .card-header h2 {
+    font-size: 1.4rem;
   }
 }
 
