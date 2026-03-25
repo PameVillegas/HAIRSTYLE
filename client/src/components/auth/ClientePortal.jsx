@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import SolicitarTurnoForm from './SolicitarTurnoForm';
+import { galeriaLocalData } from '../data/galeriaLocal';
 
 const API_URL = '/api';
 
@@ -19,10 +20,9 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
   const cargarDatos = async () => {
     setLoading(true);
     try {
-      const [tratamientosRes, promocionesRes, galeriaRes] = await Promise.all([
+      const [tratamientosRes, promocionesRes] = await Promise.all([
         fetch(`${API_URL}/tratamientos`).catch(() => ({ ok: false, json: () => [] })),
-        fetch(`${API_URL}/promociones`).catch(() => ({ ok: false, json: () => [] })),
-        fetch(`${API_URL}/galeria/local`).catch(() => ({ ok: false, json: () => [] }))
+        fetch(`${API_URL}/promociones`).catch(() => ({ ok: false, json: () => [] }))
       ]);
 
       if (tratamientosRes.ok) {
@@ -31,16 +31,9 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
       if (promocionesRes.ok) {
         setPromociones(await promocionesRes.json());
       }
-      if (galeriaRes.ok) {
-        const galeriaData = await galeriaRes.json();
-        if (Array.isArray(galeriaData) && galeriaData.length > 0 && galeriaData[0].imagenes) {
-          setGaleria(galeriaData);
-        } else if (Array.isArray(galeriaData)) {
-          setGaleria([{ categoria: 'general', nombre: 'Galería', icon: '📸', imagenes: galeriaData.map(item => ({ url: item.imagen_url, nombre: item.titulo || '' })) }]);
-        } else {
-          setGaleria([]);
-        }
-      }
+      
+      // Usar datos locales para la galería
+      setGaleria(galeriaLocalData);
       
       // Cargar turnos del cliente
       if (cliente.id) {

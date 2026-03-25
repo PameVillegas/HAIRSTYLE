@@ -68,14 +68,15 @@ export default function SolicitarTurnoForm({ cliente, tratamientos }) {
   }, [formData.fecha]);
 
   useEffect(() => {
-    if (formData.tratamiento_id && isFacialTreatment(formData.tratamiento_id) && !anamnesisCompletado) {
-      if (!showAnamnesis) {
+    if (formData.tratamiento_id && tratamientos.length > 0) {
+      const esFacial = isFacialTreatment(formData.tratamiento_id);
+      if (esFacial && !anamnesisCompletado) {
         setShowAnamnesis(true);
+      } else if (!esFacial) {
+        setShowAnamnesis(false);
       }
-    } else {
-      setShowAnamnesis(false);
     }
-  }, [formData.tratamiento_id]);
+  }, [formData.tratamiento_id, tratamientos]);
 
   const cargarTurnosDelDia = async () => {
     try {

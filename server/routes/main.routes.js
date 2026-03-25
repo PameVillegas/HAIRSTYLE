@@ -321,7 +321,7 @@ router.get('/galeria/local', async (req, res) => {
   const fs = require('fs');
   const path = require('path');
   
-  const galeriaPath = path.join(__dirname, '../../fotos/abi');
+  const galeriaPath = path.join(__dirname, '../../client/public/fotos');
   const categorias = {
     'perfilado': { nombre: 'Perfilado', icon: '✂️' },
     'alisados y tratamientos': { nombre: 'Alisados y Tratamientos', icon: '💇‍♀️' },

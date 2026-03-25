@@ -1,9 +1,12 @@
 {
   "builds": [
     { "src": "server/server.js", "use": "@vercel/node" },
-    { "src": "client/dist/**", "use": "@vercel/static" }
+    { "src": "client/dist/**", "use": "@vercel/static" },
+    { "src": "client/public/fotos/**", "use": "@vercel/static" }
   ],
   "routes": [
+    { "src": "/fotos/(.*)", "dest": "client/public/fotos/$1" },
+    { "src": "/logo.jpg", "dest": "client/public/logo.jpg" },
     { "src": "/(.*)", "dest": "/server/server.js" }
   ]
 }
