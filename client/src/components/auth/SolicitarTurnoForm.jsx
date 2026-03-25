@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import AnamnesisFacialForm from './AnamnesisFacialForm';
 
 export default function SolicitarTurnoForm({ cliente, tratamientos }) {
   const [formData, setFormData] = useState({
@@ -8,10 +9,21 @@ export default function SolicitarTurnoForm({ cliente, tratamientos }) {
   });
   const [turnosDelDia, setTurnosDelDia] = useState([]);
   const [enviado, setEnviado] = useState(false);
+  const [showAnamnesis, setShowAnamnesis] = useState(false);
+  const [anamnesisCompletado, setAnamnesisCompletado] = useState(false);
 
-  const diasDisponibles = [1, 3, 4, 5, 6]; // Lun, Mie, Jue, Vie, Sab
+  const diasDisponibles = [1, 3, 4, 5, 6];
   const horariosManiana = ['07:00', '08:00', '09:00', '10:00', '11:00'];
   const horariosTarde = ['13:30', '14:30', '15:30', '16:30', '17:30', '18:30', '19:30', '20:30'];
+
+  const isFacialTreatment = (tratamientoId) => {
+    const tratamiento = tratamientos.find(t => t.id === parseInt(tratamientoId));
+    if (!tratamiento) return false;
+    const nombre = tratamiento.nombre.toLowerCase();
+    return nombre.includes('facial') || nombre.includes('limpieza');
+  };
+
+  const selectedTratamiento = tratamientos.find(t => t.id === parseInt(formData.tratamiento_id));
 
   const getDuracion = (tratamientoId) => {
     const tratamiento = tratamientos.find(t => t.id === parseInt(tratamientoId));
@@ -20,8 +32,8 @@ export default function SolicitarTurnoForm({ cliente, tratamientos }) {
     const nombre = tratamiento.nombre.toLowerCase();
     
     if (nombre.includes('perfilado')) return 30;
-    if (nombre.includes('alisado') || nombre.includes('tratamiento') && !nombre.includes('facial')) return 120;
-    if (nombre.includes('facial')) return 90;
+    if (nombre.includes('alisado') || (nombre.includes('tratamiento') && !nombre.includes('facial') && !nombre.includes('limpieza'))) return 120;
+    if (nombre.includes('facial') || nombre.includes('limpieza')) return 90;
     if (nombre.includes('pestaña')) return 120;
     
     return tratamiento.duracion || 60;
@@ -55,6 +67,16 @@ export default function SolicitarTurnoForm({ cliente, tratamientos }) {
     }
   }, [formData.fecha]);
 
+  useEffect(() => {
+    if (formData.tratamiento_id && isFacialTreatment(formData.tratamiento_id) && !anamnesisCompletado) {
+      if (!showAnamnesis) {
+        setShowAnamnesis(true);
+      }
+    } else {
+      setShowAnamnesis(false);
+    }
+  }, [formData.tratamiento_id]);
+
   const cargarTurnosDelDia = async () => {
     try {
       const res = await fetch(`/api/turnos`);
@@ -74,12 +96,6 @@ export default function SolicitarTurnoForm({ cliente, tratamientos }) {
   const horaToMinutes = (hora) => {
     const [h, m] = hora.split(':').map(Number);
     return h * 60 + m;
-  };
-
-  const minutesToHora = (mins) => {
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
   };
 
   const isHorarioBloqueado = (horario) => {
@@ -103,20 +119,38 @@ export default function SolicitarTurnoForm({ cliente, tratamientos }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
     if (name === 'tratamiento_id') {
-      setFormData(prev => ({ ...prev, tratamiento_id: value, hora: '' }));
+      const esFacial = isFacialTreatment(value);
+      if (esFacial) {
+        setFormData({ tratamiento_id: value, fecha: '', hora: '' });
+      } else {
+        setFormData(prev => ({ ...prev, tratamiento_id: value, hora: '' }));
+      }
+      setAnamnesisCompletado(false);
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
+  };
+
+  const handleAnamnesisSubmit = (legajo) => {
+    setAnamnesisCompletado(true);
+    setShowAnamnesis(false);
+    setFormData(prev => ({ ...prev, fecha: '', hora: '' }));
+  };
+
+  const handleAnamnesisCancel = () => {
+    setFormData({ tratamiento_id: '', fecha: '', hora: '' });
+    setShowAnamnesis(false);
+    setAnamnesisCompletado(false);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    const tratamiento = tratamientos.find(t => t.id === parseInt(formData.tratamiento_id));
     const fechaFormateada = new Date(formData.fecha).toLocaleDateString('es-AR');
     const duracion = getDuracion(formData.tratamiento_id);
     
-    const mensaje = `¡Hola! Quiero reservar un turno:%0A%0A👤 Nombre: ${cliente.nombre}%0A📅 Fecha: ${fechaFormateada}%0A🕐 Horario: ${formData.hora}%0A💆 Servicio: ${tratamiento?.nombre || 'Por confirmar'}%0A⏱️ Duración estimada: ${getDuracionLabel(duracion)}`;
+    const mensaje = `¡Hola! Quiero reservar un turno:%0A%0A👤 Nombre: ${cliente.nombre}%0A📅 Fecha: ${fechaFormateada}%0A🕐 Horario: ${formData.hora}%0A💆 Servicio: ${selectedTratamiento?.nombre || 'Por confirmar'}%0A⏱️ Duración estimada: ${getDuracionLabel(duracion)}${anamnesisCompletado ? '%0A✅ Planilla de anamnesis completada' : ''}`;
     
     window.open(`https://wa.me/543388673804?text=${mensaje}`, '_blank');
     setEnviado(true);
@@ -126,10 +160,22 @@ export default function SolicitarTurnoForm({ cliente, tratamientos }) {
     setFormData({ tratamiento_id: '', fecha: '', hora: '' });
     setTurnosDelDia([]);
     setEnviado(false);
+    setShowAnamnesis(false);
+    setAnamnesisCompletado(false);
   };
 
-  const selectedTratamiento = tratamientos.find(t => t.id === parseInt(formData.tratamiento_id));
   const duracion = formData.tratamiento_id ? getDuracion(formData.tratamiento_id) : null;
+
+  if (showAnamnesis && selectedTratamiento) {
+    return (
+      <AnamnesisFacialForm 
+        cliente={cliente}
+        tratamiento={selectedTratamiento}
+        onSubmit={handleAnamnesisSubmit}
+        onCancel={handleAnamnesisCancel}
+      />
+    );
+  }
 
   if (enviado) {
     return (
@@ -189,7 +235,32 @@ export default function SolicitarTurnoForm({ cliente, tratamientos }) {
               ⏱️ Duración estimada: {getDuracionLabel(duracion)}
             </small>
           )}
+          {selectedTratamiento && isFacialTreatment(selectedTratamiento.id) && (
+            <small className="form-hint" style={{ color: 'var(--warning)', marginTop: '5px', display: 'block' }}>
+              ⚠️ Este servicio requiere completar una planilla de anamnesis
+            </small>
+          )}
+          {anamnesisCompletado && (
+            <small className="form-hint" style={{ color: 'var(--success)', marginTop: '5px' }}>
+              ✅ Planilla de anamnesis completada
+            </small>
+          )}
         </div>
+
+        {isFacialTreatment(formData.tratamiento_id) && !anamnesisCompletado && (
+          <div style={{ 
+            padding: '15px', 
+            background: 'var(--warning)', 
+            color: 'white', 
+            borderRadius: '8px',
+            textAlign: 'center',
+            marginBottom: '15px'
+          }}>
+            <p style={{ margin: 0 }}>
+              ⚠️ Debés completar la planilla de anamnesis antes de solicitar el turno
+            </p>
+          </div>
+        )}
 
         <div className="form-row">
           <div className="form-group">
@@ -205,6 +276,7 @@ export default function SolicitarTurnoForm({ cliente, tratamientos }) {
               className="form-control"
               min={getFechaMinima()}
               required
+              disabled={!formData.tratamiento_id || (isFacialTreatment(formData.tratamiento_id) && !anamnesisCompletado)}
             />
             <small className="form-hint">Lunes a Sábado (no trabajamos Martes)</small>
           </div>
@@ -220,7 +292,7 @@ export default function SolicitarTurnoForm({ cliente, tratamientos }) {
               onChange={handleChange}
               className="form-control"
               required
-              disabled={!formData.fecha || !formData.tratamiento_id}
+              disabled={!formData.fecha || !formData.tratamiento_id || (isFacialTreatment(formData.tratamiento_id) && !anamnesisCompletado)}
             >
               <option value="">Seleccionar horario</option>
               <optgroup label="Mañana">
@@ -269,6 +341,9 @@ export default function SolicitarTurnoForm({ cliente, tratamientos }) {
             {selectedTratamiento && parseFloat(selectedTratamiento.precio) > 0 && (
               <p><strong>💰 Precio:</strong> ${parseFloat(selectedTratamiento.precio).toLocaleString('es-AR')}</p>
             )}
+            {anamnesisCompletado && (
+              <p style={{ color: 'var(--success)' }}>✅ Planilla de anamnesis completada</p>
+            )}
           </div>
         )}
 
@@ -276,7 +351,12 @@ export default function SolicitarTurnoForm({ cliente, tratamientos }) {
           <button 
             type="submit" 
             className="btn-primary btn-large"
-            disabled={!formData.tratamiento_id || !formData.fecha || !formData.hora}
+            disabled={
+              !formData.tratamiento_id || 
+              !formData.fecha || 
+              !formData.hora ||
+              (isFacialTreatment(formData.tratamiento_id) && !anamnesisCompletado)
+            }
           >
             📱 Enviar por WhatsApp
           </button>

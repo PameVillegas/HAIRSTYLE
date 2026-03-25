@@ -12,6 +12,7 @@ import ClientesList from './components/auth/ClientesList';
 import EditarTurnoModal from './components/auth/EditarTurnoModal';
 import GestionPromociones from './components/auth/GestionPromociones';
 import GestionGaleria from './components/auth/GestionGaleria';
+import LegajosList from './components/auth/LegajosList';
 import useIsMobile from './hooks/useIsMobile';
 
 const API_URL = import.meta.env.PROD ? '/api' : '/api';
@@ -320,6 +321,7 @@ function App() {
     { id: 'lista-clientes', icon: '📋', label: 'Clientes' },
     { id: 'promociones', icon: '🎉', label: 'Promociones' },
     { id: 'galeria', icon: '📸', label: 'Galería' },
+    { id: 'legajos', icon: '📋', label: 'Legajos' },
     { id: 'mensajes', icon: '💬', label: 'Mensajes' }
   ];
 
@@ -490,6 +492,16 @@ function App() {
       {tab === 'promociones' && <GestionPromociones />}
 
       {tab === 'galeria' && <GestionGaleria />}
+
+      {tab === 'legajos' && (
+        <div className="card">
+          <div className="card-header">
+            <h2>📋 Legajos de Clientes</h2>
+            <p className="card-subtitle">Planillas de anamnesis completadas</p>
+          </div>
+          <LegajosList />
+        </div>
+      )}
         </div>
       </div>
     </div>

@@ -361,4 +361,96 @@ router.get('/galeria/local', async (req, res) => {
   res.json(galeria);
 });
 
+// ==================== LEGAJOS ====================
+
+router.get('/legajos', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        l.*,
+        c.nombre as cliente_nombre,
+        c.telefono as cliente_telefono
+      FROM legajos l
+      JOIN clientes c ON l.cliente_id = c.id
+      WHERE l.activo = TRUE
+      ORDER BY l.created_at DESC
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error obteniendo legajos:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.get('/legajos/cliente/:clienteId', async (req, res) => {
+  try {
+    const { clienteId } = req.params;
+    const result = await pool.query(`
+      SELECT * FROM legajos 
+      WHERE cliente_id = $1 AND activo = TRUE 
+      ORDER BY created_at DESC
+    `, [clienteId]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error obteniendo legajos del cliente:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.post('/legajos', async (req, res) => {
+  try {
+    const { cliente_id, tratamiento, tipo, fecha, datos } = req.body;
+    
+    if (!cliente_id || !fecha || !datos) {
+      return res.status(400).json({ error: 'Cliente, fecha y datos son requeridos' });
+    }
+
+    const result = await pool.query(
+      'INSERT INTO legajos (cliente_id, tratamiento, tipo, fecha, datos) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [cliente_id, tratamiento || 'Facial', tipo || 'facial', fecha, datos]
+    );
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creando legajo:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.get('/legajos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(`
+      SELECT 
+        l.*,
+        c.nombre as cliente_nombre,
+        c.telefono as cliente_telefono,
+        c.email as cliente_email
+      FROM legajos l
+      JOIN clientes c ON l.cliente_id = c.id
+      WHERE l.id = $1
+    `, [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Legajo no encontrado' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error obteniendo legajo:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.delete('/legajos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('UPDATE legajos SET activo = FALSE WHERE id = $1', [id]);
+    res.json({ message: 'Legajo eliminado' });
+  } catch (error) {
+    console.error('Error eliminando legajo:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
 export default router;

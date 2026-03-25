@@ -132,6 +132,18 @@ async function createTables(client) {
       categoria VARCHAR(100),
       activo BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS legajos (
+      id SERIAL PRIMARY KEY,
+      cliente_id INTEGER NOT NULL,
+      tratamiento VARCHAR(255),
+      tipo VARCHAR(50) DEFAULT 'facial',
+      fecha DATE NOT NULL,
+      datos JSONB NOT NULL,
+      activo BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
     )`
   ];
 

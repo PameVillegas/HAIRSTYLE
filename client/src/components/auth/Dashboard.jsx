@@ -45,6 +45,7 @@ export default function Dashboard({ onNavigate }) {
     { id: 'lista-clientes', icon: '📋', label: 'Lista Clientes', color: '#3f51b5', desc: 'Ver clientes' },
     { id: 'promociones', icon: '🎉', label: 'Promociones', color: '#2196f3', desc: 'Gestionar promos' },
     { id: 'galeria', icon: '📸', label: 'Galería', color: '#00bcd4', desc: 'Administrar fotos' },
+    { id: 'legajos', icon: '📋', label: 'Legajos', color: '#ff9800', desc: 'Planillas anamnesis' },
     { id: 'mensajes', icon: '💬', label: 'Mensajes', color: '#4caf50', desc: 'Ver mensajes' }
   ];
 
