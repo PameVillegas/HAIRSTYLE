@@ -316,4 +316,49 @@ router.get('/galeria', async (req, res) => {
   }
 });
 
+// Galería con subcarpetas locales
+router.get('/galeria/local', async (req, res) => {
+  const fs = require('fs');
+  const path = require('path');
+  
+  const galeriaPath = path.join(__dirname, '../../fotos/abi');
+  const categorias = {
+    'perfilado': { nombre: 'Perfilado', icon: '✂️' },
+    'alisados y tratamientos': { nombre: 'Alisados y Tratamientos', icon: '💇‍♀️' },
+    'facial': { nombre: 'Facial', icon: '✨' },
+    'peinados': { nombre: 'Peinados', icon: '👰' },
+    'pestañas': { nombre: 'Pestañas', icon: '🌟' },
+    'productos': { nombre: 'Productos', icon: '💄' }
+  };
+  
+  const galeria = [];
+  
+  for (const [carpeta, info] of Object.entries(categorias)) {
+    const carpetaPath = path.join(galeriaPath, carpeta);
+    
+    if (fs.existsSync(carpetaPath)) {
+      const archivos = fs.readdirSync(carpetaPath).filter(archivo => {
+        const ext = path.extname(archivo).toLowerCase();
+        return ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext);
+      });
+      
+      const imagenes = archivos.map(archivo => ({
+        url: `/fotos/${carpeta}/${archivo}`,
+        nombre: archivo
+      }));
+      
+      if (imagenes.length > 0) {
+        galeria.push({
+          categoria: carpeta,
+          nombre: info.nombre,
+          icon: info.icon,
+          imagenes: imagenes
+        });
+      }
+    }
+  }
+  
+  res.json(galeria);
+});
+
 export default router;

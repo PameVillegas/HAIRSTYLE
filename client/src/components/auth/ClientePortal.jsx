@@ -22,7 +22,7 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
       const [tratamientosRes, promocionesRes, galeriaRes] = await Promise.all([
         fetch(`${API_URL}/tratamientos`).catch(() => ({ ok: false, json: () => [] })),
         fetch(`${API_URL}/promociones`).catch(() => ({ ok: false, json: () => [] })),
-        fetch(`${API_URL}/galeria`).catch(() => ({ ok: false, json: () => [] }))
+        fetch(`${API_URL}/galeria/local`).catch(() => ({ ok: false, json: () => [] }))
       ]);
 
       if (tratamientosRes.ok) {
@@ -32,7 +32,14 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
         setPromociones(await promocionesRes.json());
       }
       if (galeriaRes.ok) {
-        setGaleria(await galeriaRes.json());
+        const galeriaData = await galeriaRes.json();
+        if (Array.isArray(galeriaData) && galeriaData.length > 0 && galeriaData[0].imagenes) {
+          setGaleria(galeriaData);
+        } else if (Array.isArray(galeriaData)) {
+          setGaleria([{ categoria: 'general', nombre: 'Galería', icon: '📸', imagenes: galeriaData.map(item => ({ url: item.imagen_url, nombre: item.titulo || '' })) }]);
+        } else {
+          setGaleria([]);
+        }
       }
       
       // Cargar turnos del cliente
@@ -123,31 +130,57 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
               </div>
             ) : (
               <div className="tratamientos-grid" style={{ padding: '20px' }}>
-                {tratamientos.map(trat => (
-                  <div key={trat.id} className="tratamiento-card">
-                    {trat.imagen_url && (
-                      <img 
-                        src={trat.imagen_url} 
-                        alt={trat.nombre}
-                        style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px', marginBottom: '10px' }}
-                      />
-                    )}
-                    <div className="tratamiento-header">
-                      <h3>{trat.nombre}</h3>
-                      <span className="tratamiento-precio">
-                        {parseFloat(trat.precio) > 0 ? `$${trat.precio}` : 'Consultar'}
-                      </span>
-                    </div>
-                    <div className="tratamiento-info">
-                      ⏱️ {trat.duracion} minutos
-                    </div>
-                    {trat.descripcion && (
-                      <div className="tratamiento-descripcion">
-                        {trat.descripcion}
+                {tratamientos.map(trat => {
+                  const esConsultar = parseFloat(trat.precio) <= 0;
+                  return (
+                    <div 
+                      key={trat.id} 
+                      className="tratamiento-card"
+                      onClick={() => {
+                        if (esConsultar) {
+                          const mensaje = `¡Hola! Quiero consultar por el servicio de ${trat.nombre}. ¿Cuánto sale?`;
+                          window.open(`https://wa.me/543388673804?text=${encodeURIComponent(mensaje)}`, '_blank');
+                        }
+                      }}
+                      style={{ cursor: esConsultar ? 'pointer' : 'default' }}
+                    >
+                      {trat.imagen_url && (
+                        <img 
+                          src={trat.imagen_url} 
+                          alt={trat.nombre}
+                          style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px', marginBottom: '10px' }}
+                        />
+                      )}
+                      <div className="tratamiento-header">
+                        <h3>{trat.nombre}</h3>
+                        <span className="tratamiento-precio" style={esConsultar ? { color: 'var(--info)', fontSize: '1rem' } : {}}>
+                          {parseFloat(trat.precio) > 0 ? `$${trat.precio}` : 'Tocá para consultar'}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      <div className="tratamiento-info">
+                        ⏱️ {trat.duracion || 60} minutos
+                      </div>
+                      {trat.descripcion && (
+                        <div className="tratamiento-descripcion">
+                          {trat.descripcion}
+                        </div>
+                      )}
+                      {esConsultar && (
+                        <div style={{ 
+                          marginTop: '10px', 
+                          padding: '8px', 
+                          background: 'var(--info)', 
+                          color: 'white', 
+                          borderRadius: '8px', 
+                          textAlign: 'center',
+                          fontSize: '0.85rem'
+                        }}>
+                          💬 Consultar por WhatsApp
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -214,16 +247,83 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
                 <p>Visitá pronto para ver nuestras fotos</p>
               </div>
             ) : (
-              <div className="galeria-grid" style={{ padding: '20px' }}>
-                {galeria.map(item => (
-                  <div key={item.id} className="galeria-item">
-                    <img src={item.imagen_url} alt={item.titulo || 'Trabajo'} />
-                    {item.titulo && (
-                      <div className="galeria-overlay">
-                        <h4>{item.titulo}</h4>
-                        {item.categoria && <span className="galeria-categoria">{item.categoria}</span>}
+              <div style={{ padding: '10px' }}>
+                {galeria.map((categoria) => (
+                  <div key={categoria.categoria} style={{ marginBottom: '25px' }}>
+                    <h3 style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '10px',
+                      marginBottom: '15px',
+                      color: 'var(--primary)',
+                      fontSize: '1.2rem'
+                    }}>
+                      <span style={{ fontSize: '1.5rem' }}>{categoria.icon}</span>
+                      {categoria.nombre}
+                    </h3>
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+                      gap: '10px'
+                    }}>
+                      {categoria.imagenes.map((img, idx) => (
+                        <div 
+                          key={idx}
+                          className="galeria-item"
+                          style={{ aspectRatio: '1', cursor: 'pointer' }}
+                          onClick={() => {
+                            const overlay = document.getElementById(`galeria-modal-${categoria.categoria}-${idx}`);
+                            if (overlay) overlay.style.display = 'flex';
+                          }}
+                        >
+                          <img src={img.url} alt={img.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Lightbox modal */}
+                    {categoria.imagenes.map((img, idx) => (
+                      <div 
+                        key={`modal-${idx}`}
+                        id={`galeria-modal-${categoria.categoria}-${idx}`}
+                        className="modal-overlay"
+                        style={{ display: 'none', background: 'rgba(0,0,0,0.9)' }}
+                        onClick={(e) => {
+                          if (e.target.id === `galeria-modal-${categoria.categoria}-${idx}`) {
+                            e.target.style.display = 'none';
+                          }
+                        }}
+                      >
+                        <button 
+                          onClick={() => document.getElementById(`galeria-modal-${categoria.categoria}-${idx}`).style.display = 'none'}
+                          style={{
+                            position: 'absolute',
+                            top: '20px',
+                            right: '20px',
+                            background: 'white',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '40px',
+                            height: '40px',
+                            fontSize: '1.5rem',
+                            cursor: 'pointer',
+                            zIndex: 10
+                          }}
+                        >
+                          ×
+                        </button>
+                        <img 
+                          src={img.url} 
+                          alt={img.nombre}
+                          style={{ 
+                            maxWidth: '90vw', 
+                            maxHeight: '90vh', 
+                            objectFit: 'contain',
+                            borderRadius: '12px'
+                          }} 
+                        />
                       </div>
-                    )}
+                    ))}
                   </div>
                 ))}
               </div>

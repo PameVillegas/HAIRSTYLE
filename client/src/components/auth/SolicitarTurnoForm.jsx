@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function SolicitarTurnoForm({ cliente, tratamientos }) {
   const [formData, setFormData] = useState({
@@ -6,15 +6,35 @@ export default function SolicitarTurnoForm({ cliente, tratamientos }) {
     fecha: '',
     hora: ''
   });
+  const [turnosDelDia, setTurnosDelDia] = useState([]);
   const [enviado, setEnviado] = useState(false);
 
   const diasDisponibles = [1, 3, 4, 5, 6]; // Lun, Mie, Jue, Vie, Sab
   const horariosManiana = ['07:00', '08:00', '09:00', '10:00', '11:00'];
   const horariosTarde = ['13:30', '14:30', '15:30', '16:30', '17:30', '18:30', '19:30', '20:30'];
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const getDuracion = (tratamientoId) => {
+    const tratamiento = tratamientos.find(t => t.id === parseInt(tratamientoId));
+    if (!tratamiento) return 60;
+    
+    const nombre = tratamiento.nombre.toLowerCase();
+    
+    if (nombre.includes('perfilado')) return 30;
+    if (nombre.includes('alisado') || nombre.includes('tratamiento') && !nombre.includes('facial')) return 120;
+    if (nombre.includes('facial')) return 90;
+    if (nombre.includes('pestaña')) return 120;
+    
+    return tratamiento.duracion || 60;
+  };
+
+  const getDuracionLabel = (minutos) => {
+    if (minutos >= 60) {
+      const horas = Math.floor(minutos / 60);
+      const mins = minutos % 60;
+      if (mins === 0) return `${horas} ${horas === 1 ? 'hora' : 'horas'}`;
+      return `${horas}h ${mins}min`;
+    }
+    return `${minutos} minutos`;
   };
 
   const getFechaMinima = () => {
@@ -29,13 +49,74 @@ export default function SolicitarTurnoForm({ cliente, tratamientos }) {
     return siguienteDia.toISOString().split('T')[0];
   };
 
+  useEffect(() => {
+    if (formData.fecha) {
+      cargarTurnosDelDia();
+    }
+  }, [formData.fecha]);
+
+  const cargarTurnosDelDia = async () => {
+    try {
+      const res = await fetch(`/api/turnos`);
+      if (res.ok) {
+        const todosTurnos = await res.json();
+        const turnosFecha = todosTurnos.filter(t => {
+          const fechaTurno = new Date(t.fecha).toISOString().split('T')[0];
+          return fechaTurno === formData.fecha && t.estado !== 'cancelado';
+        });
+        setTurnosDelDia(turnosFecha);
+      }
+    } catch (err) {
+      console.error('Error cargando turnos:', err);
+    }
+  };
+
+  const horaToMinutes = (hora) => {
+    const [h, m] = hora.split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  const minutesToHora = (mins) => {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+  };
+
+  const isHorarioBloqueado = (horario) => {
+    if (!formData.tratamiento_id || !formData.fecha) return false;
+    
+    const duracion = getDuracion(formData.tratamiento_id);
+    const horarioMinutos = horaToMinutes(horario);
+    const horarioFinMinutos = horarioMinutos + duracion;
+
+    for (const turno of turnosDelDia) {
+      const turnoMinutos = horaToMinutes(turno.hora);
+      const turnoDuracion = turno.tratamiento_duracion || 60;
+      const turnoFinMinutos = turnoMinutos + turnoDuracion;
+
+      if (horarioMinutos < turnoFinMinutos && horarioFinMinutos > turnoMinutos) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'tratamiento_id') {
+      setFormData(prev => ({ ...prev, tratamiento_id: value, hora: '' }));
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
     const tratamiento = tratamientos.find(t => t.id === parseInt(formData.tratamiento_id));
     const fechaFormateada = new Date(formData.fecha).toLocaleDateString('es-AR');
+    const duracion = getDuracion(formData.tratamiento_id);
     
-    const mensaje = `¡Hola! Quiero reservar un turno:%0A%0A👤 Nombre: ${cliente.nombre}%0A📅 Fecha: ${fechaFormateada}%0A🕐 Horario: ${formData.hora}%0A💆 Servicio: ${tratamiento?.nombre || 'Por confirmar'}`;
+    const mensaje = `¡Hola! Quiero reservar un turno:%0A%0A👤 Nombre: ${cliente.nombre}%0A📅 Fecha: ${fechaFormateada}%0A🕐 Horario: ${formData.hora}%0A💆 Servicio: ${tratamiento?.nombre || 'Por confirmar'}%0A⏱️ Duración estimada: ${getDuracionLabel(duracion)}`;
     
     window.open(`https://wa.me/543388673804?text=${mensaje}`, '_blank');
     setEnviado(true);
@@ -43,8 +124,12 @@ export default function SolicitarTurnoForm({ cliente, tratamientos }) {
 
   const handleReset = () => {
     setFormData({ tratamiento_id: '', fecha: '', hora: '' });
+    setTurnosDelDia([]);
     setEnviado(false);
   };
+
+  const selectedTratamiento = tratamientos.find(t => t.id === parseInt(formData.tratamiento_id));
+  const duracion = formData.tratamiento_id ? getDuracion(formData.tratamiento_id) : null;
 
   if (enviado) {
     return (
@@ -99,6 +184,11 @@ export default function SolicitarTurnoForm({ cliente, tratamientos }) {
               </option>
             ))}
           </select>
+          {duracion && (
+            <small className="form-hint" style={{ color: 'var(--primary)', marginTop: '5px' }}>
+              ⏱️ Duración estimada: {getDuracionLabel(duracion)}
+            </small>
+          )}
         </div>
 
         <div className="form-row">
@@ -130,21 +220,36 @@ export default function SolicitarTurnoForm({ cliente, tratamientos }) {
               onChange={handleChange}
               className="form-control"
               required
-              disabled={!formData.fecha}
+              disabled={!formData.fecha || !formData.tratamiento_id}
             >
               <option value="">Seleccionar horario</option>
               <optgroup label="Mañana">
-                {horariosManiana.map(h => (
-                  <option key={h} value={h}>{h}</option>
-                ))}
+                {horariosManiana.map(h => {
+                  const bloqueado = isHorarioBloqueado(h);
+                  return (
+                    <option key={h} value={h} disabled={bloqueado} style={bloqueado ? { color: '#ccc', textDecoration: 'line-through' } : {}}>
+                      {h} {bloqueado ? '(ocupado)' : ''}
+                    </option>
+                  );
+                })}
               </optgroup>
               <optgroup label="Tarde">
-                {horariosTarde.map(h => (
-                  <option key={h} value={h}>{h}</option>
-                ))}
+                {horariosTarde.map(h => {
+                  const bloqueado = isHorarioBloqueado(h);
+                  return (
+                    <option key={h} value={h} disabled={bloqueado} style={bloqueado ? { color: '#ccc', textDecoration: 'line-through' } : {}}>
+                      {h} {bloqueado ? '(ocupado)' : ''}
+                    </option>
+                  );
+                })}
               </optgroup>
             </select>
             <small className="form-hint">7:00-12:00 | 13:30-21:00</small>
+            {turnosDelDia.length > 0 && formData.fecha && (
+              <small className="form-hint" style={{ color: 'var(--info)' }}>
+                {turnosDelDia.length} turno(s) ya reservado(s) para este día
+              </small>
+            )}
           </div>
         </div>
 
@@ -157,9 +262,13 @@ export default function SolicitarTurnoForm({ cliente, tratamientos }) {
           }}>
             <h4 style={{ marginBottom: '10px' }}>📋 Resumen de tu solicitud:</h4>
             <p><strong>👤 Cliente:</strong> {cliente.nombre}</p>
-            <p><strong>💆 Servicio:</strong> {tratamientos.find(t => t.id === parseInt(formData.tratamiento_id))?.nombre}</p>
+            <p><strong>💆 Servicio:</strong> {selectedTratamiento?.nombre}</p>
+            <p><strong>⏱️ Duración:</strong> {getDuracionLabel(duracion)}</p>
             <p><strong>📅 Fecha:</strong> {new Date(formData.fecha).toLocaleDateString('es-AR')}</p>
             <p><strong>🕐 Horario:</strong> {formData.hora}</p>
+            {selectedTratamiento && parseFloat(selectedTratamiento.precio) > 0 && (
+              <p><strong>💰 Precio:</strong> ${parseFloat(selectedTratamiento.precio).toLocaleString('es-AR')}</p>
+            )}
           </div>
         )}
 
