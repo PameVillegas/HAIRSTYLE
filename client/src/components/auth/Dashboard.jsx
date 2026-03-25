@@ -1,23 +1,14 @@
 import { useEffect, useState } from "react";
 
-export default function Dashboard() {
-  const [treatments, setTreatments] = useState([]);
+export default function Dashboard({ onNavigate }) {
   const [stats, setStats] = useState({
     turnosTotal: 0,
-    turnosMes: 0,
     clientesTotal: 0,
-    clientesNuevos: 0,
     ingresosTotal: 0,
-    turnosPendientes: 0,
-    turnosCompletados: 0
+    turnosPendientes: 0
   });
 
   useEffect(() => {
-    fetch('/api/tratamientos')
-      .then(res => res.json())
-      .then(data => setTreatments(data))
-      .catch(err => console.error('Error cargando tratamientos:', err));
-    
     cargarEstadisticas();
   }, []);
 
@@ -31,34 +22,15 @@ export default function Dashboard() {
       const turnos = await turnosRes.json();
       const clientes = await clientesRes.json();
       
-      const hoy = new Date();
-      const mesActual = hoy.getMonth();
-      const añoActual = hoy.getFullYear();
-      
-      const turnosMes = turnos.filter(t => {
-        const fechaTurno = new Date(t.fecha);
-        return fechaTurno.getMonth() === mesActual && fechaTurno.getFullYear() === añoActual;
-      });
-      
-      const clientesNuevos = clientes.filter(c => {
-        const fechaCreacion = new Date(c.created_at);
-        const mesAtras = new Date();
-        mesAtras.setMonth(mesAtras.getMonth() - 1);
-        return fechaCreacion >= mesAtras;
-      });
-      
       const ingresosTotal = turnos
         .filter(t => t.estado === 'completado')
         .reduce((sum, t) => sum + parseFloat(t.precio || 0), 0);
       
       setStats({
         turnosTotal: turnos.length,
-        turnosMes: turnosMes.length,
         clientesTotal: clientes.length,
-        clientesNuevos: clientesNuevos.length,
         ingresosTotal: ingresosTotal,
-        turnosPendientes: turnos.filter(t => t.estado === 'pendiente').length,
-        turnosCompletados: turnos.filter(t => t.estado === 'completado').length
+        turnosPendientes: turnos.filter(t => t.estado === 'pendiente').length
       });
       
     } catch (err) {
@@ -66,96 +38,140 @@ export default function Dashboard() {
     }
   };
 
+  const menuItems = [
+    { id: 'turnos', icon: '📅', label: 'Turnos', color: '#e91e63', desc: 'Gestionar turnos' },
+    { id: 'nuevo', icon: '➕', label: 'Nuevo Turno', color: '#9c27b0', desc: 'Crear turno' },
+    { id: 'clientes', icon: '👤', label: 'Agregar Cliente', color: '#673ab7', desc: 'Registrar cliente' },
+    { id: 'lista-clientes', icon: '📋', label: 'Lista Clientes', color: '#3f51b5', desc: 'Ver clientes' },
+    { id: 'promociones', icon: '🎉', label: 'Promociones', color: '#2196f3', desc: 'Gestionar promos' },
+    { id: 'galeria', icon: '📸', label: 'Galería', color: '#00bcd4', desc: 'Administrar fotos' },
+    { id: 'mensajes', icon: '💬', label: 'Mensajes', color: '#4caf50', desc: 'Ver mensajes' }
+  ];
+
   return (
-    <div className="card">
-      <div className="card-header">
-        <h2>📊 Dashboard</h2>
-        <p className="card-subtitle">Panel de administración con estadísticas</p>
-      </div>
-
-      <div className="stats-grid" style={{ padding: '20px' }}>
-        <div className="stat-card stat-primary">
-          <div className="stat-icon">📅</div>
-          <div className="stat-content">
-            <h3>{stats.turnosTotal}</h3>
-            <p>Turnos Totales</p>
+    <div>
+      {/* Stats */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(2, 1fr)', 
+        gap: '12px',
+        marginBottom: '20px'
+      }}>
+        <div style={{ 
+          background: 'white', 
+          borderRadius: '12px', 
+          padding: '15px',
+          textAlign: 'center',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+        }}>
+          <div style={{ fontSize: '2rem', marginBottom: '5px' }}>💰</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#4caf50' }}>
+            ${stats.ingresosTotal.toLocaleString('es-AR')}
           </div>
+          <div style={{ fontSize: '0.8rem', color: '#666' }}>Ingresos</div>
         </div>
-        
-        <div className="stat-card stat-success">
-          <div className="stat-icon">💰</div>
-          <div className="stat-content">
-            <h3>${stats.ingresosTotal.toLocaleString('es-AR')}</h3>
-            <p>Ingresos Totales</p>
+        <div style={{ 
+          background: 'white', 
+          borderRadius: '12px', 
+          padding: '15px',
+          textAlign: 'center',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+        }}>
+          <div style={{ fontSize: '2rem', marginBottom: '5px' }}>📅</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#e91e63' }}>
+            {stats.turnosTotal}
           </div>
+          <div style={{ fontSize: '0.8rem', color: '#666' }}>Turnos</div>
         </div>
-        
-        <div className="stat-card stat-warning">
-          <div className="stat-icon">👥</div>
-          <div className="stat-content">
-            <h3>{stats.clientesTotal}</h3>
-            <p>Clientes Totales</p>
+        <div style={{ 
+          background: 'white', 
+          borderRadius: '12px', 
+          padding: '15px',
+          textAlign: 'center',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+        }}>
+          <div style={{ fontSize: '2rem', marginBottom: '5px' }}>👥</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#9c27b0' }}>
+            {stats.clientesTotal}
           </div>
+          <div style={{ fontSize: '0.8rem', color: '#666' }}>Clientes</div>
         </div>
-        
-        <div className="stat-card stat-info">
-          <div className="stat-icon">🆕</div>
-          <div className="stat-content">
-            <h3>{stats.clientesNuevos}</h3>
-            <p>Clientes Nuevos (mes)</p>
+        <div style={{ 
+          background: 'white', 
+          borderRadius: '12px', 
+          padding: '15px',
+          textAlign: 'center',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+        }}>
+          <div style={{ fontSize: '2rem', marginBottom: '5px' }}>⏳</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#ff9800' }}>
+            {stats.turnosPendientes}
           </div>
-        </div>
-      </div>
-
-      <div className="stats-grid" style={{ padding: '0 20px 20px' }}>
-        <div className="stat-card" style={{ background: '#fff3cd' }}>
-          <div className="stat-icon" style={{ background: '#ffc107' }}>⏳</div>
-          <div className="stat-content">
-            <h3>{stats.turnosPendientes}</h3>
-            <p>Turnos Pendientes</p>
-          </div>
-        </div>
-        
-        <div className="stat-card" style={{ background: '#d4edda' }}>
-          <div className="stat-icon" style={{ background: '#28a745' }}>✅</div>
-          <div className="stat-content">
-            <h3>{stats.turnosCompletados}</h3>
-            <p>Turnos Completados</p>
-          </div>
-        </div>
-        
-        <div className="stat-card" style={{ background: '#cce5ff' }}>
-          <div className="stat-icon" style={{ background: '#007bff' }}>📆</div>
-          <div className="stat-content">
-            <h3>{stats.turnosMes}</h3>
-            <p>Turnos Este Mes</p>
-          </div>
+          <div style={{ fontSize: '0.8rem', color: '#666' }}>Pendientes</div>
         </div>
       </div>
 
-      <div style={{ padding: '0 20px 20px' }}>
-        <h3 style={{ marginBottom: '15px' }}>💆 Servicios</h3>
-        <div className="treatment-list">
-          {treatments.length === 0 ? (
-            <p>Cargando servicios...</p>
-          ) : (
-            treatments.map(t => (
-              <div key={t.id} className="treatment-item">
-                <span>💫 {t.nombre}</span>
-                <span className="price">
-                  {parseFloat(t.precio) === 0
-                    ? "Consultar"
-                    : `$${parseFloat(t.precio).toLocaleString('es-AR')}`}
-                </span>
-              </div>
-            ))
-          )}
-        </div>
+      {/* Menu Grid */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(2, 1fr)', 
+        gap: '12px'
+      }}>
+        {menuItems.map(item => (
+          <button
+            key={item.id}
+            onClick={() => onNavigate(item.id)}
+            style={{
+              background: item.color,
+              border: 'none',
+              borderRadius: '16px',
+              padding: '20px 15px',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-3px)';
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            }}
+          >
+            <span style={{ fontSize: '2.5rem' }}>{item.icon}</span>
+            <span style={{ 
+              color: 'white', 
+              fontWeight: '700', 
+              fontSize: '0.95rem',
+              textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+            }}>
+              {item.label}
+            </span>
+            <span style={{ 
+              color: 'rgba(255,255,255,0.8)', 
+              fontSize: '0.75rem' 
+            }}>
+              {item.desc}
+            </span>
+          </button>
+        ))}
       </div>
 
-      <div className="welcome-message" style={{ margin: '0 20px 20px' }}>
-        <h3>¡Bienvenido/a a HairStyle! 💇‍♀️</h3>
-        <p>Usá las pestañas de arriba para navegar por las diferentes secciones.</p>
+      <div style={{ 
+        marginTop: '20px',
+        padding: '15px',
+        background: '#fce4ec',
+        borderRadius: '12px',
+        textAlign: 'center'
+      }}>
+        <p style={{ margin: 0, color: '#c2185b', fontWeight: '600' }}>
+          💇‍♀️ ¡Bienvenida a HairStyle! Tocá una opción para comenzar.
+        </p>
       </div>
     </div>
   );

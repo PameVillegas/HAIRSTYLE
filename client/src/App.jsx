@@ -369,7 +369,7 @@ function App() {
           
           {!isMobile && <Tabs activeTab={tab} onTabChange={setTab} />}
 
-      {tab === 'dashboard' && <Dashboard />}
+      {tab === 'dashboard' && <Dashboard onNavigate={setTab} />}
 
       {tab === 'turnos' && (
         <div className="card">

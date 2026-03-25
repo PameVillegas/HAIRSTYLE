@@ -352,11 +352,13 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
 
   const tabs = [
     { id: 'inicio', icon: '🏠', label: 'Inicio' },
-    { id: 'quiensoy', icon: '👩', label: 'Quien soy' },
+    { id: 'solicitar', icon: '➕', label: 'Turno' },
+    { id: 'mis-turnos', icon: '📅', label: 'Turnos' },
     { id: 'servicios', icon: '💆', label: 'Servicios' },
     { id: 'promociones', icon: '🎉', label: 'Promos' },
-    { id: 'mis-turnos', icon: '📅', label: 'Turnos' },
-    { id: 'solicitar', icon: '➕', label: 'Turno' }
+    { id: 'galeria', icon: '📸', label: 'Galería' },
+    { id: 'quiensoy', icon: '👩', label: 'Quien soy' },
+    { id: 'instagram', icon: '📱', label: 'Instagram' }
   ];
 
   if (isMobile) {
