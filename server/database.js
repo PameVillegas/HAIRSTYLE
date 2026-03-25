@@ -7,7 +7,8 @@ dotenv.config();
 const dbConfig = process.env.DATABASE_URL 
   ? {
       connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false }
+      ssl: { rejectUnauthorized: false },
+      options: '-c client_encoding=UTF8'
     }
   : {
       host: process.env.DB_HOST || 'localhost',
@@ -15,7 +16,8 @@ const dbConfig = process.env.DATABASE_URL
       user: process.env.DB_USER || 'postgres',
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME || 'hairstyle_db',
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      options: '-c client_encoding=UTF8'
     };
 
 export const pool = new Pool(dbConfig);

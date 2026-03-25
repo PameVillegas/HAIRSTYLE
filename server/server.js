@@ -17,13 +17,14 @@ const __dirname = dirname(__filename);
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ extended: true, limit: '10mb' }));
 
 const clientDistPath = join(__dirname, '../client/dist');
 const clientPublicPath = join(__dirname, '../client/public');
 
 app.use(express.static(clientDistPath));
 app.use('/fotos', express.static(clientPublicPath));
+app.use('/logo.jpg', express.static(join(clientPublicPath, 'logo.jpg')));
 
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/auth', authRoutes);
