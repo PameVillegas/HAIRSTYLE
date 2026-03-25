@@ -361,10 +361,10 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
 
   if (isMobile) {
     return (
-      <div className="cliente-portal" style={{ minHeight: '100vh', background: '#f5f5f5' }}>
+      <div className="cliente-portal" style={{ minHeight: '100vh', background: '#f5f5f5', display: 'flex', flexDirection: 'column' }}>
         <div style={{ 
           background: 'white', 
-          padding: '15px', 
+          padding: '15px 20px', 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center',
@@ -373,9 +373,12 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
           top: 0,
           zIndex: 100
         }}>
-          <div>
-            <h3 style={{ margin: 0, color: '#e91e63' }}>👋 {cliente?.nombre}</h3>
-            <small style={{ color: '#666' }}>Cliente</small>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <img src="/logo.jpg" alt="Logo" style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #e91e63' }} />
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#e91e63', fontWeight: '700' }}>HairStyle</h3>
+              <small style={{ color: '#666', fontSize: '0.8rem' }}>👋 {cliente?.nombre}</small>
+            </div>
           </div>
           <button 
             onClick={onLogout} 

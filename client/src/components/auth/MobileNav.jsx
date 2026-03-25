@@ -13,7 +13,7 @@ export default function MobileNav({ activeTab, onTabChange, tabs, onLogout, usua
       {/* Header */}
       <div style={{
         background: 'white',
-        padding: '15px',
+        padding: '15px 20px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -23,10 +23,10 @@ export default function MobileNav({ activeTab, onTabChange, tabs, onLogout, usua
         zIndex: 100
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img src="/logo.jpg" alt="Logo" style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #e91e63' }} />
+          <img src="/logo.jpg" alt="Logo" style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #e91e63' }} />
           <div>
-            <h1 style={{ margin: 0, fontSize: '1.2rem', color: '#e91e63' }}>HairStyle</h1>
-            <small style={{ color: '#666' }}>{tipoUsuario === 'admin' ? 'Administrador' : 'Cliente'}</small>
+            <h1 style={{ margin: 0, fontSize: '1.3rem', color: '#e91e63', fontWeight: '700' }}>HairStyle</h1>
+            <small style={{ color: '#666', fontSize: '0.8rem' }}>{tipoUsuario === 'admin' ? 'Administrador' : 'Cliente'}</small>
           </div>
         </div>
         <button 
