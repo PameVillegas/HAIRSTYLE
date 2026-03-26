@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import SolicitarTurnoForm from './SolicitarTurnoForm';
-import { galeriaLocalData } from '../data/galeriaLocal';
+import { galeriaLocalData } from '../../data/galeriaLocal';
 
 const API_URL = '/api';
 
