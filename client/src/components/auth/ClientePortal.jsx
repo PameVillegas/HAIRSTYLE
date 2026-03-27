@@ -242,34 +242,47 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
             ) : (
               <div style={{ padding: '10px' }}>
                 {galeria.map((categoria) => (
-                  <div key={categoria.categoria} style={{ marginBottom: '25px' }}>
+                  <div key={categoria.categoria} style={{ marginBottom: '25px', border: '1px solid #eee', borderRadius: '12px', padding: '15px' }}>
                     <h3 style={{ 
                       display: 'flex', 
                       alignItems: 'center', 
                       gap: '10px',
                       marginBottom: '15px',
                       color: 'var(--primary)',
-                      fontSize: '1.2rem'
+                      fontSize: '1.2rem',
+                      padding: '10px',
+                      background: '#fce4ec',
+                      borderRadius: '8px'
                     }}>
                       <span style={{ fontSize: '1.5rem' }}>{categoria.icon}</span>
-                      {categoria.nombre}
+                      {categoria.nombre} ({categoria.imagenes.length} fotos)
                     </h3>
                     <div style={{ 
                       display: 'grid', 
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
-                      gap: '10px'
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+                      gap: '8px'
                     }}>
                       {categoria.imagenes.map((img, idx) => (
                         <div 
                           key={idx}
-                          className="galeria-item"
-                          style={{ aspectRatio: '1', cursor: 'pointer' }}
+                          style={{ 
+                            aspectRatio: '1', 
+                            cursor: 'pointer',
+                            borderRadius: '8px',
+                            overflow: 'hidden',
+                            border: '2px solid #f0f0f0'
+                          }}
                           onClick={() => {
                             const overlay = document.getElementById(`galeria-modal-${categoria.categoria}-${idx}`);
                             if (overlay) overlay.style.display = 'flex';
                           }}
                         >
-                          <img src={img.url} alt={img.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <img 
+                            src={img.url} 
+                            alt={img.nombre} 
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            onError={(e) => { e.target.style.display = 'none'; }}
+                          />
                         </div>
                       ))}
                     </div>
