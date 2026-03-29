@@ -94,12 +94,19 @@ input, select {
   gap: 20px;
 }
 
-.logo {
+.logo, .header-logo {
   width: 80px;
   height: 80px;
   border-radius: 50%;
   object-fit: cover;
   border: 4px solid var(--primary);
+}
+
+@media (max-width: 480px) {
+  .logo, .header-logo {
+    width: 60px;
+    height: 60px;
+  }
 }
 
 .header-content h1 {
@@ -115,11 +122,6 @@ input, select {
     flex-direction: column;
     text-align: center;
     padding: 20px;
-  }
-  
-  .logo {
-    width: 70px;
-    height: 70px;
   }
   
   .header-content h1 {
