@@ -137,7 +137,7 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
                           window.open(`https://wa.me/543388673804?text=${encodeURIComponent(mensaje)}`, '_blank');
                         } else {
                           setSelectedTratamientoId(trat.id);
-                          onTabChange('turnos');
+                          onTabChange('solicitar');
                         }
                       }}
                     >

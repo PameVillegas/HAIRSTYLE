@@ -30,7 +30,7 @@ function App() {
   const [clientes, setClientes] = useState([]);
   const [tratamientos, setTratamientos] = useState([]);
   const [turnos, setTurnos] = useState([]);
-  const [nuevoCliente, setNuevoCliente] = useState({ nombre: '', telefono: '', email: '' });
+  const [nuevoCliente, setNuevoCliente] = useState({ username: '', nombre: '', telefono: '', email: '', password: '' });
   const [editandoCliente, setEditandoCliente] = useState(null);
   const [editandoTurno, setEditandoTurno] = useState(null);
   const [nuevoTurno, setNuevoTurno] = useState({
@@ -103,25 +103,32 @@ function App() {
     setTurnos(data);
   };
 
-  const agregarCliente = async (e) => {
-    e.preventDefault();
+  const agregarCliente = async (clienteData) => {
     setLoading(true);
     setError('');
     
     try {
       if (editandoCliente) {
+        const updateData = { ...clienteData };
+        if (!updateData.password) delete updateData.password;
         await fetch(`${API_URL}/clientes/${editandoCliente.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(nuevoCliente)
+          body: JSON.stringify(updateData)
         });
         setSuccess('Cliente actualizado correctamente');
         setEditandoCliente(null);
       } else {
-        await fetch(`${API_URL}/clientes`, {
+        await fetch(`${API_URL}/auth/registrar`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(nuevoCliente)
+          body: JSON.stringify({
+            username: clienteData.username,
+            nombre: clienteData.nombre,
+            telefono: clienteData.telefono,
+            email: clienteData.email,
+            password: clienteData.password
+          })
         });
         setSuccess('Cliente agregado correctamente');
       }
