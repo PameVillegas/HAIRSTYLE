@@ -7,6 +7,7 @@ const API_URL = '/api';
 export default function ClientePortal({ cliente, onLogout, isMobile, currentTab, onTabChange }) {
   const [misTurnos, setMisTurnos] = useState([]);
   const [tratamientos, setTratamientos] = useState([]);
+  const [selectedTratamientoId, setSelectedTratamientoId] = useState(null);
   const [promociones, setPromociones] = useState([]);
   const [galeria, setGaleria] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -61,6 +62,7 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
           <SolicitarTurnoForm 
             cliente={cliente} 
             tratamientos={tratamientos}
+            tratamientoPreseleccionado={selectedTratamientoId}
           />
         );
 
@@ -133,9 +135,11 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
                         if (esConsultar) {
                           const mensaje = `¡Hola! Quiero consultar por el servicio de ${trat.nombre}. ¿Cuánto sale?`;
                           window.open(`https://wa.me/543388673804?text=${encodeURIComponent(mensaje)}`, '_blank');
+                        } else {
+                          setSelectedTratamientoId(trat.id);
+                          onTabChange('turnos');
                         }
                       }}
-                      style={{ cursor: esConsultar ? 'pointer' : 'default' }}
                     >
                       {trat.imagen_url && (
                         <img 
@@ -417,6 +421,7 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
           <SolicitarTurnoForm 
             cliente={cliente} 
             tratamientos={tratamientos}
+            tratamientoPreseleccionado={selectedTratamientoId}
           />
         );
 

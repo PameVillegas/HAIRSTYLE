@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import AnamnesisFacialForm from './AnamnesisFacialForm';
 
-export default function SolicitarTurnoForm({ cliente, tratamientos }) {
+export default function SolicitarTurnoForm({ cliente, tratamientos, tratamientoPreseleccionado }) {
   const [formData, setFormData] = useState({
-    tratamiento_id: '',
+    tratamiento_id: tratamientoPreseleccionado ? String(tratamientoPreseleccionado) : '',
     fecha: '',
     hora: ''
   });
@@ -11,6 +11,12 @@ export default function SolicitarTurnoForm({ cliente, tratamientos }) {
   const [enviado, setEnviado] = useState(false);
   const [showAnamnesis, setShowAnamnesis] = useState(false);
   const [anamnesisCompletado, setAnamnesisCompletado] = useState(false);
+
+  useEffect(() => {
+    if (tratamientoPreseleccionado) {
+      setFormData(prev => ({ ...prev, tratamiento_id: String(tratamientoPreseleccionado) }));
+    }
+  }, [tratamientoPreseleccionado]);
 
   const diasDisponibles = [1, 3, 4, 5, 6];
   const horariosManiana = ['07:00', '08:00', '09:00', '10:00', '11:00'];
