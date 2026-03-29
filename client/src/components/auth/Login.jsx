@@ -74,7 +74,7 @@ export default function Login({ onLogin }) {
   return (
     <div className="login-container">
       <form className="login-card" onSubmit={handleSubmit}>
-        <img src="/logo.jpg" alt="HairStyle" className="login-logo" />
+        <img src="/fotos/abi.jpg" alt="HairStyle" className="login-logo" />
         <h2>HairStyle</h2>
         <p className="subtitle">Ingresá a tu cuenta</p>
 
