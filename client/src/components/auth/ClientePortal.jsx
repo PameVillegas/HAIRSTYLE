@@ -225,11 +225,12 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
         );
 
       case 'galeria':
+        console.log('Galeria data:', galeria);
         return (
           <div className="card">
             <div className="card-header">
               <h2>📸 Galería</h2>
-              <p className="card-subtitle">Nuestros trabajos</p>
+              <p className="card-subtitle">Nuestros trabajos ({galeria.length} categorías)</p>
             </div>
             {loading ? (
               <div style={{ padding: '40px', textAlign: 'center' }}>Cargando...</div>
@@ -240,50 +241,37 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
                 <p>Visitá pronto para ver nuestras fotos</p>
               </div>
             ) : (
-              <div style={{ padding: '10px' }}>
+              <div style={{ padding: '15px' }}>
                 {galeria.map((categoria) => (
-                  <div key={categoria.categoria} style={{ marginBottom: '25px', border: '1px solid #eee', borderRadius: '12px', padding: '15px' }}>
+                  <div key={categoria.categoria} style={{ marginBottom: '30px' }}>
                     <h3 style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '10px',
-                      marginBottom: '15px',
-                      color: 'var(--primary)',
-                      fontSize: '1.2rem',
-                      padding: '10px',
+                      marginBottom: '12px',
+                      color: '#e91e63',
+                      fontSize: '1.1rem',
+                      padding: '8px 12px',
                       background: '#fce4ec',
                       borderRadius: '8px'
                     }}>
-                      <span style={{ fontSize: '1.5rem' }}>{categoria.icon}</span>
-                      {categoria.nombre} ({categoria.imagenes.length} fotos)
+                      {categoria.icon} {categoria.nombre} ({categoria.imagenes.length})
                     </h3>
                     <div style={{ 
                       display: 'grid', 
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
                       gap: '8px'
                     }}>
                       {categoria.imagenes.map((img, idx) => (
-                        <div 
+                        <img 
                           key={idx}
+                          src={img.url} 
+                          alt={img.nombre}
                           style={{ 
+                            width: '100%', 
                             aspectRatio: '1', 
-                            cursor: 'pointer',
+                            objectFit: 'cover',
                             borderRadius: '8px',
-                            overflow: 'hidden',
-                            border: '2px solid #f0f0f0'
+                            border: '1px solid #ddd'
                           }}
-                          onClick={() => {
-                            const overlay = document.getElementById(`galeria-modal-${categoria.categoria}-${idx}`);
-                            if (overlay) overlay.style.display = 'flex';
-                          }}
-                        >
-                          <img 
-                            src={img.url} 
-                            alt={img.nombre} 
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            onError={(e) => { e.target.style.display = 'none'; }}
-                          />
-                        </div>
+                        />
                       ))}
                     </div>
                     
