@@ -225,20 +225,18 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
         );
 
       case 'galeria':
-        console.log('Galeria data:', galeria);
         return (
           <div className="card">
             <div className="card-header">
               <h2>📸 Galería</h2>
-              <p className="card-subtitle">Nuestros trabajos ({galeria.length} categorías)</p>
+              <p className="card-subtitle">Nuestros trabajos</p>
             </div>
+            
             {loading ? (
               <div style={{ padding: '40px', textAlign: 'center' }}>Cargando...</div>
             ) : galeria.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon">📸</div>
-                <h3>Galería vacía</h3>
-                <p>Visitá pronto para ver nuestras fotos</p>
+              <div style={{ padding: '20px', textAlign: 'center' }}>
+                <p>No hay categorías cargadas</p>
               </div>
             ) : (
               <div style={{ padding: '15px' }}>
