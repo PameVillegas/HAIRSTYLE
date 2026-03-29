@@ -110,6 +110,27 @@ input, select {
   margin-bottom: 5px;
 }
 
+@media (max-width: 480px) {
+  .header {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .logo {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .header-content h1 {
+    font-size: 1.5rem;
+  }
+  
+  .subtitle {
+    font-size: 0.9rem;
+  }
+}
+
 .subtitle {
   color: var(--gray);
   font-size: 1.1rem;
