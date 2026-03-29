@@ -453,4 +453,26 @@ router.delete('/legajos/:id', async (req, res) => {
   }
 });
 
+// Actualizar imagen de tratamiento
+router.patch('/tratamientos/:id/imagen', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { imagen_url } = req.body;
+    
+    const result = await pool.query(
+      'UPDATE tratamientos SET imagen_url = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+      [imagen_url, id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Tratamiento no encontrado' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error actualizando imagen:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
 export default router;
