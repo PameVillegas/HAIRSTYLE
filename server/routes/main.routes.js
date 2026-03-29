@@ -113,10 +113,10 @@ router.post('/tratamientos', async (req, res) => {
 router.put('/tratamientos/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, precio, duracion, descripcion, imagen_url } = req.body;
+    const { nombre, precio, duracion, descripcion, imagen_url, activo } = req.body;
     const result = await pool.query(
-      'UPDATE tratamientos SET nombre = $1, precio = $2, duracion = $3, descripcion = $4, imagen_url = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6 RETURNING *',
-      [nombre, precio, duracion, descripcion, imagen_url, id]
+      'UPDATE tratamientos SET nombre = $1, precio = $2, duracion = $3, descripcion = $4, imagen_url = $5, activo = COALESCE($6, activo), updated_at = CURRENT_TIMESTAMP WHERE id = $7 RETURNING *',
+      [nombre, precio, duracion, descripcion, imagen_url, activo, id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Tratamiento no encontrado' });
