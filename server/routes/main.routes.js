@@ -8,8 +8,23 @@ const router = express.Router();
 // Obtener todos los clientes
 router.get('/clientes', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM clientes WHERE activo = TRUE ORDER BY nombre');
-    res.json(result.rows);
+    const clientesResult = await pool.query('SELECT * FROM clientes WHERE activo = TRUE ORDER BY nombre');
+    const usuariosResult = await pool.query("SELECT id, username, nombre, telefono, email, rol, created_at FROM usuarios WHERE rol = 'admin' ORDER BY nombre");
+    
+    const clientes = clientesResult.rows.map(c => ({ ...c, source: 'cliente' }));
+    const admins = usuariosResult.rows.map(u => ({ 
+      id: u.id, 
+      nombre: u.nombre, 
+      telefono: u.telefono, 
+      email: u.email, 
+      username: u.username,
+      activo: true,
+      created_at: u.created_at,
+      source: 'admin'
+    }));
+    
+    const all = [...clientes, ...admins].sort((a, b) => a.nombre.localeCompare(b.nombre));
+    res.json(all);
   } catch (error) {
     console.error('Error obteniendo clientes:', error);
     res.status(500).json({ error: 'Error del servidor' });

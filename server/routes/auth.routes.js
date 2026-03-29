@@ -151,6 +151,31 @@ router.post('/registrar', async (req, res) => {
       });
     }
 
+    const existingUser = await pool.query(
+      'SELECT id FROM clientes WHERE username = $1 OR telefono = $1',
+      [username]
+    );
+    
+    if (telefono) {
+      const existingPhone = await pool.query(
+        'SELECT id FROM clientes WHERE telefono = $1',
+        [telefono]
+      );
+      if (existingPhone.rows.length > 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Ya existe un cliente registrado con este número de teléfono'
+        });
+      }
+    }
+    
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Ya existe un cliente registrado con este nombre de usuario'
+      });
+    }
+
     const result = await pool.query(
       'INSERT INTO clientes (username, nombre, telefono, email, password) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, nombre, telefono, email',
       [username, nombre || username, telefono || null, email || null, password]

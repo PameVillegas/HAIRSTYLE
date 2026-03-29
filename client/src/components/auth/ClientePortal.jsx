@@ -59,11 +59,75 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
     switch (currentTab) {
       case 'inicio':
         return (
-          <SolicitarTurnoForm 
-            cliente={cliente} 
-            tratamientos={tratamientos}
-            tratamientoPreseleccionado={selectedTratamientoId}
-          />
+          <div>
+            <div className="card" style={{ marginBottom: '20px', background: 'linear-gradient(135deg, #e91e63 0%, #f48fb1 100%)' }}>
+              <div style={{ padding: '30px', textAlign: 'center', color: 'white' }}>
+                <h2 style={{ margin: '0 0 10px 0', fontSize: '1.8rem' }}>¡Bienvenida, {cliente?.nombre || 'cliente'}! 💇‍♀️</h2>
+                <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
+                  Estilos exclusive by Abigail
+                </p>
+              </div>
+            </div>
+            
+            <div className="card" style={{ marginBottom: '20px' }}>
+              <div className="card-header">
+                <h2>💆 Nuestros Servicios</h2>
+                <p className="card-subtitle">Elegí el servicio que necesitás</p>
+              </div>
+              <div style={{ padding: '15px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                  {tratamientos.filter(t => t.activo && parseFloat(t.precio) > 0).slice(0, 4).map(trat => (
+                    <div 
+                      key={trat.id}
+                      onClick={() => {
+                        setSelectedTratamientoId(trat.id);
+                        onTabChange('solicitar');
+                      }}
+                      style={{
+                        padding: '15px',
+                        background: '#fce4ec',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        transition: 'transform 0.2s'
+                      }}
+                    >
+                      <div style={{ fontSize: '1.5rem', marginBottom: '5px' }}>
+                        {trat.nombre.toLowerCase().includes('pestaña') ? '👁️' : 
+                         trat.nombre.toLowerCase().includes('facial') ? '✨' :
+                         trat.nombre.toLowerCase().includes('crema') ? '🧴' : '💆'}
+                      </div>
+                      <div style={{ fontWeight: '600', fontSize: '0.9rem', color: '#c2185b' }}>{trat.nombre}</div>
+                      <div style={{ color: '#4caf50', fontWeight: '700' }}>${trat.precio}</div>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => onTabChange('servicios')}
+                  style={{
+                    width: '100%',
+                    marginTop: '15px',
+                    padding: '12px',
+                    background: '#e91e63',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Ver todos los servicios →
+                </button>
+              </div>
+            </div>
+
+            <SolicitarTurnoForm 
+              cliente={cliente} 
+              tratamientos={tratamientos}
+              tratamientoPreseleccionado={selectedTratamientoId}
+            />
+          </div>
         );
 
       case 'quiensoy':
