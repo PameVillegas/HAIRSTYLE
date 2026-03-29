@@ -49,14 +49,14 @@
   display: block;
   margin: 0 auto 15px;
   text-align: center;
-  width: 280px;
+  width: 180px;
   max-width: 100%;
   height: auto;
 }
 
 @media (max-width: 480px) {
   .login-logo {
-    width: 220px;
+    width: 150px;
   }
 }
 
