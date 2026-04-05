@@ -9,7 +9,7 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        entryFileNames: 'assets/index-[name].js',
+        entryFileNames: 'assets/index.js',
         chunkFileNames: 'assets/index-[name].js',
         assetFileNames: 'assets/[name].[ext]'
       }

@@ -21,6 +21,24 @@ function App() {
   // Hook para detectar dispositivos móviles
   const { isMobile, isTablet } = useIsMobile();
 
+  // Forzar scroll arriba al cargar
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+  }, []);
+
+  // Reset scroll when user logs in
+  useEffect(() => {
+    if (usuario) {
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+      }, 100);
+    }
+  }, [usuario]);
+
   // Estado de autenticación
   const [usuario, setUsuario] = useState(null);
   const [tipoUsuario, setTipoUsuario] = useState(null); // 'admin' o 'cliente'
@@ -295,8 +313,8 @@ function App() {
     ];
 
     return (
-      <div className={`app-container ${isMobile ? 'mobile' : ''}`}>
-        {isMobile && (
+      <div style={{ margin: 0, padding: 0, width: '100%', background: 'linear-gradient(135deg, #e91e63, #9c27b0)', minHeight: '100vh' }}>
+        {isMobile ? (
           <MobileNav
             activeTab={tab}
             onTabChange={setTab}
@@ -304,17 +322,26 @@ function App() {
             onLogout={handleLogout}
             usuario={usuario}
             tipoUsuario={tipoUsuario}
-          />
+          >
+            <ClientePortal 
+              cliente={usuario} 
+              onLogout={handleLogout}
+              isMobile={isMobile}
+              currentTab={tab}
+              onTabChange={setTab}
+            />
+          </MobileNav>
+        ) : (
+          <div className="main-content">
+            <ClientePortal 
+              cliente={usuario} 
+              onLogout={handleLogout}
+              isMobile={isMobile}
+              currentTab={tab}
+              onTabChange={setTab}
+            />
+          </div>
         )}
-        <div className={`main-content ${isMobile ? 'mobile-content' : ''}`}>
-          <ClientePortal 
-            cliente={usuario} 
-            onLogout={handleLogout}
-            isMobile={isMobile}
-            currentTab={tab}
-            onTabChange={setTab}
-          />
-        </div>
       </div>
     );
   }
@@ -346,7 +373,7 @@ function App() {
       ) : (
         <div className="admin-header" style={{ background: 'white', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.1)', borderRadius: '12px', marginBottom: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <img src="/logo.jpg" alt="Logo" className="header-logo" />
+            <img src="/fotos/logo.png" alt="Logo" className="header-logo" />
             <div>
               <h2 style={{ margin: 0, fontSize: '1.5rem', background: 'linear-gradient(135deg, #e91e63, #9c27b0)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>HairStyle</h2>
               <small style={{ color: '#666' }}>Panel de Administración</small>

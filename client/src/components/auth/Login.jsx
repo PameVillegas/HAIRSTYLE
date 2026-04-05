@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import Registro from './Registro';
 import RegistroAdmin from './RegistroAdmin';
-import './Login.css';
 
 export default function Login({ onLogin }) {
   const [mostrarRegistro, setMostrarRegistro] = useState(false);
@@ -27,106 +26,172 @@ export default function Login({ onLogin }) {
 
     try {
       const endpoint = tipo === 'admin' ? '/api/auth/admin' : '/api/auth/cliente';
-      
-      // Preparar datos según el tipo de usuario
-      let requestData;
-      if (tipo === 'admin') {
-        requestData = {
-          username: email, // Para admin, el campo "email" del form es realmente el username
-          password: password
-        };
-      } else {
-        requestData = {
-          username: email,
-          password: password
-        };
-      }
-      
-      console.log('Intentando login:', { endpoint, requestData, tipo });
+      const requestData = { username: email, password: password };
       
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestData)
       });
 
-      console.log('Response status:', response.status);
       const data = await response.json();
-      console.log('Response data:', data);
 
       if (response.ok && data.success) {
-        console.log('Login exitoso:', data.user);
         onLogin(data.user, tipo);
       } else {
-        console.log('Login falló:', data);
         setError(data.error || 'Error al iniciar sesión');
       }
     } catch (error) {
-      console.error('Error de conexión:', error);
-      setError('Error de conexión: ' + error.message);
+      setError('Error de conexión');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="login-container">
-      <form className="login-card" onSubmit={handleSubmit}>
-        <img src="/logo.png" alt="HairStyle" className="login-logo" />
-        <h2>HairStyle</h2>
-        <p className="subtitle">Ingresá a tu cuenta</p>
-
-        {error && <div className="error-message">{error}</div>}
-
-        <input
-          type="text"
-          placeholder={tipo === 'admin' ? "Usuario" : "Nombre de usuario"}
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          required
-          disabled={loading}
+    <div style={{
+      width: '100%',
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px',
+      boxSizing: 'border-box',
+      background: 'linear-gradient(135deg, #e91e63, #9c27b0)'
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        padding: '30px',
+        borderRadius: '16px',
+        width: '100%',
+        maxWidth: '360px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+      }}>
+        <img 
+          src="/fotos/logo.png" 
+          alt="HairStyle" 
+          style={{
+            display: 'block',
+            margin: '0 auto 15px',
+            width: '100px',
+            height: '100px',
+            borderRadius: '50%',
+            objectFit: 'cover'
+          }}
         />
+        <h2 style={{
+          textAlign: 'center',
+          color: '#e91e63',
+          marginBottom: '10px'
+        }}>HairStyle</h2>
+        <p style={{
+          textAlign: 'center',
+          color: '#666',
+          marginBottom: '20px'
+        }}>Ingresá a tu cuenta</p>
 
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-          disabled={loading}
-        />
+        {error && (
+          <div style={{
+            backgroundColor: '#fee',
+            color: '#c00',
+            padding: '10px',
+            borderRadius: '8px',
+            marginBottom: '15px',
+            textAlign: 'center'
+          }}>{error}</div>
+        )}
 
-        <select value={tipo} onChange={e => setTipo(e.target.value)} disabled={loading}>
-          <option value="cliente">Cliente</option>
-          <option value="admin">Administrador</option>
-        </select>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            placeholder="Usuario"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '12px',
+              marginBottom: '12px',
+              borderRadius: '8px',
+              border: '1px solid #ddd',
+              boxSizing: 'border-box'
+            }}
+          />
 
-        <button type="submit" disabled={loading}>
-          {loading ? 'Ingresando...' : 'Ingresar'}
-        </button>
+          <input
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '12px',
+              marginBottom: '12px',
+              borderRadius: '8px',
+              border: '1px solid #ddd',
+              boxSizing: 'border-box'
+            }}
+          />
+
+          <select 
+            value={tipo} 
+            onChange={e => setTipo(e.target.value)}
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '12px',
+              marginBottom: '12px',
+              borderRadius: '8px',
+              border: '1px solid #ddd',
+              boxSizing: 'border-box'
+            }}
+          >
+            <option value="cliente">Cliente</option>
+            <option value="admin">Administrador</option>
+          </select>
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '14px',
+              backgroundColor: '#e91e63',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.7 : 1
+            }}
+          >
+            {loading ? 'Ingresando...' : 'Ingresar'}
+          </button>
+        </form>
 
         {tipo === 'cliente' && (
-          <button 
-            type="button" 
-            className="btn-link"
+          <button
             onClick={() => setMostrarRegistro(true)}
+            style={{
+              width: '100%',
+              padding: '12px',
+              marginTop: '10px',
+              backgroundColor: 'transparent',
+              color: '#e91e63',
+              border: '2px solid #e91e63',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              cursor: 'pointer'
+            }}
           >
             📝 ¿No tenés cuenta? Registrate
           </button>
         )}
-
-        {tipo === 'admin' && (
-          <button 
-            type="button" 
-            className="btn-link"
-            onClick={() => setMostrarRegistroAdmin(true)}
-          >
-            📝 ¿No tenés cuenta? Registrate como admin
-          </button>
-        )}
-      </form>
+      </div>
     </div>
   );
 }

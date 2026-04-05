@@ -1,14 +1,53 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
-export default function MobileNav({ activeTab, onTabChange, tabs, onLogout, usuario, tipoUsuario }) {
+export default function MobileNav({ activeTab, onTabChange, tabs, onLogout, usuario, tipoUsuario, children }) {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    // Scroll al top inmediatamente al montar
+    window.scrollTo(0, 0);
+    window.parent.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    
+    if (containerRef.current) {
+      containerRef.current.scrollTop = 0;
+    }
+    
+    // Scroll again after a short delay
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0);
+      if (containerRef.current) {
+        containerRef.current.scrollTop = 0;
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [usuario]);
+
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: '#f5f5f5',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      {/* Header fijo arriba */}
+    <div 
+      ref={containerRef}
+      style={{ 
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        margin: 0,
+        padding: 0,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        WebkitOverflowScrolling: 'touch',
+        background: 'linear-gradient(135deg, #e91e63, #9c27b0)'
+      }}
+      onScroll={() => {
+        if (containerRef.current && containerRef.current.scrollTop > 0) {
+          containerRef.current.scrollTop = 0;
+        }
+      }}
+    >
+      {/* Header */}
       <div style={{
         background: 'white',
         padding: '12px 20px',
@@ -16,42 +55,30 @@ export default function MobileNav({ activeTab, onTabChange, tabs, onLogout, usua
         justifyContent: 'space-between',
         alignItems: 'center',
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        position: 'fixed',
+        position: 'sticky',
         top: 0,
-        left: 0,
-        right: 0,
         zIndex: 100
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img src="/logo.jpg" alt="Logo" style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #e91e63' }} />
+          <img src="/fotos/logo.png" alt="Logo" style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #e91e63' }} />
           <div>
             <h1 style={{ margin: 0, fontSize: '1.3rem', color: '#e91e63', fontWeight: '700' }}>HairStyle</h1>
             <small style={{ color: '#666', fontSize: '0.8rem' }}>{tipoUsuario === 'admin' ? 'Administrador' : 'Cliente'}</small>
           </div>
         </div>
-        <button 
-          onClick={onLogout}
-          style={{
-            background: '#f44336',
-            color: 'white',
-            border: 'none',
-            padding: '10px 15px',
-            borderRadius: '8px',
-            fontSize: '0.85rem',
-            fontWeight: '600'
-          }}
-        >
+        <button onClick={onLogout} style={{ background: '#f44336', color: 'white', border: 'none', padding: '10px 15px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: '600' }}>
           🚪
         </button>
       </div>
 
-      {/* Main Content - con espacio para header y bottom nav */}
-      <div style={{ flex: 1, padding: '80px 15px 90px', marginTop: '60px' }}>
+      {/* Main Content */}
+      <div style={{ padding: '15px 10px 90px 10px' }}>
+        {children}
       </div>
 
       {/* Bottom Navigation */}
       <div style={{
-        position: 'fixed',
+        position: 'sticky',
         bottom: 0,
         left: 0,
         right: 0,
@@ -60,8 +87,7 @@ export default function MobileNav({ activeTab, onTabChange, tabs, onLogout, usua
         overflowX: 'auto',
         boxShadow: '0 -2px 10px rgba(0,0,0,0.15)',
         padding: '8px 5px',
-        gap: '5px',
-        zIndex: 100
+        gap: '5px'
       }}>
         {tabs.map(tab => (
           <button

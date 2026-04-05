@@ -151,16 +151,44 @@ export default function SolicitarTurnoForm({ cliente, tratamientos, tratamientoP
     setAnamnesisCompletado(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const fechaFormateada = new Date(formData.fecha).toLocaleDateString('es-AR');
-    const duracion = getDuracion(formData.tratamiento_id);
+    setLoading(true);
     
-    const mensaje = `¡Hola! Quiero reservar un turno:%0A%0A👤 Nombre: ${cliente.nombre}%0A📅 Fecha: ${fechaFormateada}%0A🕐 Horario: ${formData.hora}%0A💆 Servicio: ${selectedTratamiento?.nombre || 'Por confirmar'}%0A⏱️ Duración estimada: ${getDuracionLabel(duracion)}${anamnesisCompletado ? '%0A✅ Planilla de anamnesis completada' : ''}`;
-    
-    window.open(`https://wa.me/543388673804?text=${mensaje}`, '_blank');
-    setEnviado(true);
+    try {
+      const fechaFormateada = new Date(formData.fecha).toLocaleDateString('es-AR');
+      const duracion = getDuracion(formData.tratamiento_id);
+      
+      // Guardar turno en la base de datos
+      const resTurno = await fetch('/api/turnos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cliente_id: cliente.id,
+          tratamiento_id: parseInt(formData.tratamiento_id),
+          fecha: formData.fecha,
+          hora: formData.hora,
+          notas: '',
+          estado: 'pendiente'
+        })
+      });
+      
+      if (!resTurno.ok) {
+        throw new Error('Error al guardar el turno');
+      }
+      
+      // Abrir WhatsApp
+      const mensaje = `¡Hola! Reservé un turno:%0A%0A👤 Nombre: ${cliente.nombre}%0A📅 Fecha: ${fechaFormateada}%0A🕐 Horario: ${formData.hora}%0A💆 Servicio: ${selectedTratamiento?.nombre || 'Por confirmar'}%0A⏱️ Duración: ${getDuracionLabel(duracion)}${anamnesisCompletado ? '%0A✅ Planilla de anamnesis completada' : ''}`;
+      
+      window.open(`https://wa.me/543388673804?text=${mensaje}`, '_blank');
+      setEnviado(true);
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Error al procesar tu solicitud');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {

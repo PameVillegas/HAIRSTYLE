@@ -62,6 +62,7 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
           <div>
             <div className="card" style={{ marginBottom: '20px', background: 'linear-gradient(135deg, #e91e63 0%, #f48fb1 100%)' }}>
               <div style={{ padding: '30px', textAlign: 'center', color: 'white' }}>
+                <img src="/fotos/logo.png" alt="Logo" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '3px solid white', marginBottom: '15px' }} />
                 <h2 style={{ margin: '0 0 10px 0', fontSize: '1.8rem' }}>¡Bienvenida, {cliente?.nombre || 'cliente'}! 💇‍♀️</h2>
                 <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
                   Estilos exclusive by Abigail
@@ -173,23 +174,68 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
         );
 
       case 'servicios':
+        const tratamientosFiltrados = tratamientos.filter(trat => {
+          const nombreLower = trat.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          return !(nombreLower.includes('crema') || nombreLower.includes('bano') || nombreLower.includes('alisado'));
+        });
+        
+        const tieneTratamientos = tratamientos.some(trat => {
+          const nombreLower = trat.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          return nombreLower.includes('crema') || nombreLower.includes('bano') || nombreLower.includes('alisado');
+        });
+        
         return (
-          <div className="card">
+          <div className="card" style={{ background: 'white', borderRadius: '12px', padding: '20px' }}>
             <div className="card-header">
               <h2>💆 Nuestros Servicios</h2>
               <p className="card-subtitle">Conocé todos nuestros servicios</p>
             </div>
             {loading ? (
               <div style={{ padding: '40px', textAlign: 'center' }}>Cargando...</div>
-            ) : tratamientos.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon">💆</div>
-                <h3>Próximamente</h3>
-                <p>Estamos preparando nuestros servicios</p>
-              </div>
             ) : (
-              <div className="tratamientos-grid" style={{ padding: '20px' }}>
-                {tratamientos.map(trat => {
+              <div className="tratamientos-grid" style={{ padding: '10px' }}>
+                {tieneTratamientos && (
+                  <div 
+                    className="tratamiento-card"
+                    onClick={() => {
+                      const trat = tratamientos.find(t => {
+                        const n = t.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                        return n.includes('crema') || n.includes('bano') || n.includes('alisado');
+                      });
+                      if (trat && parseFloat(trat.precio) > 0) {
+                        setSelectedTratamientoId(trat.id);
+                        onTabChange('solicitar');
+                      } else {
+                        const mensaje = `¡Hola! Quiero consultar por el servicio de Tratamientos y alisados. ¿Cuánto sale?`;
+                        window.open(`https://wa.me/543388673804?text=${encodeURIComponent(mensaje)}`, '_blank');
+                      }
+                    }}
+                  >
+                    <div style={{ width: '100%', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', borderRadius: '8px', marginBottom: '10px', overflow: 'hidden' }}>
+                      <img 
+                        src="/fotos/tratamientosyalisados.jpg" 
+                        alt="Tratamientos y alisados"
+                        style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                      />
+                    </div>
+                    <div className="tratamiento-header">
+                      <h3>Tratamientos y alisados</h3>
+                      <span className="tratamiento-precio">
+                        {tratamientos.find(t => {
+                          const n = t.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                          return n.includes('crema') || n.includes('bano');
+                        })?.precio ? `$${tratamientos.find(t => {
+                          const n = t.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                          return n.includes('crema') || n.includes('bano');
+                        })?.precio}` : 'Consultar'}
+                      </span>
+                    </div>
+                    <div className="tratamiento-info">
+                      Baños de crema, alisados y más
+                    </div>
+                  </div>
+                )}
+                {tratamientosFiltrados.map(trat => {
                   const esConsultar = parseFloat(trat.precio) <= 0;
                   return (
                     <div 
@@ -206,16 +252,18 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
                       }}
                     >
                       {trat.imagen_url && (
-                        <img 
-                          src={trat.imagen_url} 
-                          alt={trat.nombre}
-                          style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px', marginBottom: '10px' }}
-                        />
+                        <div style={{ width: '100%', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5', borderRadius: '8px', marginBottom: '10px', overflow: 'hidden' }}>
+                          <img 
+                            src={trat.imagen_url} 
+                            alt={trat.nombre}
+                            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                          />
+                        </div>
                       )}
                       <div className="tratamiento-header">
                         <h3>{trat.nombre}</h3>
                         <span className="tratamiento-precio" style={esConsultar ? { color: 'var(--info)', fontSize: '1rem' } : {}}>
-                          {parseFloat(trat.precio) > 0 ? `$${trat.precio}` : 'Tocá para consultar'}
+                          {parseFloat(trat.precio) > 0 ? `$${trat.precio}` : 'Consultar'}
                         </span>
                       </div>
                       <div className="tratamiento-info">
@@ -506,10 +554,8 @@ export default function ClientePortal({ cliente, onLogout, isMobile, currentTab,
 
   if (isMobile) {
     return (
-      <div className="cliente-portal" style={{ flex: 1 }}>
-        <div style={{ padding: '10px 10px 90px 10px' }}>
-          {renderContent()}
-        </div>
+      <div style={{ margin: 0, padding: 0, width: '100%', minHeight: '100vh', background: 'linear-gradient(135deg, #e91e63, #9c27b0)' }}>
+        {renderContent()}
       </div>
     );
   }
