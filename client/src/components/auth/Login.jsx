@@ -11,6 +11,8 @@ export default function Login({ onLogin }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  console.log('Login component rendering');
+
   if (mostrarRegistro) {
     return <Registro onBack={() => setMostrarRegistro(false)} />;
   }
@@ -50,6 +52,8 @@ export default function Login({ onLogin }) {
 
   return (
     <div style={{
+      position: 'relative',
+      zIndex: 9999,
       width: '100%',
       minHeight: '100vh',
       display: 'flex',
@@ -65,7 +69,9 @@ export default function Login({ onLogin }) {
         borderRadius: '16px',
         width: '100%',
         maxWidth: '360px',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+        position: 'relative',
+        zIndex: 10000
       }}>
         <img 
           src="/fotos/logo.png" 
