@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Registro from './Registro';
 import RegistroAdmin from './RegistroAdmin';
 
@@ -10,6 +10,10 @@ export default function Login({ onLogin }) {
   const [tipo, setTipo] = useState('cliente');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    console.log('Login component mounted');
+  }, []);
 
   console.log('Login component rendering');
 
@@ -51,50 +55,15 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div style={{
-      position: 'relative',
-      zIndex: 9999,
-      width: '100%',
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      boxSizing: 'border-box',
-      background: 'linear-gradient(135deg, #e91e63, #9c27b0)'
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        padding: '30px',
-        borderRadius: '16px',
-        width: '100%',
-        maxWidth: '360px',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-        position: 'relative',
-        zIndex: 10000
-      }}>
+    <div className="login-wrapper">
+      <div className="login-box">
         <img 
           src="/fotos/logo.png" 
           alt="HairStyle" 
-          style={{
-            display: 'block',
-            margin: '0 auto 15px',
-            width: '100px',
-            height: '100px',
-            borderRadius: '50%',
-            objectFit: 'cover'
-          }}
+          className="login-logo"
         />
-        <h2 style={{
-          textAlign: 'center',
-          color: '#e91e63',
-          marginBottom: '10px'
-        }}>HairStyle</h2>
-        <p style={{
-          textAlign: 'center',
-          color: '#666',
-          marginBottom: '20px'
-        }}>Ingresá a tu cuenta</p>
+        <h2>HairStyle</h2>
+        <p className="subtitle">Ingresá a tu cuenta</p>
 
         {error && (
           <div style={{
@@ -115,14 +84,7 @@ export default function Login({ onLogin }) {
             onChange={e => setEmail(e.target.value)}
             required
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '12px',
-              marginBottom: '12px',
-              borderRadius: '8px',
-              border: '1px solid #ddd',
-              boxSizing: 'border-box'
-            }}
+            className="login-input"
           />
 
           <input
@@ -132,28 +94,14 @@ export default function Login({ onLogin }) {
             onChange={e => setPassword(e.target.value)}
             required
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '12px',
-              marginBottom: '12px',
-              borderRadius: '8px',
-              border: '1px solid #ddd',
-              boxSizing: 'border-box'
-            }}
+            className="login-input"
           />
 
           <select 
             value={tipo} 
             onChange={e => setTipo(e.target.value)}
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '12px',
-              marginBottom: '12px',
-              borderRadius: '8px',
-              border: '1px solid #ddd',
-              boxSizing: 'border-box'
-            }}
+            className="login-select"
           >
             <option value="cliente">Cliente</option>
             <option value="admin">Administrador</option>
@@ -162,18 +110,7 @@ export default function Login({ onLogin }) {
           <button
             type="submit"
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '14px',
-              backgroundColor: '#e91e63',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1
-            }}
+            className="login-button"
           >
             {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
@@ -182,22 +119,79 @@ export default function Login({ onLogin }) {
         {tipo === 'cliente' && (
           <button
             onClick={() => setMostrarRegistro(true)}
-            style={{
-              width: '100%',
-              padding: '12px',
-              marginTop: '10px',
-              backgroundColor: 'transparent',
-              color: '#e91e63',
-              border: '2px solid #e91e63',
-              borderRadius: '8px',
-              fontWeight: 'bold',
-              cursor: 'pointer'
-            }}
+            className="login-register-btn"
           >
             📝 ¿No tenés cuenta? Registrate
           </button>
         )}
       </div>
+      <style>{`
+        .login-wrapper {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          background: linear-gradient(135deg, #e91e63, #9c27b0);
+        }
+        .login-box {
+          background: white;
+          padding: 30px;
+          border-radius: 16px;
+          width: 100%;
+          max-width: 360px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        .login-logo {
+          display: block;
+          margin: 0 auto 15px;
+          width: 100px;
+          height: 100px;
+          border-radius: 50%;
+          object-fit: cover;
+        }
+        .login-box h2 {
+          text-align: center;
+          color: #e91e63;
+          margin-bottom: 10px;
+        }
+        .subtitle {
+          text-align: center;
+          color: #666;
+          margin-bottom: 20px;
+        }
+        .login-input, .login-select {
+          width: 100%;
+          padding: 12px;
+          margin-bottom: 12px;
+          border-radius: 8px;
+          border: 1px solid #ddd;
+          box-sizing: border-box;
+          font-size: 16px;
+        }
+        .login-button {
+          width: 100%;
+          padding: 14px;
+          background: linear-gradient(135deg, #e91e63, #9c27b0);
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-size: 16px;
+          font-weight: bold;
+          cursor: pointer;
+        }
+        .login-register-btn {
+          width: 100%;
+          padding: 12px;
+          margin-top: 10px;
+          background: transparent;
+          color: #e91e63;
+          border: 2px solid #e91e63;
+          border-radius: 8px;
+          font-weight: bold;
+          cursor: pointer;
+        }
+      `}</style>
     </div>
   );
 }
