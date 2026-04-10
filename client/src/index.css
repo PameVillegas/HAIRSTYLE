@@ -23,22 +23,6 @@
   box-sizing: border-box;
 }
 
-html, body {
-  background: red !important;
-}
-
-#root {
-  background: blue !important;
-}
-
-.login-wrapper {
-  background: green !important;
-}
-
-.login-box {
-  background: white !important;
-}
-
 #root {
   min-height: 100vh;
   display: block;

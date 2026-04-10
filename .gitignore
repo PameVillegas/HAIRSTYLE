@@ -11,3 +11,4 @@ mensajes-pendientes.txt
 # Ignorar dist solo en la raíz, no en client/
 /dist/
 .vercel
+.env*.local

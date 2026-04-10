@@ -22,8 +22,8 @@ app.use(express.json({ extended: true, limit: '10mb' }));
 let clientDistPath, clientPublicPath;
 
 if (process.env.VERCEL) {
-  clientDistPath = join(__dirname, 'dist');
-  clientPublicPath = join(__dirname, 'public');
+  clientDistPath = join(__dirname, '../client/dist');
+  clientPublicPath = join(__dirname, '../client/public');
 } else {
   clientDistPath = join(__dirname, '../client/dist');
   clientPublicPath = join(__dirname, '../client/public');
@@ -31,6 +31,17 @@ if (process.env.VERCEL) {
 
 app.use(express.static(clientDistPath));
 app.use('/fotos', express.static(clientPublicPath));
+
+// Servir páginas HTML explícitamente
+app.get('/entrar.html', (req, res) => {
+  res.sendFile(join(clientDistPath, 'entrar.html'));
+});
+app.get('/panel.html', (req, res) => {
+  res.sendFile(join(clientDistPath, 'panel.html'));
+});
+app.get('/admin.html', (req, res) => {
+  res.sendFile(join(clientDistPath, 'admin.html'));
+});
 
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/auth', authRoutes);
@@ -47,7 +58,7 @@ async function startServer() {
     await initializeDatabase();
     console.log('PostgreSQL conectado');
   } catch (error) {
-    console.error('Error DB:', error.message);
+    console.error('Advertencia: DB no conectada -', error.message);
   }
 
   app.listen(PORT, '0.0.0.0', () => {

@@ -15,6 +15,28 @@ router.post('/admin', async (req, res) => {
       });
     }
 
+    // Verificar si existe la tabla, si no crearla
+    try {
+      await pool.query('SELECT 1 FROM usuarios LIMIT 1');
+    } catch (e) {
+      // Tabla no existe, crear estructura
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS usuarios (
+          id SERIAL PRIMARY KEY,
+          username VARCHAR(100) NOT NULL UNIQUE,
+          password VARCHAR(255) NOT NULL,
+          nombre VARCHAR(255) NOT NULL,
+          rol VARCHAR(20) DEFAULT 'admin',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      // Crear usuario Abitu por defecto
+      await pool.query(
+        'INSERT INTO usuarios (username, password, nombre, rol) VALUES ($1, $2, $3, $4) ON CONFLICT (username) DO NOTHING',
+        ['Abitu', 'Abitu26', 'Administrador', 'admin']
+      );
+    }
+
     const result = await pool.query(
       'SELECT id, username, nombre, rol FROM usuarios WHERE username = $1 AND password = $2 AND rol = $3',
       [username, password, 'admin']
@@ -40,10 +62,10 @@ router.post('/admin', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error en login admin:', error);
+    console.error('Error en login admin:', error.message);
     res.status(500).json({
       success: false,
-      error: 'Error del servidor'
+      error: 'Error del servidor: ' + error.message
     });
   }
 });
@@ -131,10 +153,10 @@ router.post('/cliente', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error en login cliente:', error);
+    console.error('Error en login cliente:', error.message);
     res.status(500).json({
       success: false,
-      error: 'Error del servidor'
+      error: 'Error del servidor: ' + error.message
     });
   }
 });

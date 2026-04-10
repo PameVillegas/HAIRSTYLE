@@ -43,6 +43,23 @@ function App() {
   const [usuario, setUsuario] = useState(null);
   const [tipoUsuario, setTipoUsuario] = useState(null); // 'admin' o 'cliente'
 
+  // Restaurar sesión desde localStorage al cargar
+  useEffect(() => {
+    const storedUsuario = localStorage.getItem('usuario');
+    const storedTipo = localStorage.getItem('tipoUsuario');
+    if (storedUsuario && storedTipo) {
+      try {
+        const user = JSON.parse(storedUsuario);
+        setUsuario(user);
+        setTipoUsuario(storedTipo);
+      } catch (e) {
+        console.error('Error parseando usuario:', e);
+        localStorage.removeItem('usuario');
+        localStorage.removeItem('tipoUsuario');
+      }
+    }
+  }, []);
+
   // Estados para admin
   const [tab, setTab] = useState('dashboard');
   const [clientes, setClientes] = useState([]);
@@ -70,6 +87,8 @@ function App() {
   }, [tipoUsuario]);
 
   const handleLogin = (user, tipo) => {
+    localStorage.setItem('usuario', JSON.stringify(user));
+    localStorage.setItem('tipoUsuario', tipo);
     setUsuario(user);
     setTipoUsuario(tipo);
     if (tipo === 'admin') {
@@ -80,6 +99,8 @@ function App() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('usuario');
+    localStorage.removeItem('tipoUsuario');
     setUsuario(null);
     setTipoUsuario(null);
     setTab('dashboard');

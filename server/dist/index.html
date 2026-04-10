@@ -11,11 +11,149 @@
   <link rel="apple-touch-icon" href="/fotos/logo.png">
   <link rel="icon" type="image/png" href="/fotos/logo.png">
   <title>HairStyleAbii - Gestión de Turnos</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/index.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index.css">
+  <style>
+    body { 
+      margin: 0; 
+      padding: 0; 
+      background: url('/fotos/fondo.jpg') no-repeat center center fixed; 
+      background-size: cover;
+      min-height: 100vh;
+    }
+    @media (max-width: 768px) {
+      body {
+        background: url('/fotos/fondo.jpg') no-repeat center center fixed;
+        background-size: cover;
+      }
+    }
+    #root { 
+      min-height: 100vh; 
+    }
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .login-box {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    .login-logo {
+      display: block;
+      margin: 0 auto 15px;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .login-title {
+      text-align: center;
+      color: #e91e63;
+      margin-bottom: 10px;
+      font-family: sans-serif;
+    }
+    .login-subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 20px;
+      font-family: sans-serif;
+    }
+    .login-input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      box-sizing: border-box;
+      font-size: 16px;
+      font-family: sans-serif;
+    }
+    .login-button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #e91e63, #9c27b0);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <div class="login-container">
+      <div class="login-box">
+        <img src="/fotos/logo.png" alt="HairStyle" class="login-logo">
+        <h2 class="login-title">HairStyle</h2>
+        <p class="login-subtitle">Ingresá a tu cuenta</p>
+        <form id="login-form">
+          <input type="text" placeholder="Usuario" class="login-input" required>
+          <input type="password" placeholder="Contraseña" class="login-input" required>
+          <select class="login-input">
+            <option value="cliente">Cliente</option>
+            <option value="admin">Administrador</option>
+          </select>
+          <button type="submit" class="login-button">Ingresar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Disable React by preventing it from running
+    window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = { inject: function(){} };
+  </script>
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const usuario = this.querySelector('input[type="text"]').value;
+      const password = this.querySelector('input[type="password"]').value;
+      const tipo = this.querySelector('select').value;
+      
+      const btn = this.querySelector('button');
+      btn.textContent = 'Ingresando...';
+      btn.disabled = true;
+      
+      console.log('Intentando login como:', tipo);
+      console.log('Usuario:', usuario);
+      
+      try {
+        const url = '/api/auth/' + tipo;
+        console.log('URL:', url);
+        
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({username: usuario, password: password})
+        });
+        
+        console.log('Respuesta:', res.status);
+        const data = await res.json();
+        console.log('Datos:', data);
+        
+        if (data.success) {
+          localStorage.setItem('usuario', JSON.stringify(data.user));
+          localStorage.setItem('tipoUsuario', tipo);
+          alert('Login exitoso! Redirigiendo...');
+          location.reload();
+        } else {
+          alert(data.error || 'Error al iniciar sesión');
+          btn.textContent = 'Ingresar';
+          btn.disabled = false;
+        }
+      } catch(err) {
+        console.error('Error:', err);
+        alert('Error de conexión: ' + err.message);
+        btn.textContent = 'Ingresar';
+        btn.disabled = false;
+      }
+    });
+  </script>
 </body>
 </html>

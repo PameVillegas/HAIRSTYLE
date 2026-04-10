@@ -5,7 +5,7 @@
       "use": "@vercel/node"
     }
   ],
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/server/server.js" }
+  "routes": [
+    { "src": "/(.*)", "dest": "/server/server.js", "headers": { "Cache-Control": "no-cache" } }
   ]
 }
