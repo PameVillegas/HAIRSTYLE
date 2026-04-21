@@ -42,7 +42,12 @@ app.get('/panel.html', (req, res) => {
 app.get('/admin.html', (req, res) => {
   res.sendFile(join(clientDistPath, 'admin.html'));
 });
-
+app.get('/cliente.html', (req, res) => {
+  res.sendFile(join(clientDistPath, 'cliente.html'));
+});
+app.get('/cliente.html', (req, res) => {
+  res.sendFile(join(clientDistPath, 'cliente.html'));
+});
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api', mainRoutes);

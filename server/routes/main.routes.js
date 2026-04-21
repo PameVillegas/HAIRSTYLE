@@ -231,22 +231,42 @@ Tu turno ha sido confirmado:
   }
 });
 
-// Actualizar estado del turno
+// Actualizar turno (estado, fecha, hora)
 router.patch('/turnos/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { estado } = req.body;
+    const { estado, fecha, hora } = req.body;
     
-    const result = await pool.query(
-      'UPDATE turnos SET estado = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
-      [estado, id]
-    );
+    let query = 'UPDATE turnos SET updated_at = CURRENT_TIMESTAMP';
+    let params = [];
+    let paramIndex = 1;
+    
+    if (estado) {
+      query += ', estado = $' + paramIndex;
+      params.push(estado);
+      paramIndex++;
+    }
+    if (fecha) {
+      query += ', fecha = $' + paramIndex;
+      params.push(fecha);
+      paramIndex++;
+    }
+    if (hora) {
+      query += ', hora = $' + paramIndex;
+      params.push(hora);
+      paramIndex++;
+    }
+    
+    query += ' WHERE id = $' + paramIndex + ' RETURNING *';
+    params.push(id);
+    
+    const result = await pool.query(query, params);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Turno no encontrado' });
     }
     
-    res.json(result.rows[0]);
+    res.json({ success: true, turno: result.rows[0] });
   } catch (error) {
     console.error('Error actualizando turno:', error);
     res.status(500).json({ error: 'Error del servidor' });
@@ -323,45 +343,94 @@ router.get('/galeria', async (req, res) => {
 
 // Galería con subcarpetas locales
 router.get('/galeria/local', async (req, res) => {
-  const fs = require('fs');
-  const path = require('path');
-  
-  const galeriaPath = path.join(__dirname, '../../client/public/fotos');
-  const categorias = {
-    'perfilado': { nombre: 'Perfilado', icon: '✂️' },
-    'alisados y tratamientos': { nombre: 'Alisados y Tratamientos', icon: '💇‍♀️' },
-    'facial': { nombre: 'Facial', icon: '✨' },
-    'peinados': { nombre: 'Peinados', icon: '👰' },
-    'pestañas': { nombre: 'Pestañas', icon: '🌟' },
-    'productos': { nombre: 'Productos', icon: '💄' }
-  };
-  
-  const galeria = [];
-  
-  for (const [carpeta, info] of Object.entries(categorias)) {
-    const carpetaPath = path.join(galeriaPath, carpeta);
-    
-    if (fs.existsSync(carpetaPath)) {
-      const archivos = fs.readdirSync(carpetaPath).filter(archivo => {
-        const ext = path.extname(archivo).toLowerCase();
-        return ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext);
-      });
-      
-      const imagenes = archivos.map(archivo => ({
-        url: `/fotos/${carpeta}/${archivo}`,
-        nombre: archivo
-      }));
-      
-      if (imagenes.length > 0) {
-        galeria.push({
-          categoria: carpeta,
-          nombre: info.nombre,
-          icon: info.icon,
-          imagenes: imagenes
-        });
-      }
+  const galeria = [
+    {
+      categoria: 'perfilado',
+      nombre: 'Perfilado',
+      icon: '✂️',
+      imagenes: [
+        { url: '/fotos/perfilado/IMG-20260325-WA0019.jpg', nombre: 'IMG-20260325-WA0019.jpg' },
+        { url: '/fotos/perfilado/IMG-20260325-WA0021.jpg', nombre: 'IMG-20260325-WA0021.jpg' },
+        { url: '/fotos/perfilado/IMG-20260325-WA0034.jpg', nombre: 'IMG-20260325-WA0034.jpg' },
+        { url: '/fotos/perfilado/IMG-20260325-WA0038.jpg', nombre: 'IMG-20260325-WA0038.jpg' },
+        { url: '/fotos/perfilado/IMG-20260325-WA0039.jpg', nombre: 'IMG-20260325-WA0039.jpg' },
+        { url: '/fotos/perfilado/IMG-20260325-WA0046.jpg', nombre: 'IMG-20260325-WA0046.jpg' },
+        { url: '/fotos/perfilado/IMG-20260325-WA0059.jpg', nombre: 'IMG-20260325-WA0059.jpg' },
+        { url: '/fotos/perfilado/IMG-20260325-WA0063.jpg', nombre: 'IMG-20260325-WA0063.jpg' }
+      ]
+    },
+    {
+      categoria: 'alisados y tratamientos',
+      nombre: 'Alisados y Tratamientos',
+      icon: '💇‍♀️',
+      imagenes: [
+        { url: '/fotos/alisados y tratamientos/IMG-20260325-WA0028.jpg', nombre: 'IMG-20260325-WA0028.jpg' },
+        { url: '/fotos/alisados y tratamientos/IMG-20260325-WA0032.jpg', nombre: 'IMG-20260325-WA0032.jpg' },
+        { url: '/fotos/alisados y tratamientos/IMG-20260325-WA0035.jpg', nombre: 'IMG-20260325-WA0035.jpg' },
+        { url: '/fotos/alisados y tratamientos/IMG-20260325-WA0042.jpg', nombre: 'IMG-20260325-WA0042.jpg' },
+        { url: '/fotos/alisados y tratamientos/IMG-20260325-WA0050.jpg', nombre: 'IMG-20260325-WA0050.jpg' },
+        { url: '/fotos/alisados y tratamientos/IMG-20260325-WA0051.jpg', nombre: 'IMG-20260325-WA0051.jpg' },
+        { url: '/fotos/alisados y tratamientos/IMG-20260325-WA0052.jpg', nombre: 'IMG-20260325-WA0052.jpg' },
+        { url: '/fotos/alisados y tratamientos/IMG-20260325-WA0056.jpg', nombre: 'IMG-20260325-WA0056.jpg' },
+        { url: '/fotos/alisados y tratamientos/IMG-20260325-WA0060.jpg', nombre: 'IMG-20260325-WA0060.jpg' }
+      ]
+    },
+    {
+      categoria: 'peinados',
+      nombre: 'Peinados',
+      icon: '👰',
+      imagenes: [
+        { url: '/fotos/peinados/IMG-20260325-WA0023.jpg', nombre: 'IMG-20260325-WA0023.jpg' },
+        { url: '/fotos/peinados/IMG-20260325-WA0025.jpg', nombre: 'IMG-20260325-WA0025.jpg' },
+        { url: '/fotos/peinados/IMG-20260325-WA0027.jpg', nombre: 'IMG-20260325-WA0027.jpg' },
+        { url: '/fotos/peinados/IMG-20260325-WA0031.jpg', nombre: 'IMG-20260325-WA0031.jpg' },
+        { url: '/fotos/peinados/IMG-20260325-WA0033.jpg', nombre: 'IMG-20260325-WA0033.jpg' },
+        { url: '/fotos/peinados/IMG-20260325-WA0044.jpg', nombre: 'IMG-20260325-WA0044.jpg' },
+        { url: '/fotos/peinados/IMG-20260325-WA0045.jpg', nombre: 'IMG-20260325-WA0045.jpg' },
+        { url: '/fotos/peinados/IMG-20260325-WA0048.jpg', nombre: 'IMG-20260325-WA0048.jpg' },
+        { url: '/fotos/peinados/IMG-20260325-WA0049.jpg', nombre: 'IMG-20260325-WA0049.jpg' },
+        { url: '/fotos/peinados/IMG-20260325-WA0053.jpg', nombre: 'IMG-20260325-WA0053.jpg' },
+        { url: '/fotos/peinados/IMG-20260325-WA0055.jpg', nombre: 'IMG-20260325-WA0055.jpg' },
+        { url: '/fotos/peinados/IMG-20260325-WA0064.jpg', nombre: 'IMG-20260325-WA0064.jpg' }
+      ]
+    },
+    {
+      categoria: 'facial',
+      nombre: 'Facial',
+      icon: '✨',
+      imagenes: [
+        { url: '/fotos/facial/IMG-20260325-WA0022.jpg', nombre: 'IMG-20260325-WA0022.jpg' },
+        { url: '/fotos/facial/IMG-20260325-WA0030.jpg', nombre: 'IMG-20260325-WA0030.jpg' },
+        { url: '/fotos/facial/IMG-20260325-WA0040.jpg', nombre: 'IMG-20260325-WA0040.jpg' },
+        { url: '/fotos/facial/IMG-20260325-WA0041.jpg', nombre: 'IMG-20260325-WA0041.jpg' }
+      ]
+    },
+    {
+      categoria: 'pestañas',
+      nombre: 'Pestañas',
+      icon: '🌟',
+      imagenes: [
+        { url: '/fotos/pestañas/IMG-20260325-WA0024.jpg', nombre: 'IMG-20260325-WA0024.jpg' },
+        { url: '/fotos/pestañas/IMG-20260325-WA0029.jpg', nombre: 'IMG-20260325-WA0029.jpg' },
+        { url: '/fotos/pestañas/IMG-20260325-WA0036.jpg', nombre: 'IMG-20260325-WA0036.jpg' },
+        { url: '/fotos/pestañas/IMG-20260325-WA0047.jpg', nombre: 'IMG-20260325-WA0047.jpg' },
+        { url: '/fotos/pestañas/IMG-20260325-WA0054.jpg', nombre: 'IMG-20260325-WA0054.jpg' },
+        { url: '/fotos/pestañas/IMG-20260325-WA0057.jpg', nombre: 'IMG-20260325-WA0057.jpg' },
+        { url: '/fotos/pestañas/IMG-20260325-WA0058.jpg', nombre: 'IMG-20260325-WA0058.jpg' },
+        { url: '/fotos/pestañas/IMG-20260325-WA0061.jpg', nombre: 'IMG-20260325-WA0061.jpg' }
+      ]
+    },
+    {
+      categoria: 'productos',
+      nombre: 'Productos',
+      icon: '💄',
+      imagenes: [
+        { url: '/fotos/productos/IMG-20260325-WA0020.jpg', nombre: 'IMG-20260325-WA0020.jpg' },
+        { url: '/fotos/productos/IMG-20260325-WA0026.jpg', nombre: 'IMG-20260325-WA0026.jpg' },
+        { url: '/fotos/productos/IMG-20260325-WA0037.jpg', nombre: 'IMG-20260325-WA0037.jpg' }
+      ]
     }
-  }
+  ];
   
   res.json(galeria);
 });
@@ -476,6 +545,98 @@ router.patch('/tratamientos/:id/imagen', async (req, res) => {
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error actualizando imagen:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// ==================== TESTIMONIOS ====================
+
+// Obtener testimonios aprobados
+router.get('/testimonios', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT t.*, c.nombre as cliente_nombre
+      FROM testimonios t
+      JOIN clientes c ON t.cliente_id = c.id
+      WHERE t.aprobado = TRUE AND t.activo = TRUE
+      ORDER BY t.created_at DESC
+      LIMIT 20
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error obteniendo testimonios:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// Crear testimonio (cliente)
+router.post('/testimonios', async (req, res) => {
+  try {
+    const { cliente_id, texto, calificacion } = req.body;
+    
+    if (!texto || texto.trim().length < 10) {
+      return res.status(400).json({ error: 'El testimonio debe tener al menos 10 caracteres' });
+    }
+    
+    const result = await pool.query(
+      'INSERT INTO testimonios (cliente_id, texto, calificacion) VALUES ($1, $2, $3) RETURNING *',
+      [cliente_id, texto.trim(), calificacion || 5]
+    );
+    
+    res.json({ success: true, message: '¡Gracias por tu opinión! Tu testimonio será revisado.', testimonio: result.rows[0] });
+  } catch (error) {
+    console.error('Error creando testimonio:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// Obtener todos los testimonios (admin)
+router.get('/testimonios/todos', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT t.*, c.nombre as cliente_nombre
+      FROM testimonios t
+      JOIN clientes c ON t.cliente_id = c.id
+      WHERE t.activo = TRUE
+      ORDER BY t.created_at DESC
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error obteniendo testimonios:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// Aprobar/rechazar testimonio (admin)
+router.patch('/testimonios/:id/aprobar', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { aprobado } = req.body;
+    
+    const result = await pool.query(
+      'UPDATE testimonios SET aprobado = $1 WHERE id = $2 RETURNING *',
+      [aprobado, id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Testimonio no encontrado' });
+    }
+    
+    res.json({ success: true, testimonio: result.rows[0] });
+  } catch (error) {
+    console.error('Error aprobando testimonio:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// Eliminar testimonio (admin)
+router.delete('/testimonios/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('UPDATE testimonios SET activo = FALSE WHERE id = $1', [id]);
+    res.json({ success: true, message: 'Testimonio eliminado' });
+  } catch (error) {
+    console.error('Error eliminando testimonio:', error);
     res.status(500).json({ error: 'Error del servidor' });
   }
 });

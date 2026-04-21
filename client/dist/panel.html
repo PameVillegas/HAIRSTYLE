@@ -64,6 +64,9 @@
     .stat-icon { font-size: 24px; margin-bottom: 5px; }
     .stat-number { font-family: 'Poppins', sans-serif; font-size: 24px; font-weight: 700; color: #e91e63; }
     .stat-label { font-size: 12px; color: #666; }
+    .stat-card { background: white; border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .stat-card .stat-value { font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: 700; color: white; }
+    .stat-card .stat-label { font-size: 11px; color: rgba(255,255,255,0.9); margin-top: 5px; }
     
     .card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     .card h2 { font-family: 'Poppins', sans-serif; color: #e91e63; font-size: 18px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
@@ -180,11 +183,11 @@
     var u = localStorage.getItem('u');
     var t = localStorage.getItem('t');
     
-    if (!u) {
+    if (!u || t !== 'admin') {
       document.getElementById('app').innerHTML = 
         '<div class="error-page">' +
-          '<h2>No hay sesión activa</h2>' +
-          '<p>Ingresá con tu usuario para continuar</p>' +
+          '<h2>Acceso denegado</h2>' +
+          '<p>Esta sección es solo para administradores</p>' +
           '<a href="/entrar.html">Ir al login</a>' +
         '</div>';
     } else {
@@ -207,11 +210,13 @@
         '</div>' +
         
         '<div class="stats" id="stats">' +
-          '<div class="stat-box"><div class="stat-icon">💰</div><div class="stat-number" id="stat-ingresos">$0</div><div class="stat-label">Ingresos</div></div>' +
+          '<div class="stat-box"><div class="stat-icon">💰</div><div class="stat-number" id="stat-ingresos">$0</div><div class="stat-label">Ingresos Mes</div></div>' +
           '<div class="stat-box"><div class="stat-icon">👥</div><div class="stat-number" id="stat-clientes">0</div><div class="stat-label">Clientes</div></div>' +
-          '<div class="stat-box"><div class="stat-icon">📅</div><div class="stat-number" id="stat-turnos">0</div><div class="stat-label">Turnos</div></div>' +
+          '<div class="stat-box"><div class="stat-icon">📅</div><div class="stat-number" id="stat-turnos">0</div><div class="stat-label">Turnos Mes</div></div>' +
           '<div class="stat-box"><div class="stat-icon">⏳</div><div class="stat-number" id="stat-pendientes">0</div><div class="stat-label">Pendientes</div></div>' +
         '</div>' +
+        
+        '<div class="stats" id="stats-grid" style="margin-top:10px;"></div>' +
         
         '<div class="card">' +
           '<h2>📋 Menú Principal</h2>' +
@@ -220,10 +225,11 @@
             '<div class="menu-item" onclick="showSection(\'nuevo-turno\')"><span class="icon">➕</span><span class="label">Nuevo Turno</span><span class="desc">Crear turno</span></div>' +
             '<div class="menu-item secondary" onclick="showSection(\'registrar-cliente\')"><span class="icon">👤</span><span class="label">Registrar</span><span class="desc">Nuevo cliente</span></div>' +
             '<div class="menu-item secondary" onclick="showSection(\'lista-clientes\')"><span class="icon">📋</span><span class="label">Clientes</span><span class="desc">Ver todos</span></div>' +
-            '<div class="menu-item" onclick="showSection(\'tratamientos\')"><span class="icon">💅</span><span class="label">Tratamientos</span><span class="desc">Servicios</span></div>' +
+            '<div class="menu-item" onclick="showSection(\'tratamientos\')"><span class="icon">💅</span><span class="label">Servicios</span><span class="desc">Tratamientos</span></div>' +
             '<div class="menu-item" onclick="showSection(\'promociones\')"><span class="icon">🎉</span><span class="label">Promociones</span><span class="desc">Ofertas</span></div>' +
             '<div class="menu-item secondary" onclick="showSection(\'galeria\')"><span class="icon">📸</span><span class="label">Galería</span><span class="desc">Fotos</span></div>' +
             '<div class="menu-item secondary" onclick="showSection(\'legajos\')"><span class="icon">📋</span><span class="label">Legajos</span><span class="desc">Anamnesis</span></div>' +
+            '<div class="menu-item secondary" onclick="showSection(\'testimonios\')"><span class="icon">⭐</span><span class="label">Reseñas</span><span class="desc">Testimonios</span></div>' +
           '</div>' +
         '</div>';
       
@@ -232,21 +238,49 @@
     
     async function cargarEstadisticas() {
       try {
-        var [turnosRes, clientesRes] = await Promise.all([
+        var [turnosRes, clientesRes, tratamientosRes] = await Promise.all([
           fetch(API + '/turnos'),
-          fetch(API + '/clientes')
+          fetch(API + '/clientes'),
+          fetch(API + '/tratamientos')
         ]);
         var turnos = await turnosRes.json();
         var clientes = await clientesRes.json();
+        var tratamientos = await tratamientosRes.json();
         
-        var ingresos = turnos.filter(function(t) { return t.estado === 'completado'; })
-          .reduce(function(sum, t) { return sum + parseFloat(t.precio || 0); }, 0);
+        var hoy = new Date();
+        var mesActual = hoy.getMonth();
+        var anioActual = hoy.getFullYear();
+        
+        var turnosMes = turnos.filter(function(t) {
+          var fechaTurno = new Date(t.fecha);
+          return fechaTurno.getMonth() === mesActual && fechaTurno.getFullYear() === anioActual;
+        });
+        
+        var completadosMes = turnosMes.filter(function(t) { return t.estado === 'completado'; });
         var pendientes = turnos.filter(function(t) { return t.estado === 'pendiente'; }).length;
+        var completadosTotal = turnos.filter(function(t) { return t.estado === 'completado'; });
         
-        document.getElementById('stat-ingresos').textContent = '$' + ingresos.toLocaleString('es-AR');
+        var ingresosMes = completadosMes.reduce(function(sum, t) { return sum + parseFloat(t.precio || 0); }, 0);
+        var ingresosTotal = completadosTotal.reduce(function(sum, t) { return sum + parseFloat(t.precio || 0); }, 0);
+        
+        document.getElementById('stat-ingresos').textContent = '$' + ingresosMes.toLocaleString('es-AR');
         document.getElementById('stat-clientes').textContent = clientes.length;
-        document.getElementById('stat-turnos').textContent = turnos.length;
+        document.getElementById('stat-turnos').textContent = completadosMes.length;
         document.getElementById('stat-pendientes').textContent = pendientes;
+        
+        document.getElementById('stats-grid').innerHTML = 
+          '<div class="stat-card" style="background:linear-gradient(135deg,#4caf50,#2e7d32);">' +
+            '<div class="stat-value">$' + ingresosTotal.toLocaleString('es-AR') + '</div>' +
+            '<div class="stat-label">💰 Ingresos Totales</div>' +
+          '</div>' +
+          '<div class="stat-card" style="background:linear-gradient(135deg,#2196f3,#1565c0);">' +
+            '<div class="stat-value">' + completadosTotal.length + '</div>' +
+            '<div class="stat-label">✅ Turnos Completados</div>' +
+          '</div>' +
+          '<div class="stat-card" style="background:linear-gradient(135deg,#9c27b0,#7b1fa2);">' +
+            '<div class="stat-value">' + tratamientos.length + '</div>' +
+            '<div class="stat-label">💅 Servicios Activos</div>' +
+          '</div>';
       } catch(err) { console.error('Error cargando stats:', err); }
     }
     
@@ -260,6 +294,7 @@
         case 'promociones': showPromociones(); break;
         case 'galeria': showGaleria(); break;
         case 'legajos': showLegajos(); break;
+        case 'testimonios': showTestimoniosAdmin(); break;
       }
     }
     
@@ -636,13 +671,13 @@
       document.getElementById('app').innerHTML = 
         showBackButton() +
         '<div class="card">' +
-          '<h2>💅 Tratamientos</h2>' +
+          '<h2>💅 Servicios</h2>' +
           '<div class="menu" style="grid-template-columns:repeat(2,1fr);gap:10px;">' +
             '<div class="menu-item secondary" onclick="showAgregarTratamiento()"><span class="icon">➕</span><span class="label">Agregar Nuevo</span></div>' +
             '<div class="menu-item secondary" onclick="inicializarTratamientos()"><span class="icon">🔄</span><span class="label">Actualizar Default</span></div>' +
           '</div>' +
         '</div>' +
-        '<div class="card"><h2>Lista de Tratamientos</h2><div id="trat-list"><div class="loading">Cargando...</div></div></div>';
+        '<div class="card"><h2>Lista de Servicios</h2><div id="trat-list"><div class="loading">Cargando...</div></div></div>';
       
       loadTratamientos();
     }
@@ -732,7 +767,7 @@
         }
       }
       
-      if (confirmar) alert('¡Tratamientos actualizados!');
+      if (confirmar) alert('¡Servicios actualizados!');
       loadTratamientos();
     }
     
@@ -1007,6 +1042,89 @@
     
     function verPlanillaFacial() {
       window.open('/fotos/planilla-anamnesis-facial.docx', '_blank');
+    }
+    
+    // TESTIMONIOS ADMIN
+    function showTestimoniosAdmin() {
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="card">' +
+          '<h2>⭐ Reseñas de Clientes</h2>' +
+          '<div id="testimonios-admin-list"><div class="loading">Cargando...</div></div>' +
+        '</div>';
+      
+      loadTestimoniosAdmin();
+    }
+    
+    async function loadTestimoniosAdmin() {
+      try {
+        var res = await fetch(API + '/testimonios/todos');
+        var testimonios = await res.json();
+        
+        var container = document.getElementById('testimonios-admin-list');
+        
+        if (testimonios.length === 0) {
+          container.innerHTML = '<div class="empty-state">No hay reseñas aún</div>';
+        } else {
+          var html = '';
+          testimonios.forEach(function(t) {
+            var estrellas = '⭐'.repeat(t.calificacion || 5);
+            var estadoBadge = t.aprobado ? 
+              '<span class="badge completado">Aprobado</span>' : 
+              '<span class="badge pendiente">Pendiente</span>';
+            
+            html += '<div class="list-item" style="flex-direction:column;align-items:flex-start;">' +
+              '<div style="width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+                '<span style="font-weight:600;">' + (t.cliente_nombre || 'Cliente') + '</span>' +
+                estadoBadge +
+              '</div>' +
+              '<div style="color:#666;font-size:13px;margin-bottom:5px;">' + estrellas + '</div>' +
+              '<div style="color:#444;font-size:14px;">"' + t.texto + '"</div>' +
+              '<div style="display:flex;gap:8px;margin-top:10px;">';
+            
+            if (!t.aprobado) {
+              html += '<button class="btn small" style="background:#4caf50;color:white;" onclick="aprobarTestimonio(' + t.id + ', true)">✅ Aprobar</button>';
+            } else {
+              html += '<button class="btn small" style="background:#ff9800;color:white;" onclick="aprobarTestimonio(' + t.id + ', false)">❌ Desaprobar</button>';
+            }
+            html += '<button class="btn small danger" onclick="eliminarTestimonio(' + t.id + ')">🗑️ Eliminar</button>' +
+              '</div>' +
+            '</div>';
+          });
+          container.innerHTML = html;
+        }
+      } catch(err) {
+        document.getElementById('testimonios-admin-list').innerHTML = '<div class="empty-state">Error cargando reseñas</div>';
+      }
+    }
+    
+    async function aprobarTestimonio(id, aprobado) {
+      try {
+        var res = await fetch(API + '/testimonios/' + id + '/aprobar', {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({aprobado: aprobado})
+        });
+        var result = await res.json();
+        if (result.success) {
+          loadTestimoniosAdmin();
+        }
+      } catch(err) {
+        alert('Error');
+      }
+    }
+    
+    async function eliminarTestimonio(id) {
+      if (!confirm('¿Eliminar esta reseña?')) return;
+      try {
+        var res = await fetch(API + '/testimonios/' + id, { method: 'DELETE' });
+        var result = await res.json();
+        if (result.success) {
+          loadTestimoniosAdmin();
+        }
+      } catch(err) {
+        alert('Error');
+      }
     }
   </script>
 </body>

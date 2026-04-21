@@ -7,17 +7,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      height: 100%;
-      overflow-x: hidden;
-    }
+    html, body { height: 100%; overflow-x: hidden; }
     body {
       font-family: 'Roboto', sans-serif;
       background: linear-gradient(135deg, #e91e63, #9c27b0);
       min-height: 100vh;
       position: relative;
       -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
     }
     body::before {
       content: '';
@@ -28,14 +24,8 @@
       opacity: 0.3;
       z-index: 0;
     }
-    .container {
-      position: relative;
-      z-index: 1;
-      padding: 20px;
-      padding-top: env(safe-area-inset-top, 20px);
-      max-width: 600px;
-      margin: 0 auto;
-    }
+    .container { position: relative; z-index: 1; padding: 20px; max-width: 600px; margin: 0 auto; }
+    
     .header {
       text-align: center;
       padding: 25px 20px;
@@ -48,151 +38,60 @@
     .header h1 { font-family: 'Poppins', sans-serif; font-size: 26px; color: white; }
     .header .welcome { color: #ffd54f; font-size: 18px; font-weight: 600; }
     
-    .card {
-      background: white;
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 15px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    .card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .card h2 { font-family: 'Poppins', sans-serif; color: #e91e63; font-size: 18px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+    
+    .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .menu-box {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 20px 10px; background: linear-gradient(135deg, #e91e63, #9c27b0);
+      border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      cursor: pointer; transition: transform 0.2s;
     }
-    .card h2 {
-      font-family: 'Poppins', sans-serif;
-      color: #e91e63;
-      font-size: 18px;
-      margin-bottom: 15px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .menu-box:active { transform: scale(0.95); }
+    .menu-box .menu-icon { font-size: 28px; margin-bottom: 8px; }
+    .menu-box .menu-label { font-weight: 600; font-size: 12px; color: white; text-align: center; }
+    .menu-box.secondary { background: white; border: 2px solid #e91e63; }
+    .menu-box.secondary .menu-label { color: #e91e63; }
+    
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; background: rgba(255,255,255,0.2); color: white;
+      border: none; border-radius: 20px; cursor: pointer; margin-bottom: 20px; font-size: 14px;
     }
     
-    .info-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid #eee;
-    }
+    .btn { display: block; width: 100%; padding: 14px; background: linear-gradient(135deg, #e91e63, #9c27b0); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+    .btn:active { opacity: 0.9; }
+    .btn.secondary { background: white; color: #e91e63; border: 2px solid #e91e63; }
+    .btn.danger { background: #f44336; }
+    .btn.small { padding: 10px 16px; font-size: 14px; width: auto; display: inline-block; }
+    
+    .info-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee; }
     .info-item:last-child { border-bottom: none; }
     .info-item .label { color: #666; font-size: 14px; }
     .info-item .value { font-weight: 600; color: #333; }
     
-    .btn {
-      display: block;
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, #e91e63, #9c27b0);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      text-align: center;
-      margin-top: 15px;
-    }
-    .btn:active { opacity: 0.9; }
-    .btn.secondary {
-      background: white;
-      color: #e91e63;
-      border: 2px solid #e91e63;
-    }
-    .btn.danger {
-      background: #f44336;
-    }
-    .btn.small {
-      padding: 10px 16px;
-      font-size: 14px;
-      width: auto;
-      display: inline-block;
-    }
-    
-    .logout-section {
-      text-align: center;
-      margin-top: 20px;
-    }
-    .logout-link { color: rgba(255,255,255,0.8); text-decoration: underline; cursor: pointer; }
-    
-    .turno-item {
-      padding: 15px;
-      background: #f8f8f8;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      border-left: 4px solid #e91e63;
-    }
+    .turno-item { padding: 15px; background: #f8f8f8; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid #e91e63; }
     .turno-item .fecha { font-weight: 600; color: #333; }
     .turno-item .detalle { font-size: 13px; color: #666; margin-top: 5px; }
-    .turno-item .estado {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-size: 11px;
-      margin-top: 8px;
-    }
+    .turno-item .estado { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; margin-top: 8px; }
     .estado.pendiente { background: #fff3e0; color: #ff9800; }
     .estado.completado { background: #e8f5e9; color: #4caf50; }
     .estado.cancelado { background: #ffebee; color: #f44336; }
     
-    .trat-card { 
-      background: #f8f8f8; 
-      border-radius: 12px; 
-      margin-bottom: 12px; 
-      overflow: hidden; 
-    }
-    .trat-image { 
-      width: 100%; 
-      height: 140px; 
-      object-fit: cover; 
-      object-position: center;
-      background: #ddd;
-    }
+    .trat-card { background: #f8f8f8; border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+    .trat-image { width: 100%; height: 140px; object-fit: cover; background: #ddd; }
     .trat-content { padding: 12px; text-align: center; }
     .trat-content .name { font-weight: 600; color: #333; font-size: 16px; }
     .trat-content .detail { font-size: 13px; color: #666; margin-top: 5px; }
     .trat-content .precio { font-weight: 700; color: #4caf50; margin-top: 10px; font-size: 18px; }
-    .trat-content .solicitar { 
-      display: block; 
-      width: 100%; 
-      margin-top: 10px; 
-      padding: 10px; 
-      background: #e91e63; 
-      color: white; 
-      border: none; 
-      border-radius: 8px; 
-      cursor: pointer;
-      font-weight: 600;
-    }
+    .trat-content .solicitar { display: block; width: 100%; margin-top: 10px; padding: 10px; background: #e91e63; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
     .trat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
     
     .galeria-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .galeria-img { width: 100%; height: 80px; object-fit: cover; border-radius: 8px; }
     .galeria-categoria { margin-bottom: 15px; }
     .galeria-categoria h3 { color: #e91e63; font-size: 14px; margin-bottom: 8px; }
-    
-    .solicitar-section {
-      margin-top: 20px;
-      padding-top: 20px;
-      border-top: 1px solid #eee;
-    }
-    
-    .error-page {
-      text-align: center;
-      padding: 60px 20px;
-      background: white;
-      border-radius: 16px;
-    }
-    .error-page h2 { color: #e91e63; margin-bottom: 15px; }
-    .error-page a {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 12px 30px;
-      background: linear-gradient(135deg, #e91e63, #9c27b0);
-      color: white;
-      border-radius: 25px;
-      text-decoration: none;
-      font-weight: 600;
-    }
-    
-    .loading { text-align: center; padding: 40px; color: #666; }
-    .empty-state { text-align: center; padding: 30px; color: #666; }
     
     .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
     .modal-content { background: white; border-radius: 16px; padding: 25px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
@@ -207,72 +106,63 @@
     .msg.success { background: #e8f5e9; color: #4caf50; }
     .msg.error { background: #ffebee; color: #f44336; }
     
-    .menu-item {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      padding: 15px;
-      background: #f8f8f8;
-      border-radius: 12px;
-      margin-bottom: 10px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .menu-item:active { background: #eee; }
-    .menu-item .icon { font-size: 24px; }
-    .menu-item .text { flex: 1; }
-    .menu-item .text .title { font-weight: 600; color: #333; }
-    .menu-item .text .desc { font-size: 12px; color: #666; }
-    
-    .actions-bar {
-      display: flex;
-      gap: 10px;
+    .whatsapp-float {
+      position: fixed; bottom: 25px; right: 20px; width: 55px; height: 55px;
+      background: #25D366; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; font-size: 28px;
+      text-decoration: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9998;
     }
     
-    .trat-card { 
-      background: #f8f8f8; 
-      border-radius: 12px; 
-      margin-bottom: 12px; 
-      overflow: hidden; 
-    }
-    .trat-image { 
-      width: 100%; 
-      height: 140px; 
-      object-fit: cover; 
-      background: #ddd;
-    }
-    .trat-content { padding: 12px; }
-    .trat-content .name { font-weight: 600; color: #333; font-size: 16px; }
-    .trat-content .detail { font-size: 13px; color: #666; margin-top: 5px; }
-    .trat-content .precio { font-weight: 700; color: #4caf50; margin-top: 10px; font-size: 18px; }
-    .trat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .testimonio-card { background: #f8f8f8; border-radius: 16px; padding: 20px; margin-bottom: 15px; }
+    .testimonio-avatar { width: 45px; height: 45px; background: linear-gradient(135deg, #e91e63, #9c27b0); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 18px; }
+    .testimonio-nombre { font-weight: 600; color: #333; font-size: 15px; }
+    .testimonio-estrellas { color: #ffc107; font-size: 14px; }
+    .testimonio-texto { color: #666; font-size: 14px; line-height: 1.5; margin-top: 10px; }
+    
+    .loading { text-align: center; padding: 40px; color: #666; }
+    .empty-state { text-align: center; padding: 30px; color: #666; }
+    
+    .sobre-nosotros { background: white; border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .sobre-nosotros img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #e91e63; margin-bottom: 15px; }
+    .perfil-nombre { font-family: 'Poppins', sans-serif; font-size: 20px; color: #e91e63; margin-bottom: 5px; }
+    .perfil-edad { color: #666; font-size: 16px; margin-bottom: 20px; }
+    .perfil-desc { text-align: left; color: #666; font-size: 14px; line-height: 1.6; }
+    .perfil-desc p { margin-bottom: 12px; }
+    .perfil-desc ul { margin: 10px 0 10px 20px; }
+    .perfil-desc li { margin-bottom: 6px; }
+    
+    .redes-link { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; text-decoration: none; }
+    .redes-link.instagram { background: #E1306C; color: white; }
     
     @media (max-width: 400px) {
       .trat-grid { grid-template-columns: 1fr; }
+      .menu-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     }
   </style>
 </head>
 <body>
+  <a href="https://wa.me/543388673804" target="_blank" class="whatsapp-float">💬</a>
   <div class="container">
     <div id="app"></div>
   </div>
-  
   <div id="modal-container"></div>
 
   <script>
     var API = '/api';
     var u = localStorage.getItem('u');
     var t = localStorage.getItem('t');
+    var user = null;
     
     if (!u || t !== 'cliente') {
       document.getElementById('app').innerHTML = 
-        '<div class="error-page">' +
+        '<div class="header">' +
           '<h2>Acceso denegado</h2>' +
           '<p>Esta sección es solo para clientes</p>' +
-          '<a href="/entrar.html">Ir al login</a>' +
+          '<a href="/entrar.html" class="btn">Ir al login</a>' +
         '</div>';
     } else {
-      var user = JSON.parse(u);
+      user = JSON.parse(u);
+      window.user = user;
       showClienteHome();
     }
     
@@ -290,158 +180,32 @@
           '<p style="color:rgba(255,255,255,0.8);font-size:14px;margin-top:5px;">Bienvenida a tu cuenta</p>' +
         '</div>' +
         
+        '<div class="menu-grid">' +
+          '<div class="menu-box" onclick="showServicios()"><span class="menu-icon">💅</span><span class="menu-label">Servicios</span></div>' +
+          '<div class="menu-box" onclick="showGaleriaCliente()"><span class="menu-icon">📸</span><span class="menu-label">Galería</span></div>' +
+          '<div class="menu-box" onclick="showMisTurnos()"><span class="menu-icon">📅</span><span class="menu-label">Turnos</span></div>' +
+          '<div class="menu-box" onclick="showTestimonios()"><span class="menu-icon">⭐</span><span class="menu-label">Reseñas</span></div>' +
+          '<div class="menu-box" onclick="showPromociones()"><span class="menu-icon">🎉</span><span class="menu-label">Promos</span></div>' +
+          '<div class="menu-box" onclick="showSobreNosotros()"><span class="menu-icon">✨</span><span class="menu-label">Sobre Mí</span></div>' +
+          '<div class="menu-box" onclick="showPoliticas()"><span class="menu-icon">📜</span><span class="menu-label">Políticas</span></div>' +
+          '<div class="menu-box" onclick="showTerminos()"><span class="menu-icon">📋</span><span class="menu-label">Términos</span></div>' +
+          '<div class="menu-box" onclick="showSolicitarTurno()"><span class="menu-icon">📆</span><span class="menu-label">Turno</span></div>' +
+        '</div>' +
+        
         '<div class="card">' +
-          '<h2>👤 Mis Datos</h2>' +
+          '<h2>👤 Mi Perfil</h2>' +
           '<div class="info-item"><span class="label">Nombre</span><span class="value">' + (user.nombre || '-') + '</span></div>' +
           '<div class="info-item"><span class="label">Teléfono</span><span class="value">' + (user.telefono || '-') + '</span></div>' +
-          '<div class="info-item"><span class="label">Email</span><span class="value">' + (user.email || '-') + '</span></div>' +
-          '<div class="actions-bar">' +
-            '<button class="btn small secondary" onclick="editarMiPerfil()">✏️ Editar</button>' +
-            '<button class="btn small danger" onclick="eliminarMiCuenta()">🗑️ Eliminar</button>' +
-          '</div>' +
-          '<button class="btn" onclick="showMisTurnos()">📅 Mis Turnos</button>' +
+          '<button class="btn secondary" onclick="editarMiPerfil()">✏️ Editar Mi Perfil</button>' +
         '</div>' +
         
-        '<div class="card">' +
-          '<h2>💅 Servicios</h2>' +
-          '<div class="menu-item" onclick="showServicios()">' +
-            '<span class="icon">💆</span>' +
-            '<span class="text"><span class="title">Todos los servicios</span><span class="desc">Ver servicios disponibles</span></span>' +
-          '</div>' +
-          '<div class="menu-item" onclick="showPromociones()">' +
-            '<span class="icon">🎉</span>' +
-            '<span class="text"><span class="title">Promociones</span><span class="desc">Ofertas especiales</span></span>' +
-          '</div>' +
-          '<div class="menu-item" onclick="showGaleriaCliente()">' +
-            '<span class="icon">📸</span>' +
-            '<span class="text"><span class="title">Galería</span><span class="desc">Fotos del salón</span></span>' +
-          '</div>' +
-        '</div>' +
-        
-        '<div class="card">' +
-          '<h2>📋 Solicitar Turno</h2>' +
-          '<p style="color:#666;font-size:13px;margin-bottom:15px;">¿Querés un turno? Solicitá uno y te contactaremos</p>' +
-          '<button class="btn" onclick="showSolicitarTurno()">📅 Solicitar Turno</button>' +
-        '</div>' +
-        
-        '<div class="logout-section">' +
-          '<span class="logout-link" onclick="logout()">Cerrar sesión</span>' +
-        '</div>';
-    }
-    
-    // EDITAR MI PERFIL
-    function editarMiPerfil() {
-      document.getElementById('modal-container').innerHTML = 
-        '<div class="modal" onclick="closeModal()">' +
-          '<div class="modal-content" onclick="event.stopPropagation()">' +
-            '<h3>✏️ Editar Mi Perfil</h3>' +
-            '<div id="edit-msg"></div>' +
-            '<form id="edit-form">' +
-              '<div class="form-group"><label>Nombre</label><input type="text" id="edit-nombre" value="' + (user.nombre || '') + '"></div>' +
-              '<div class="form-group"><label>Usuario</label><input type="text" id="edit-username" value="' + (user.username || '') + '"></div>' +
-              '<div class="form-group"><label>Nueva contraseña (dejar vacío para no cambiar)</label><input type="password" id="edit-password" placeholder="Nueva contraseña"></div>' +
-              '<div class="form-group"><label>Teléfono</label><input type="tel" id="edit-telefono" value="' + (user.telefono || '') + '"></div>' +
-              '<div class="form-group"><label>Email</label><input type="email" id="edit-email" value="' + (user.email || '') + '"></div>' +
-              '<button type="submit" class="btn">Guardar Cambios</button>' +
-              '<button type="button" class="btn secondary" onclick="closeModal()">Cancelar</button>' +
-            '</form>' +
-          '</div>' +
-        '</div>';
-      
-      document.getElementById('edit-form').onsubmit = async function(e) {
-        e.preventDefault();
-        var msg = document.getElementById('edit-msg');
-        var password = document.getElementById('edit-password').value;
-        var updateData = {
-          username: document.getElementById('edit-username').value,
-          nombre: document.getElementById('edit-nombre').value,
-          telefono: document.getElementById('edit-telefono').value || null,
-          email: document.getElementById('edit-email').value || null
-        };
-        if (password) updateData.password = password;
-        
-        try {
-          var res = await fetch(API + '/clientes/' + user.id, {
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(updateData)
-          });
-          var result = await res.json();
-          
-          if (result.success) {
-            msg.innerHTML = '<div class="msg success">¡Perfil actualizado!</div>';
-            // Actualizar localStorage
-            var newUser = { ...user, ...updateData };
-            delete newUser.password;
-            localStorage.setItem('u', JSON.stringify(newUser));
-            user = newUser;
-            setTimeout(function() { closeModal(); showClienteHome(); }, 1000);
-          } else {
-            msg.innerHTML = '<div class="msg error">' + result.error + '</div>';
-          }
-        } catch(err) {
-          msg.innerHTML = '<div class="msg error">Error de conexión</div>';
-        }
-      };
-    }
-    
-    // ELIMINAR MI CUENTA
-    function eliminarMiCuenta() {
-      if (!confirm('¿Estás seguro de eliminar tu cuenta?\n\nEsta acción no se puede deshacer y perderás todos tus datos.')) return;
-      
-      var confirmar = confirm('Para confirmar, escribí "eliminar"');
-      if (confirmar) {
-        fetch(API + '/clientes/' + user.id, { method: 'DELETE' })
-          .then(function(res) { return res.json(); })
-          .then(function(result) {
-            if (result.success) {
-              logout();
-            } else {
-              alert(result.error || 'Error al eliminar');
-            }
-          })
-          .catch(function() { alert('Error de conexión'); });
-      }
-    }
-    
-    function closeModal() {
-      document.getElementById('modal-container').innerHTML = '';
-    }
-    
-    // MIS TURNOS
-    async function showMisTurnos() {
-      document.getElementById('app').innerHTML = 
-        '<button class="back-btn" style="background:rgba(255,255,255,0.2);color:white;border:none;padding:10px 20px;border-radius:20px;margin-bottom:20px;cursor:pointer;" onclick="showClienteHome()">← Volver</button>' +
-        '<div class="header"><h1>📅 Mis Turnos</h1></div>' +
-        '<div class="card"><div id="turnos-content"><div class="loading">Cargando...</div></div></div>';
-      
-      try {
-        var res = await fetch(API + '/cliente/' + user.id);
-        var data = await res.json();
-        
-        if (data.success && data.turnos && data.turnos.length > 0) {
-          var html = '';
-          data.turnos.forEach(function(t) {
-            var badgeClass = t.estado === 'pendiente' ? 'pendiente' : (t.estado === 'completado' ? 'completado' : 'cancelado');
-            html += '<div class="turno-item">' +
-              '<div class="fecha">📅 ' + t.fecha + ' - ' + t.hora + '</div>' +
-              '<div class="detalle">💅 ' + t.tratamiento + (t.precio > 0 ? ' - $' + t.precio : '') + '</div>' +
-              '<span class="estado ' + badgeClass + '">' + t.estado + '</span>' +
-            '</div>';
-          });
-          document.getElementById('turnos-content').innerHTML = html;
-        } else {
-          document.getElementById('turnos-content').innerHTML = '<div class="empty-state">No tenés turnos registrados</div>';
-        }
-      } catch(err) {
-        document.getElementById('turnos-content').innerHTML = '<div class="empty-state">Error cargando turnos</div>';
-      }
+        '<button class="back-btn" style="background:rgba(255,255,255,0.2);width:100%;text-align:center;margin-top:20px;" onclick="logout()">🚪 Cerrar sesión</button>';
     }
     
     // SERVICIOS
     async function showServicios() {
       document.getElementById('app').innerHTML = 
-        '<button class="back-btn" style="background:rgba(255,255,255,0.2);color:white;border:none;padding:10px 20px;border-radius:20px;margin-bottom:20px;cursor:pointer;" onclick="showClienteHome()">← Volver</button>' +
+        '<button class="back-btn" onclick="showClienteHome()">← Volver</button>' +
         '<div class="header"><h1>💅 Servicios</h1></div>' +
         '<div class="card"><div id="serv-content"><div class="loading">Cargando...</div></div></div>';
       
@@ -465,15 +229,12 @@
                 '<div class="precio">' + (precio > 0 ? '$' + precio.toLocaleString('es-AR') : 'Consultar precio') + '</div>';
             
             if (precio === 0) {
-              // Tratamiento con precio a consultar - botón WhatsApp
               var mensaje = encodeURIComponent('Hola! Quiero consultar por el tratamiento: ' + nombre);
-              html += '<a href="https://wa.me/543388673804?text=' + mensaje + '" class="solicitar" style="display:block;text-align:center;text-decoration:none;margin-top:10px;padding:10px;background:#25D366;color:white;border-radius:8px;font-weight:600;">💬 Consultar por WhatsApp</a>';
+              html += '<a href="https://wa.me/543388673804?text=' + mensaje + '" class="solicitar" style="display:block;text-align:center;text-decoration:none;">💬 Consultar</a>';
             } else if (esFacial) {
-              // Tratamiento facial - botón para completar planilla
-              html += '<button class="solicitar" onclick="mostrarPlanillaFacial(' + t.id + ', \'' + nombre.replace(/'/g, "\\'") + '\')">📋 Completar Planilla Anamnesis</button>';
+              html += '<button class="solicitar" onclick="mostrarPlanillaFacial(' + t.id + ', \'' + nombre.replace(/'/g, "\\'") + '\')">📋 Planilla</button>';
             } else {
-              // Tratamiento normal - solicitar turno
-              html += '<button class="solicitar" onclick="solicitarTurnoTratamiento(' + t.id + ', \'' + nombre.replace(/'/g, "\\'") + '\')">📅 Solicitar Turno</button>';
+              html += '<button class="solicitar" onclick="solicitarTurnoTratamiento(' + t.id + ', \'' + nombre.replace(/'/g, "\\'") + '\')">📅 Turno</button>';
             }
             
             html += '</div></div>';
@@ -488,29 +249,27 @@
       }
     }
     
-    // Solicitar turno de un tratamiento específico
     function solicitarTurnoTratamiento(tratamientoId, tratamientoNombre) {
       showSolicitarTurnoConTratamiento(tratamientoId, tratamientoNombre);
     }
     
     async function showSolicitarTurnoConTratamiento(tratamientoId, tratamientoNombre) {
-      document.getElementById('app').innerHTML = 
-        '<button class="back-btn" style="background:rgba(255,255,255,0.2);color:white;border:none;padding:10px 20px;border-radius:20px;margin-bottom:20px;cursor:pointer;" onclick="showServicios()">← Volver</button>' +
-        '<div class="header"><h1>📅 Turno: ' + tratamientoNombre + '</h1></div>' +
-        '<div class="card"><div id="solicitar-form"><div class="loading">Cargando...</div></div></div>';
-      
-      // Obtener fecha minima (mañana)
       var manana = new Date();
       manana.setDate(manana.getDate() + 1);
       var fechaMin = manana.toISOString().split('T')[0];
+      
+      document.getElementById('app').innerHTML = 
+        '<button class="back-btn" onclick="showServicios()">← Volver</button>' +
+        '<div class="header"><h1>📅 Turno: ' + tratamientoNombre + '</h1></div>' +
+        '<div class="card"><div id="solicitar-form"></div></div>';
       
       document.getElementById('solicitar-form').innerHTML = 
         '<div id="solicitar-msg"></div>' +
         '<form id="solicitar-turno-form">' +
           '<div class="form-group"><label>Tratamiento</label><input type="text" value="' + tratamientoNombre + '" disabled></div>' +
-          '<div class="form-group"><label>Fecha preferida *</label><input type="date" id="sol-fecha" min="' + fechaMin + '" required></div>' +
-          '<div class="form-group"><label>Horario preferdio *</label><select id="sol-hora" required>' +
-            '<option value="">Seleccionar horario</option>' +
+          '<div class="form-group"><label>Fecha *</label><input type="date" id="sol-fecha" min="' + fechaMin + '" required></div>' +
+          '<div class="form-group"><label>Horario *</label><select id="sol-hora" required>' +
+            '<option value="">Seleccionar</option>' +
             '<option value="09:00">09:00</option><option value="09:30">09:30</option>' +
             '<option value="10:00">10:00</option><option value="10:30">10:30</option>' +
             '<option value="11:00">11:00</option><option value="11:30">11:30</option>' +
@@ -522,7 +281,7 @@
             '<option value="17:00">17:00</option><option value="17:30">17:30</option>' +
             '<option value="18:00">18:00</option>' +
           '</select></div>' +
-          '<div class="form-group"><label>Notas adicionales</label><textarea id="sol-notas" rows="3" placeholder="Observaciones..."></textarea></div>' +
+          '<div class="form-group"><label>Notas</label><textarea id="sol-notas" rows="3" placeholder="Observaciones..."></textarea></div>' +
           '<button type="submit" class="btn">📨 Solicitar Turno</button>' +
         '</form>';
       
@@ -547,7 +306,7 @@
           var result = await res.json();
           
           if (result.id || result.success) {
-            msg.innerHTML = '<div class="msg success">¡Turno solicitado! Te contactaremos para confirmar.</div>';
+            msg.innerHTML = '<div class="msg success">¡Turno solicitado! Te contactaremos.</div>';
             setTimeout(function() { showMisTurnos(); }, 2000);
           } else {
             msg.innerHTML = '<div class="msg error">' + (result.error || 'Error') + '</div>';
@@ -558,143 +317,40 @@
       };
     }
     
-    // MOSTRAR PLANILLA DE ANAMNESIS FACIAL
-    function mostrarPlanillaFacial(tratamientoId, tratamientoNombre) {
-      document.getElementById('modal-container').innerHTML = 
-        '<div class="modal" onclick="closeModal()">' +
-          '<div class="modal-content" onclick="event.stopPropagation()" style="max-width:500px;">' +
-            '<h3>📋 Planilla de Anamnesis - Facial</h3>' +
-            '<p style="color:#666;font-size:13px;margin-bottom:15px;">Completá los siguientes datos para tu tratamiento facial</p>' +
-            '<div id="planilla-msg"></div>' +
-            '<form id="planilla-form">' +
-              '<div class="form-group"><label>Nombre completo</label><input type="text" id="plan-nombre" value="' + (user.nombre || '') + '" required></div>' +
-              '<div class="form-group"><label>Teléfono</label><input type="tel" id="plan-telefono" value="' + (user.telefono || '') + '"></div>' +
-              '<div class="form-group"><label>Email</label><input type="email" id="plan-email" value="' + (user.email || '') + '"></div>' +
-              '<hr style="margin:15px 0;border:none;border-top:1px solid #eee;">' +
-              '<h4 style="color:#e91e63;margin-bottom:10px;">Datos del tratamiento</h4>' +
-              '<div class="form-group"><label>Tipo de piel</label>' +
-                '<select id="plan-tipo-piel" required>' +
-                  '<option value="">Seleccionar</option>' +
-                  '<option value="Normal">Normal</option>' +
-                  '<option value="Seca">Seca</option>' +
-                  '<option value="Grasa">Grasa</option>' +
-                  '<option value="Mixta">Mixta</option>' +
-                  '<option value="Sensible">Sensible</option>' +
-                '</select></div>' +
-              '<div class="form-group"><label>¿Tiene alergias?</label><select id="plan-alergias"><option value="No">No</option><option value="Si">Sí</option></select></div>' +
-              '<div class="form-group"><label>Si tiene alergias, especificar</label><input type="text" id="plan-alergias-detalle" placeholder="¿A qué es alérgico/a?"></div>' +
-              '<div class="form-group"><label>¿Usa algún medicamento?</label><select id="plan-medicamentos"><option value="No">No</option><option value="Si">Sí</option></select></div>' +
-              '<div class="form-group"><label>Si usa medicamentos, especificar</label><input type="text" id="plan-medicamentos-detalle" placeholder="¿Qué medicamentos usa?"></div>' +
-              '<div class="form-group"><label>¿Tiene problemas de salud?</label><select id="plan-problemas"><option value="No">No</option><option value="Si">Sí</option></select></div>' +
-              '<div class="form-group"><label>Si tiene problemas, especificar</label><input type="text" id="plan-problemas-detalle" placeholder="¿Qué problemas tiene?"></div>' +
-              '<div class="form-group"><label>¿Embarazada?</label><select id="plan-embarazada"><option value="No">No</option><option value="Si">Sí</option></select></div>' +
-              '<div class="form-group"><label>Último tratamiento facial (fecha aproximada)</label><input type="text" id="plan-ultimo" placeholder="Hace cuánto tiempo"></div>' +
-              '<div class="form-group"><label>Comentarios adicionales</label><textarea id="plan-comentarios" rows="3" placeholder="Algo que debamos saber..."></textarea></div>' +
-              '<button type="submit" class="btn">💾 Guardar y Solicitar Turno</button>' +
-              '<button type="button" class="btn secondary" onclick="closeModal()">Cancelar</button>' +
-            '</form>' +
-          '</div>' +
-        '</div>';
-      
-      document.getElementById('planilla-form').onsubmit = async function(e) {
-        e.preventDefault();
-        var msg = document.getElementById('planilla-msg');
-        
-        // Guardar en legajos
-        var datosPlanilla = {
-          tipo_piel: document.getElementById('plan-tipo-piel').value,
-          alergias: document.getElementById('plan-alergias').value,
-          alergias_detalle: document.getElementById('plan-alergias-detalle').value,
-          medicamentos: document.getElementById('plan-medicamentos').value,
-          medicamentos_detalle: document.getElementById('plan-medicamentos-detalle').value,
-          problemas_salud: document.getElementById('plan-problemas').value,
-          problemas_detalle: document.getElementById('plan-problemas-detalle').value,
-          embarazada: document.getElementById('plan-embarazada').value,
-          ultimo_tratamiento: document.getElementById('plan-ultimo').value,
-          comentarios: document.getElementById('plan-comentarios').value
-        };
-        
-        var legajoData = {
-          cliente_id: user.id,
-          tratamiento: tratamientoNombre,
-          tipo: 'facial',
-          fecha: new Date().toISOString().split('T')[0],
-          datos: JSON.stringify(datosPlanilla)
-        };
-        
-        try {
-          // Guardar legajo
-          var resLegajo = await fetch(API + '/legajos', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(legajoData)
-          });
-          var resultLegajo = await resLegajo.json();
-          
-          // Solicitar turno
-          var turnoData = {
-            cliente_id: user.id,
-            tratamiento_id: tratamientoId,
-            fecha: new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0], // 7 días después
-            hora: '10:00',
-            notas: 'Tratamiento facial - Planilla de anamnesis completada'
-          };
-          
-          var resTurno = await fetch(API + '/turnos', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(turnoData)
-          });
-          
-          msg.innerHTML = '<div class="msg success">¡Planilla guardada! Tu turno ha sido solicitado. Te contactaremos para confirmar.</div>';
-          setTimeout(function() { 
-            closeModal(); 
-            showMisTurnos(); 
-          }, 2000);
-          
-        } catch(err) {
-          msg.innerHTML = '<div class="msg error">Error al guardar. Intentá de nuevo.</div>';
-        }
-      };
-    }
-    
-    // PROMOCIONES
-    async function showPromociones() {
+    // MIS TURNOS
+    async function showMisTurnos() {
       document.getElementById('app').innerHTML = 
-        '<button class="back-btn" style="background:rgba(255,255,255,0.2);color:white;border:none;padding:10px 20px;border-radius:20px;margin-bottom:20px;cursor:pointer;" onclick="showClienteHome()">← Volver</button>' +
-        '<div class="header"><h1>🎉 Promociones</h1></div>' +
-        '<div class="card"><div id="promo-content"><div class="loading">Cargando...</div></div></div>';
+        '<button class="back-btn" onclick="showClienteHome()">← Volver</button>' +
+        '<div class="header"><h1>📅 Mis Turnos</h1></div>' +
+        '<div class="card"><div id="turnos-content"><div class="loading">Cargando...</div></div></div>';
       
       try {
-        var res = await fetch(API + '/promociones');
-        var promos = await res.json();
+        var res = await fetch(API + '/cliente/' + user.id);
+        var data = await res.json();
         
-        if (promos.length > 0) {
+        if (data.success && data.turnos && data.turnos.length > 0) {
           var html = '';
-          promos.forEach(function(p) {
-            html += '<div class="menu-item" style="cursor:default;flex-direction:column;align-items:flex-start;">' +
-              '<span style="font-size:24px;">🎉</span>' +
-              '<div style="margin-top:10px;width:100%;">' +
-                '<span class="title" style="font-size:16px;">' + p.titulo + '</span>' +
-                '<span class="desc" style="display:block;margin-top:5px;">' + (p.descripcion || '') + '</span>';
-            if (p.precio_especial) {
-              html += '<span style="color:#4caf50;font-weight:700;margin-top:8px;display:block;">Precio especial: $' + parseFloat(p.precio_especial).toLocaleString('es-AR') + '</span>';
-            }
-            html += '</div></div>';
+          data.turnos.forEach(function(t) {
+            var badgeClass = t.estado === 'pendiente' ? 'pendiente' : (t.estado === 'completado' ? 'completado' : 'cancelado');
+            html += '<div class="turno-item">' +
+              '<div class="fecha">📅 ' + t.fecha + ' - ' + t.hora + '</div>' +
+              '<div class="detalle">💅 ' + t.tratamiento + '</div>' +
+              '<span class="estado ' + badgeClass + '">' + t.estado + '</span>' +
+            '</div>';
           });
-          document.getElementById('promo-content').innerHTML = html;
+          document.getElementById('turnos-content').innerHTML = html;
         } else {
-          document.getElementById('promo-content').innerHTML = '<div class="empty-state">No hay promociones activas</div>';
+          document.getElementById('turnos-content').innerHTML = '<div class="empty-state">No tenés turnos</div>';
         }
       } catch(err) {
-        document.getElementById('promo-content').innerHTML = '<div class="empty-state">Error cargando promociones</div>';
+        document.getElementById('turnos-content').innerHTML = '<div class="empty-state">Error cargando</div>';
       }
     }
     
-    // GALERÍA CLIENTE
+    // GALERÍA
     async function showGaleriaCliente() {
       document.getElementById('app').innerHTML = 
-        '<button class="back-btn" style="background:rgba(255,255,255,0.2);color:white;border:none;padding:10px 20px;border-radius:20px;margin-bottom:20px;cursor:pointer;" onclick="showClienteHome()">← Volver</button>' +
+        '<button class="back-btn" onclick="showClienteHome()">← Volver</button>' +
         '<div class="header"><h1>📸 Galería</h1></div>' +
         '<div class="card"><div id="galeria-content"><div class="loading">Cargando...</div></div></div>';
       
@@ -703,7 +359,7 @@
         var galeria = await res.json();
         
         if (galeria.length === 0) {
-          document.getElementById('galeria-content').innerHTML = '<div class="empty-state">No hay fotos disponibles</div>';
+          document.getElementById('galeria-content').innerHTML = '<div class="empty-state">No hay fotos</div>';
         } else {
           var html = '';
           galeria.forEach(function(cat) {
@@ -718,61 +374,226 @@
           document.getElementById('galeria-content').innerHTML = html;
         }
       } catch(err) {
-        document.getElementById('galeria-content').innerHTML = '<div class="empty-state">Error cargando galería</div>';
+        document.getElementById('galeria-content').innerHTML = '<div class="empty-state">Error cargando</div>';
       }
+    }
+    
+    // TESTIMONIOS
+    async function showTestimonios() {
+      document.getElementById('app').innerHTML = 
+        '<button class="back-btn" onclick="showClienteHome()">← Volver</button>' +
+        '<div class="header"><h1>⭐ Reseñas</h1></div>' +
+        '<div class="card"><button class="btn secondary" onclick="showAgregarTestimonio()">✍️ Escribir reseña</button><div id="testimonios-list" style="margin-top:15px;"></div></div>';
+      
+      try {
+        var res = await fetch(API + '/testimonios');
+        var testimonios = await res.json();
+        
+        var container = document.getElementById('testimonios-list');
+        
+        if (testimonios.length === 0) {
+          container.innerHTML = '<div class="empty-state">Aún no hay reseñas</div>';
+        } else {
+          var html = '';
+          testimonios.forEach(function(t) {
+            var estrellas = '⭐'.repeat(t.calificacion || 5);
+            var inicial = (t.cliente_nombre || 'C').charAt(0).toUpperCase();
+            html += '<div class="testimonio-card">' +
+              '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">' +
+                '<div class="testimonio-avatar">' + inicial + '</div>' +
+                '<div><div class="testimonio-nombre">' + (t.cliente_nombre || 'Cliente') + '</div>' +
+                '<div class="testimonio-estrellas">' + estrellas + '</div></div>' +
+              '</div>' +
+              '<div class="testimonio-texto">"' + t.texto + '"</div>' +
+            '</div>';
+          });
+          container.innerHTML = html;
+        }
+      } catch(err) {
+        document.getElementById('testimonios-list').innerHTML = '<div class="empty-state">Error cargando</div>';
+      }
+    }
+    
+    function showAgregarTestimonio() {
+      document.getElementById('modal-container').innerHTML = 
+        '<div class="modal" onclick="closeModal()">' +
+          '<div class="modal-content">' +
+            '<h3>✍️ Tu Reseña</h3>' +
+            '<div id="testimonio-msg"></div>' +
+            '<form id="testimonio-form">' +
+              '<div class="form-group"><label>Tu opinión</label><textarea id="test-texto" rows="4" placeholder="Contanos..." required style="width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:10px;resize:none;"></textarea></div>' +
+              '<button type="submit" class="btn">Enviar Reseña</button>' +
+              '<button type="button" class="btn secondary" onclick="closeModal()">Cancelar</button>' +
+            '</form>' +
+          '</div>' +
+        '</div>';
+      
+      document.getElementById('testimonio-form').onsubmit = async function(e) {
+        e.preventDefault();
+        var texto = document.getElementById('test-texto').value;
+        
+        try {
+          var res = await fetch(API + '/testimonios', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ cliente_id: user.id, texto: texto, calificacion: 5 })
+          });
+          var result = await res.json();
+          
+          if (result.success) {
+            closeModal();
+            showTestimonios();
+          } else {
+            document.getElementById('testimonio-msg').innerHTML = '<div class="msg error">' + (result.error || 'Error') + '</div>';
+          }
+        } catch(err) {
+          document.getElementById('testimonio-msg').innerHTML = '<div class="msg error">Error de conexión</div>';
+        }
+      };
+    }
+    
+    // PROMOCIONES
+    async function showPromociones() {
+      document.getElementById('app').innerHTML = 
+        '<button class="back-btn" onclick="showClienteHome()">← Volver</button>' +
+        '<div class="header"><h1>🎉 Promociones</h1></div>' +
+        '<div class="card"><div id="promo-content"><div class="loading">Cargando...</div></div></div>';
+      
+      try {
+        var res = await fetch(API + '/promociones');
+        var promos = await res.json();
+        
+        if (promos.length > 0) {
+          var html = '';
+          promos.forEach(function(p) {
+            html += '<div class="trat-card" style="padding:15px;">' +
+              '<div class="trat-content" style="text-align:left;">' +
+                '<div class="name">🎉 ' + p.titulo + '</div>' +
+                '<div class="detail">' + (p.descripcion || '') + '</div>';
+            if (p.precio_especial) {
+              html += '<div class="precio">$' + parseFloat(p.precio_especial).toLocaleString('es-AR') + '</div>';
+            }
+            html += '</div></div>';
+          });
+          document.getElementById('promo-content').innerHTML = html;
+        } else {
+          document.getElementById('promo-content').innerHTML = '<div class="empty-state">No hay promociones</div>';
+        }
+      } catch(err) {
+        document.getElementById('promo-content').innerHTML = '<div class="empty-state">Error cargando</div>';
+      }
+    }
+    
+    // SOBRE NOSOTROS
+    function showSobreNosotros() {
+      document.getElementById('app').innerHTML = 
+        '<button class="back-btn" onclick="showClienteHome()">← Volver</button>' +
+        '<div class="sobre-nosotros">' +
+          '<img src="/fotos/abi.jpg" alt="Abigail" onerror="this.style.display=\'none\'">' +
+          '<h1 class="perfil-nombre">Abigail Berenice Villegas</h1>' +
+          '<p class="perfil-edad">21 años</p>' +
+          '<div class="perfil-desc">' +
+            '<p>¡Hola! Soy Abigail, profesional en estética y belleza. 💖</p>' +
+            '<p>📚 Cursos:</p>' +
+            '<ul>' +
+              '<li>🌟 Curso de Extensiones de Pestañas</li>' +
+              '<li>💇‍♀️ Curso Profesional de Alisados</li>' +
+              '<li>💆 Alisados, Botox y Shock de Keratina</li>' +
+              '<li>✨ Curso Diseño de Cejas</li>' +
+              '<li>💜 Capacitación en Cosmetología</li>' +
+              '<li>📖 Curso de Cosmetología</li>' +
+            '</ul>' +
+            '<p>Mi pasión es hacer que te sientas hermosa/o. ¡Te espero!</p>' +
+          '</div>' +
+        '</div>' +
+        '<div class="card" style="margin-top:15px;text-align:center;">' +
+          '<h3>📱 Redes Sociales</h3>' +
+          '<div style="display:flex;justify-content:center;gap:15px;margin-top:15px;">' +
+            '<a href="https://www.instagram.com/hairstyleabii" target="_blank" class="redes-link instagram">📷</a>' +
+          '</div>' +
+        '</div>' +
+        '<div class="card" style="margin-top:15px;text-align:center;">' +
+          '<h3>📍 Ubicación</h3>' +
+          '<p>Calle 32 entre 3 y 5</p>' +
+          '<p>Florentino Ameghino, Buenos Aires</p>' +
+        '</div>';
+    }
+    
+    // POLÍTICAS
+    function showPoliticas() {
+      document.getElementById('app').innerHTML = 
+        '<button class="back-btn" onclick="showClienteHome()">← Volver</button>' +
+        '<div class="card">' +
+          '<h2>📜 Políticas de Privacidad</h2>' +
+          '<div style="font-size:13px;color:#555;line-height:1.6;text-align:justify;">' +
+            '<p><strong>Última actualización:</strong> 2024</p>' +
+            '<p><strong>1. Datos:</strong> Recopilamos nombre, teléfono, email y datos de salud solo para gestionar turnos.</p>' +
+            '<p><strong>2. Uso:</strong> Los datos se usan para gestión de turnos y comunicación.</p>' +
+            '<p><strong>3. Protección:</strong> Tu información no se comparte con terceros.</p>' +
+            '<p><strong>4. Datos de salud:</strong> La información de anamnesis es confidencial y segura.</p>' +
+            '<p><strong>5. Contacto:</strong> WhatsApp +54 3388 673804</p>' +
+          '</div>' +
+        '</div>';
+    }
+    
+    // TÉRMINOS
+    function showTerminos() {
+      document.getElementById('app').innerHTML = 
+        '<button class="back-btn" onclick="showClienteHome()">← Volver</button>' +
+        '<div class="card">' +
+          '<h2>📋 Términos y Condiciones</h2>' +
+          '<div style="font-size:13px;color:#555;line-height:1.6;text-align:justify;">' +
+            '<p><strong>Última actualización:</strong> 2024</p>' +
+            '<p><strong>1. Turnos:</strong> Sujetos a confirmación. Se puede editar/cancelar 24h antes.</p>' +
+            '<p><strong>2. Cancelaciones:</strong> Con anticipación para no afectar futuras reservas.</p>' +
+            '<p><strong>3. Puntualidad:</strong> Se recomienda llegar a tiempo.</p>' +
+            '<p><strong>4. Pago:</strong> Se realiza en el local.</p>' +
+            '<p><strong>5. Contacto:</strong> WhatsApp +54 3388 673804</p>' +
+          '</div>' +
+        '</div>';
     }
     
     // SOLICITAR TURNO
     async function showSolicitarTurno() {
+      var manana = new Date();
+      manana.setDate(manana.getDate() + 1);
+      var fechaMin = manana.toISOString().split('T')[0];
+      
       document.getElementById('app').innerHTML = 
-        '<button class="back-btn" style="background:rgba(255,255,255,0.2);color:white;border:none;padding:10px 20px;border-radius:20px;margin-bottom:20px;cursor:pointer;" onclick="showClienteHome()">← Volver</button>' +
+        '<button class="back-btn" onclick="showClienteHome()">← Volver</button>' +
         '<div class="header"><h1>📅 Solicitar Turno</h1></div>' +
-        '<div class="card"><div id="solicitar-form"><div class="loading">Cargando...</div></div></div>';
+        '<div class="card"><div id="solicitar-form"></div></div>';
       
       try {
         var res = await fetch(API + '/tratamientos');
         var tratamientos = await res.json();
         
-        var tratamientoOptions = '<option value="">Seleccionar tratamiento</option>';
+        var tratamientoOptions = '<option value="">Seleccionar</option>';
         tratamientos.forEach(function(t) {
           var precio = parseFloat(t.precio || 0);
           var precioTexto = precio > 0 ? '$' + precio.toLocaleString('es-AR') : 'Consultar';
           tratamientoOptions += '<option value="' + t.id + '">' + t.nombre + ' (' + precioTexto + ')</option>';
         });
         
-        // Obtener fecha minima (mañana)
-        var manana = new Date();
-        manana.setDate(manana.getDate() + 1);
-        var fechaMin = manana.toISOString().split('T')[0];
-        
         document.getElementById('solicitar-form').innerHTML = 
           '<div id="solicitar-msg"></div>' +
           '<form id="solicitar-turno-form">' +
             '<div class="form-group"><label>Tratamiento *</label><select id="sol-tratamiento" required>' + tratamientoOptions + '</select></div>' +
-            '<div class="form-group"><label>Fecha preferida *</label><input type="date" id="sol-fecha" min="' + fechaMin + '" required></div>' +
-            '<div class="form-group"><label>Horario preferidio *</label><select id="sol-hora" required>' +
-              '<option value="">Seleccionar horario</option>' +
-              '<option value="09:00">09:00</option>' +
-              '<option value="09:30">09:30</option>' +
-              '<option value="10:00">10:00</option>' +
-              '<option value="10:30">10:30</option>' +
-              '<option value="11:00">11:00</option>' +
-              '<option value="11:30">11:30</option>' +
-              '<option value="12:00">12:00</option>' +
-              '<option value="12:30">12:30</option>' +
-              '<option value="13:00">13:00</option>' +
-              '<option value="13:30">13:30</option>' +
-              '<option value="14:00">14:00</option>' +
-              '<option value="14:30">14:30</option>' +
-              '<option value="15:00">15:00</option>' +
-              '<option value="15:30">15:30</option>' +
-              '<option value="16:00">16:00</option>' +
-              '<option value="16:30">16:30</option>' +
-              '<option value="17:00">17:00</option>' +
-              '<option value="17:30">17:30</option>' +
+            '<div class="form-group"><label>Fecha *</label><input type="date" id="sol-fecha" min="' + fechaMin + '" required></div>' +
+            '<div class="form-group"><label>Horario *</label><select id="sol-hora" required>' +
+              '<option value="">Seleccionar</option>' +
+              '<option value="09:00">09:00</option><option value="09:30">09:30</option>' +
+              '<option value="10:00">10:00</option><option value="10:30">10:30</option>' +
+              '<option value="11:00">11:00</option><option value="11:30">11:30</option>' +
+              '<option value="12:00">12:00</option><option value="12:30">12:30</option>' +
+              '<option value="13:00">13:00</option><option value="13:30">13:30</option>' +
+              '<option value="14:00">14:00</option><option value="14:30">14:30</option>' +
+              '<option value="15:00">15:00</option><option value="15:30">15:30</option>' +
+              '<option value="16:00">16:00</option><option value="16:30">16:30</option>' +
+              '<option value="17:00">17:00</option><option value="17:30">17:30</option>' +
               '<option value="18:00">18:00</option>' +
             '</select></div>' +
-            '<div class="form-group"><label>Notas adicionales</label><textarea id="sol-notas" rows="3" placeholder="Alguna observación o preferencia especial..."></textarea></div>' +
+            '<div class="form-group"><label>Notas</label><textarea id="sol-notas" rows="3" placeholder="Algo especial..."></textarea></div>' +
             '<button type="submit" class="btn">📨 Enviar Solicitud</button>' +
           '</form>';
         
@@ -785,7 +606,7 @@
             tratamiento_id: document.getElementById('sol-tratamiento').value,
             fecha: document.getElementById('sol-fecha').value,
             hora: document.getElementById('sol-hora').value,
-            notas: document.getElementById('sol-notas').value || 'Solicitado por cliente'
+            notas: document.getElementById('sol-notas').value || 'Solicitado'
           };
           
           try {
@@ -797,18 +618,138 @@
             var result = await res.json();
             
             if (result.id || result.success) {
-              msg.innerHTML = '<div class="msg success">¡Solicitud enviada! Te contactaremos para confirmar tu turno.</div>';
+              msg.innerHTML = '<div class="msg success">¡Solicitud enviada!</div>';
               setTimeout(function() { showMisTurnos(); }, 2000);
             } else {
-              msg.innerHTML = '<div class="msg error">' + (result.error || 'Error al enviar solicitud') + '</div>';
+              msg.innerHTML = '<div class="msg error">' + (result.error || 'Error') + '</div>';
             }
           } catch(err) {
             msg.innerHTML = '<div class="msg error">Error de conexión</div>';
           }
         };
       } catch(err) {
-        document.getElementById('solicitar-form').innerHTML = '<div class="empty-state">Error cargando datos</div>';
+        document.getElementById('solicitar-form').innerHTML = '<div class="empty-state">Error cargando</div>';
       }
+    }
+    
+    // EDITAR PERFIL
+    function editarMiPerfil() {
+      document.getElementById('modal-container').innerHTML = 
+        '<div class="modal" onclick="closeModal()">' +
+          '<div class="modal-content">' +
+            '<h3>✏️ Editar Mi Perfil</h3>' +
+            '<div id="edit-msg"></div>' +
+            '<form id="edit-form">' +
+              '<div class="form-group"><label>Nombre</label><input type="text" id="edit-nombre" value="' + (user.nombre || '') + '"></div>' +
+              '<div class="form-group"><label>Teléfono</label><input type="tel" id="edit-telefono" value="' + (user.telefono || '') + '"></div>' +
+              '<div class="form-group"><label>Email</label><input type="email" id="edit-email" value="' + (user.email || '') + '"></div>' +
+              '<button type="submit" class="btn">Guardar</button>' +
+              '<button type="button" class="btn secondary" onclick="closeModal()">Cancelar</button>' +
+            '</form>' +
+          '</div>' +
+        '</div>';
+      
+      document.getElementById('edit-form').onsubmit = async function(e) {
+        e.preventDefault();
+        var msg = document.getElementById('edit-msg');
+        
+        try {
+          var res = await fetch(API + '/clientes/' + user.id, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              nombre: document.getElementById('edit-nombre').value,
+              telefono: document.getElementById('edit-telefono').value || null,
+              email: document.getElementById('edit-email').value || null
+            })
+          });
+          var result = await res.json();
+          
+          if (result.success) {
+            user.nombre = document.getElementById('edit-nombre').value;
+            user.telefono = document.getElementById('edit-telefono').value;
+            user.email = document.getElementById('edit-email').value;
+            localStorage.setItem('u', JSON.stringify(user));
+            closeModal();
+            showClienteHome();
+          } else {
+            msg.innerHTML = '<div class="msg error">' + (result.error || 'Error') + '</div>';
+          }
+        } catch(err) {
+          msg.innerHTML = '<div class="msg error">Error de conexión</div>';
+        }
+      };
+    }
+    
+    function closeModal() {
+      document.getElementById('modal-container').innerHTML = '';
+    }
+    
+    // PLANILLA FACIAL
+    function mostrarPlanillaFacial(tratamientoId, tratamientoNombre) {
+      document.getElementById('modal-container').innerHTML = 
+        '<div class="modal" onclick="closeModal()">' +
+          '<div class="modal-content" style="max-width:500px;">' +
+            '<h3>📋 Planilla Anamnesis</h3>' +
+            '<div id="planilla-msg"></div>' +
+            '<form id="planilla-form">' +
+              '<div class="form-group"><label>Tipo de piel</label><select id="plan-tipo-piel" required><option value="">Seleccionar</option><option value="Normal">Normal</option><option value="Seca">Seca</option><option value="Grasa">Grasa</option><option value="Mixta">Mixta</option><option value="Sensible">Sensible</option></select></div>' +
+              '<div class="form-group"><label>¿Alergias?</label><select id="plan-alergias"><option value="No">No</option><option value="Si">Sí</option></select></div>' +
+              '<div class="form-group"><label>¿Medicamentos?</label><select id="plan-medicamentos"><option value="No">No</option><option value="Si">Sí</option></select></div>' +
+              '<div class="form-group"><label>¿Problemas de salud?</label><select id="plan-problemas"><option value="No">No</option><option value="Si">Sí</option></select></div>' +
+              '<div class="form-group"><label>¿Embarazada?</label><select id="plan-embarazada"><option value="No">No</option><option value="Si">Sí</option></select></div>' +
+              '<div class="form-group"><label>Comentarios</label><textarea id="plan-comentarios" rows="3" placeholder="Algo a considerar..."></textarea></div>' +
+              '<button type="submit" class="btn">💾 Guardar y Solicitar Turno</button>' +
+              '<button type="button" class="btn secondary" onclick="closeModal()">Cancelar</button>' +
+            '</form>' +
+          '</div>' +
+        '</div>';
+      
+      document.getElementById('planilla-form').onsubmit = async function(e) {
+        e.preventDefault();
+        var msg = document.getElementById('planilla-msg');
+        
+        var datos = {
+          tipo_piel: document.getElementById('plan-tipo-piel').value,
+          alergias: document.getElementById('plan-alergias').value,
+          medicamentos: document.getElementById('plan-medicamentos').value,
+          problemas: document.getElementById('plan-problemas').value,
+          embarazada: document.getElementById('plan-embarazada').value,
+          comentarios: document.getElementById('plan-comentarios').value
+        };
+        
+        try {
+          var res = await fetch(API + '/legajos', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              cliente_id: user.id,
+              tratamiento: tratamientoNombre,
+              tipo: 'facial',
+              fecha: new Date().toISOString().split('T')[0],
+              datos: JSON.stringify(datos)
+            })
+          });
+          
+          var resTurno = await fetch(API + '/turnos', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              cliente_id: user.id,
+              tratamiento_id: tratamientoId,
+              fecha: new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0],
+              hora: '10:00',
+              notas: 'Tratamiento facial - Anamnesis completada'
+            })
+          });
+          
+          msg.innerHTML = '<div class="msg success">¡Planilla guardada! Turno solicitado.</div>';
+          setTimeout(function() { closeModal(); showMisTurnos(); }, 2000);
+          
+        } catch(err) {
+          msg.innerHTML = '<div class="msg error">Error al guardar</div>';
+        }
+      };
     }
   </script>
 </body>

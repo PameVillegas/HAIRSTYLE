@@ -144,6 +144,17 @@ async function createTables(client) {
       activo BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS testimonios (
+      id SERIAL PRIMARY KEY,
+      cliente_id INTEGER NOT NULL,
+      texto TEXT NOT NULL,
+      calificacion INTEGER DEFAULT 5,
+      aprobado BOOLEAN DEFAULT FALSE,
+      activo BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
     )`
   ];
 
@@ -166,8 +177,23 @@ async function createTables(client) {
     );
     
     console.log('Usuarios admin creados');
+    const clienteTest = await client.query('SELECT COUNT(*) as count FROM clientes WHERE username = $1', ['cliente1']);
+if (parseInt(clienteTest.rows[0].count) === 0) {
+  await client.query(
+    'INSERT INTO clientes (username, nombre, telefono, email, password, activo) VALUES ($1, $2, $3, $4, $5, $6)',
+    ['cliente1', 'Cliente Prueba', '3388123456', null, 'cliente123', true]
+  );
+  console.log('Cliente de prueba creado');
+}
   }
-  
+  const clienteTest = await client.query('SELECT COUNT(*) as count FROM clientes WHERE username = $1', ['cliente1']);
+if (parseInt(clienteTest.rows[0].count) === 0) {
+  await client.query(
+    'INSERT INTO clientes (username, nombre, telefono, email, password, activo) VALUES ($1, $2, $3, $4, $5, $6)',
+    ['cliente1', 'Cliente Prueba', '3388123456', null, 'cliente123', true]
+  );
+  console.log('Cliente de prueba creado');
+}
   const tratamientosResult = await client.query('SELECT COUNT(*) as count FROM tratamientos');
   if (parseInt(tratamientosResult.rows[0].count) === 0) {
     const tratamientos = [
