@@ -1,0 +1,30 @@
+// FUNCIONES QUE HAY QUE AGREGAR AL PANEL.HTML
+
+// 1. showSection cases (después de 'testimonios'):
+//         case 'bloquear': showBloquearHorario(); break;
+//         case 'ingresos': showIngresos(); break;
+//         case 'turno-directo': showTurnoDirecto(); break;
+//         case 'nuevo-legajo': showNuevoLegajo(); break;
+//         case 'estadisticas': showEstadisticas(); break;
+
+// 2. Agregar al menú principal:
+// - showSection('bloquear')
+// - showSection('ingresos')  
+// - showSection('turno-directo')
+// - showSection('nuevo-legajo')
+// - showSection('estadisticas')
+
+// 3. Agregar functions:
+// - showIngresos()
+// - showAgregarIngresoExtra()
+// - showTurnoDirecto()
+// - showNuevoLegajo()
+// - showBloquearHorario()
+// - showEstadisticas()
+
+// 4. Agregar CSS para scroll buttons Y WhatsApp floating
+
+// 5. Agregar HTML buttons (scroll Y WhatsApp)
+// - <button class="scroll-btn scroll-up">▲</button>
+// - <button class="scroll-btn scroll-down">▼</button>  
+// - <a href="https://wa.me/543388673804" class="whatsapp-float">...

@@ -146,6 +146,31 @@ router.delete('/tratamientos/:id', async (req, res) => {
 
 // ==================== TURNOS ====================
 
+router.get('/cliente/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(`
+      SELECT 
+        t.id,
+        t.fecha,
+        t.hora,
+        t.estado,
+        t.notas,
+        tr.nombre as tratamiento,
+        tr.precio as tratamiento_precio
+      FROM turnos t
+      JOIN tratamientos tr ON t.tratamiento_id = tr.id
+      WHERE t.cliente_id = $1
+      ORDER BY t.fecha DESC, t.hora DESC
+    `, [id]);
+    
+    res.json({ success: true, turnos: result.rows });
+  } catch (error) {
+    console.error('Error:', error);
+    res.json({ success: false, turnos: [] });
+  }
+});
+
 // Obtener todos los turnos con información de cliente y tratamiento
 router.get('/turnos', async (req, res) => {
   try {
@@ -172,7 +197,7 @@ router.get('/turnos', async (req, res) => {
 // Crear nuevo turno
 router.post('/turnos', async (req, res) => {
   try {
-    const { cliente_id, tratamiento_id, fecha, hora, notas } = req.body;
+    const { cliente_id, tratamiento_id, fecha, hora, notas, precio } = req.body;
     
     if (!cliente_id || !tratamiento_id || !fecha || !hora) {
       return res.status(400).json({ error: 'Cliente, tratamiento, fecha y hora son requeridos' });
@@ -188,9 +213,15 @@ router.post('/turnos', async (req, res) => {
       return res.status(400).json({ error: 'Ya hay un turno agendado en esa fecha y hora' });
     }
 
+    // Si hay precio especial (alisado por cm), actualizar las notas
+    var notasFinales = notas || null;
+    if (precio) {
+      notasFinales = (notas || '') + ' [PRECIO ESPECIAL: $' + precio + ']';
+    }
+
     const result = await pool.query(
       'INSERT INTO turnos (cliente_id, tratamiento_id, fecha, hora, notas) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [cliente_id, tratamiento_id, fecha, hora, notas || null]
+      [cliente_id, tratamiento_id, fecha, hora, notasFinales]
     );
     
     // Obtener información completa del turno creado
@@ -199,7 +230,9 @@ router.post('/turnos', async (req, res) => {
         t.*,
         c.nombre as cliente_nombre,
         c.telefono as cliente_telefono,
-        tr.nombre as tratamiento_nombre
+        tr.nombre as tratamiento_nombre,
+        tr.precio as tratamiento_precio,
+        tr.duracion as tratamiento_duracion
       FROM turnos t
       JOIN clientes c ON t.cliente_id = c.id
       JOIN tratamientos tr ON t.tratamiento_id = tr.id
@@ -336,14 +369,92 @@ router.get('/galeria', async (req, res) => {
     );
     res.json(result.rows);
   } catch (error) {
-    console.error('Error obteniendo galeria:', error);
+    console.error('Error getting galeria:', error);
     res.status(500).json({ error: 'Error del servidor' });
   }
 });
 
-// Galería con subcarpetas locales
+// Agregar foto a galería
+router.post('/galeria', async (req, res) => {
+  try {
+    const { categoria, nombre, imagen_url } = req.body;
+    
+    const titulo = nombre || req.body.titulo;
+    const url = imagen_url || req.body.url;
+    
+    if (!categoria || !titulo || !url) {
+      return res.status(400).json({ error: 'Categoría, título e imagen son requeridos' });
+    }
+    
+    const result = await pool.query(
+      'INSERT INTO galeria (titulo, categoria, imagen_url, activo) VALUES ($1, $2, $3, $4) RETURNING *',
+      [titulo, categoria, url, true]
+    );
+    
+    res.status(201).json({
+      success: true,
+      message: 'Foto agregada a galería',
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error adding to galeria:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// Eliminar foto de galería
+router.delete('/galeria/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const result = await pool.query(
+      'UPDATE galeria SET activo = FALSE WHERE id = $1 RETURNING *',
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Foto no encontrada' });
+    }
+    
+    res.json({ success: true, message: 'Foto eliminada' });
+  } catch (error) {
+    console.error('Error deleting from galeria:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// Galería combinada: base de datos + locales
 router.get('/galeria/local', async (req, res) => {
-  const galeria = [
+  // Obtener fotos de la base de datos
+  let fotosDB = [];
+  try {
+    const result = await pool.query(
+      'SELECT categoria, titulo as nombre, imagen_url as url FROM galeria WHERE activo = TRUE ORDER BY categoria, titulo'
+    );
+    fotosDB = result.rows;
+  } catch(e) {
+    console.log('No hay fotos en BD');
+  }
+  
+  // Agrupar fotos de BD por categoría
+  const categoriasDB = {};
+  fotosDB.forEach(f => {
+    if (!categoriasDB[f.categoria]) {
+      categoriasDB[f.categoria] = {
+        categoria: f.categoria,
+        nombre: f.categoria.charAt(0).toUpperCase() + f.categoria.slice(1),
+        icon: '📷',
+        imagenes: []
+      };
+    }
+    categoriasDB[f.categoria].imagenes.push({
+      url: f.imagen_url,
+      nombre: f.nombre
+    });
+  });
+  
+  // Fotos locales hardcodeadas
+  const galeriaLocal = [
     {
       categoria: 'perfilado',
       nombre: 'Perfilado',
@@ -432,7 +543,20 @@ router.get('/galeria/local', async (req, res) => {
     }
   ];
   
-  res.json(galeria);
+  // Combinar fotos de BD con fotos locales
+  Object.keys(categoriasDB).forEach(cat => {
+    if (!galeriaLocal.find(g => g.categoria === cat)) {
+      galeriaLocal.push(categoriasDB[cat]);
+    } else {
+      // Agregar fotos de BD a categoría existente
+      var catLocal = galeriaLocal.find(g => g.categoria === cat);
+      categoriasDB[cat].imagenes.forEach(img => {
+        catLocal.imagenes.push(img);
+      });
+    }
+  });
+  
+  res.json(galeriaLocal);
 });
 
 // ==================== LEGAJOS ====================
@@ -638,6 +762,75 @@ router.delete('/testimonios/:id', async (req, res) => {
   } catch (error) {
     console.error('Error eliminando testimonio:', error);
     res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// ==================== HORARIOS BLOQUEADOS ====================
+
+// Obtener horarios bloqueados
+router.get('/horarios-bloqueados', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM horarios_bloqueados WHERE activo = TRUE ORDER BY fecha, hora'
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error obteniendo horarios bloqueados:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// Bloquear horario
+router.post('/horarios-bloqueados', async (req, res) => {
+  try {
+    const { fecha, hora, motivo } = req.body;
+    
+    if (!fecha) {
+      return res.status(400).json({ error: 'Fecha es requerida' });
+    }
+    
+    const result = await pool.query(
+      'INSERT INTO horarios_bloqueados (fecha, hora, motivo) VALUES ($1, $2, $3) RETURNING *',
+      [fecha, hora || null, motivo || null]
+    );
+    
+    res.status(201).json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    console.error('Error bloqueando horario:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// Desbloquear horario
+router.delete('/horarios-bloqueados/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    await pool.query(
+      'UPDATE horarios_bloqueados SET activo = FALSE WHERE id = $1',
+      [id]
+    );
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error desbloqueando:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// Verificar si un horario está bloqueado
+router.get('/horario-bloqueado/:fecha/:hora', async (req, res) => {
+  try {
+    const { fecha, hora } = req.params;
+    
+    const result = await pool.query(
+      'SELECT * FROM horarios_bloqueados WHERE fecha = $1 AND hora = $2 AND activo = TRUE',
+      [fecha, hora]
+    );
+    
+    res.json({ bloqueado: result.rows.length > 0, data: result.rows[0] });
+  } catch (error) {
+    res.json({ bloqueado: false });
   }
 });
 

@@ -31,6 +31,7 @@ if (process.env.VERCEL) {
 
 app.use(express.static(clientDistPath));
 app.use('/fotos', express.static(clientPublicPath));
+app.use('/fotos', express.static(clientDistPath));
 
 // Servir páginas HTML explícitamente
 app.get('/entrar.html', (req, res) => {
@@ -45,8 +46,11 @@ app.get('/admin.html', (req, res) => {
 app.get('/cliente.html', (req, res) => {
   res.sendFile(join(clientDistPath, 'cliente.html'));
 });
-app.get('/cliente.html', (req, res) => {
-  res.sendFile(join(clientDistPath, 'cliente.html'));
+app.get('/registro.html', (req, res) => {
+  res.sendFile(join(clientDistPath, 'registro.html'));
+});
+app.get('/index.html', (req, res) => {
+  res.sendFile(join(clientDistPath, 'index.html'));
 });
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/auth', authRoutes);

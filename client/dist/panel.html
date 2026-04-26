@@ -106,6 +106,7 @@
     .badge.pendiente { background: #fff3e0; color: #ff9800; }
     .badge.completado { background: #e8f5e9; color: #4caf50; }
     .badge.cancelado { background: #ffebee; color: #f44336; }
+    .badge-notif { background: #e91e63; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; }
     
     .empty-state { text-align: center; padding: 40px 20px; color: #666; }
     .loading { text-align: center; padding: 40px; color: #666; }
@@ -221,7 +222,7 @@
         '<div class="card">' +
           '<h2>📋 Menú Principal</h2>' +
           '<div class="menu">' +
-            '<div class="menu-item" onclick="showSection(\'turnos\')"><span class="icon">📅</span><span class="label">Turnos</span><span class="desc">Ver turnos</span></div>' +
+            '<div class="menu-item" onclick="showSection(\'turnos\')"><span class="icon">📅</span><span class="label">Turnos</span><span class="desc" id="menu-turnos-badge">Ver turnos</span></div>' +
             '<div class="menu-item" onclick="showSection(\'nuevo-turno\')"><span class="icon">➕</span><span class="label">Nuevo Turno</span><span class="desc">Crear turno</span></div>' +
             '<div class="menu-item secondary" onclick="showSection(\'registrar-cliente\')"><span class="icon">👤</span><span class="label">Registrar</span><span class="desc">Nuevo cliente</span></div>' +
             '<div class="menu-item secondary" onclick="showSection(\'lista-clientes\')"><span class="icon">📋</span><span class="label">Clientes</span><span class="desc">Ver todos</span></div>' +
@@ -267,6 +268,10 @@
         document.getElementById('stat-clientes').textContent = clientes.length;
         document.getElementById('stat-turnos').textContent = completadosMes.length;
         document.getElementById('stat-pendientes').textContent = pendientes;
+        
+        if (pendientes > 0 && document.getElementById('menu-turnos-badge')) {
+          document.getElementById('menu-turnos-badge').innerHTML = '<span class="badge-notif">' + pendientes + '</span>';
+        }
         
         document.getElementById('stats-grid').innerHTML = 
           '<div class="stat-card" style="background:linear-gradient(135deg,#4caf50,#2e7d32);">' +

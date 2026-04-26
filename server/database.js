@@ -1,4 +1,4 @@
-﻿import pkg from 'pg';
+import pkg from 'pg';
 const { Pool } = pkg;
 import dotenv from 'dotenv';
 
@@ -130,6 +130,15 @@ async function createTables(client) {
       descripcion TEXT,
       imagen_url VARCHAR(500) NOT NULL,
       categoria VARCHAR(100),
+      activo BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS horarios_bloqueados (
+      id SERIAL PRIMARY KEY,
+      fecha DATE NOT NULL,
+      hora TIME,
+      motivo VARCHAR(255),
       activo BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`,

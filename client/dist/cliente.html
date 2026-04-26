@@ -8,6 +8,9 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; overflow-x: hidden; }
+    html { scroll-behavior: smooth; }
+    body::-webkit-scrollbar { display: none; }
+    body { -ms-overflow-style: none; scrollbar-width: none; }
     body {
       font-family: 'Roboto', sans-serif;
       background: linear-gradient(135deg, #e91e63, #9c27b0);
@@ -24,7 +27,8 @@
       opacity: 0.3;
       z-index: 0;
     }
-    .container { position: relative; z-index: 1; padding: 20px; max-width: 600px; margin: 0 auto; }
+    .container { position: relative; z-index: 1; padding: 20px; max-width: 600px; margin: 0 auto; overflow-y: auto; height: calc(100vh - 40px); padding-bottom: 100px; -ms-overflow-style: none; scrollbar-width: none; }
+    .container::-webkit-scrollbar { display: none; }
     
     .header {
       text-align: center;
@@ -108,8 +112,8 @@
     
     .whatsapp-float {
       position: fixed; bottom: 25px; right: 20px; width: 55px; height: 55px;
-      background: #25D366; border-radius: 50%; display: flex;
-      align-items: center; justify-content: center; font-size: 28px;
+      background: #128C7E; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center;
       text-decoration: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 9998;
     }
     
@@ -138,10 +142,25 @@
       .trat-grid { grid-template-columns: 1fr; }
       .menu-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     }
+    
+    .scroll-btn {
+      position: fixed; left: 15px; width: 45px; height: 45px;
+      background: linear-gradient(135deg, #e91e63, #9c27b0); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; color: white; cursor: pointer; z-index: 9997;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2); border: none;
+      transition: transform 0.2s;
+    }
+    .scroll-btn:hover { transform: scale(1.1); }
+    .scroll-up { bottom: 90px; }
+    .scroll-down { bottom: 30px; }
+    .scroll-btn:disabled { opacity: 0.3; cursor: default; transform: none; }
   </style>
 </head>
 <body>
-  <a href="https://wa.me/543388673804" target="_blank" class="whatsapp-float">💬</a>
+  <a href="https://wa.me/543388673804" target="_blank" class="whatsapp-float"><svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.545 4.589-10.032 10.077-10.032 5.489 0 10.077 4.487 10.077 10.032 0 4.055-2.916 7.703-6.923 9.564l-2.145.8a9.87 9.87 0 01-5.027 1.379"/></svg></a>
+  <button class="scroll-btn scroll-up" onclick="document.getElementById('app').parentElement.scrollTop -= 200">▲</button>
+  <button class="scroll-btn scroll-down" onclick="document.getElementById('app').parentElement.scrollTop += 200">▼</button>
   <div class="container">
     <div id="app"></div>
   </div>
@@ -172,7 +191,41 @@
       window.location.href = '/entrar.html';
     }
     
+    // Recordatorio de turno 2 horas antes
+    async function verificarRecordatorio() {
+      try {
+        var res = await fetch(API + '/turnos?cliente_id=' + user.id);
+        var turnos = await res.json();
+        
+        var ahora = new Date();
+        var dosHoras = 2 * 60 * 60 * 1000;
+        
+        turnos.forEach(function(t) {
+          if (t.estado !== 'pendiente') return;
+          
+          var fechaTurno = new Date(t.fecha + 'T' + t.hora);
+          var diff = fechaTurno - ahora;
+          
+          // Entre 1.5 y 2.5 horas = entre 90 y 150 minutos
+          var minutos = diff / 60000;
+          if (minutos >= 90 && minutos <= 150) {
+            var yaMostrado = localStorage.getItem('recordatorio_' + t.id);
+            if (!yaMostrado) {
+              var mensaje = '⏰ Recordatorio: Tu turno es en aproximadamente ' + Math.round(minutos) + ' minutos!\n\n' +
+                '📅 ' + t.fecha + ' a las ' + t.hora + '\n' +
+                '💅 ' + (t.tratamiento_nombre || 'Servicio');
+              alert(mensaje);
+              localStorage.setItem('recordatorio_' + t.id, 'mostrado');
+            }
+          }
+        });
+      } catch(e) {}
+    }
+    
     function showClienteHome() {
+      // Verificar recordatorio de turno
+      verificarRecordatorio();
+      
       document.getElementById('app').innerHTML = 
         '<div class="header">' +
           '<h1>HairStyle</h1>' +
@@ -183,13 +236,13 @@
         '<div class="menu-grid">' +
           '<div class="menu-box" onclick="showServicios()"><span class="menu-icon">💅</span><span class="menu-label">Servicios</span></div>' +
           '<div class="menu-box" onclick="showGaleriaCliente()"><span class="menu-icon">📸</span><span class="menu-label">Galería</span></div>' +
-          '<div class="menu-box" onclick="showMisTurnos()"><span class="menu-icon">📅</span><span class="menu-label">Turnos</span></div>' +
+          '<div class="menu-box" onclick="showMisTurnos()"><span class="menu-icon">📅</span><span class="menu-label">Mis Turnos</span></div>' +
           '<div class="menu-box" onclick="showTestimonios()"><span class="menu-icon">⭐</span><span class="menu-label">Reseñas</span></div>' +
           '<div class="menu-box" onclick="showPromociones()"><span class="menu-icon">🎉</span><span class="menu-label">Promos</span></div>' +
           '<div class="menu-box" onclick="showSobreNosotros()"><span class="menu-icon">✨</span><span class="menu-label">Sobre Mí</span></div>' +
           '<div class="menu-box" onclick="showPoliticas()"><span class="menu-icon">📜</span><span class="menu-label">Políticas</span></div>' +
           '<div class="menu-box" onclick="showTerminos()"><span class="menu-icon">📋</span><span class="menu-label">Términos</span></div>' +
-          '<div class="menu-box" onclick="showSolicitarTurno()"><span class="menu-icon">📆</span><span class="menu-label">Turno</span></div>' +
+          '<div class="menu-box" onclick="showSolicitarTurno()"><span class="menu-icon">📆</span><span class="menu-label">Nuevo Turno</span></div>' +
         '</div>' +
         
         '<div class="card">' +
@@ -219,22 +272,33 @@
             var precio = parseFloat(t.precio || 0);
             var img = t.imagen_url || '/fotos/logo.png';
             var nombre = t.nombre || '';
-            var esFacial = nombre.toUpperCase().indexOf('FACIAL') >= 0;
+            var descripcion = t.descripcion || '';
+            var esLimpieza = nombre.toUpperCase().indexOf('LIMPIEZA') >= 0;
+            var nombreUpper = nombre.toUpperCase();
+            var esAlisado = nombreUpper.indexOf('TRATAMIENTOS Y ALISADOS') >= 0 || nombreUpper.indexOf('ALISADO') >= 0 || nombreUpper.indexOf('BOTOX') >= 0 || nombreUpper.indexOf('TRATAMIENTO') >= 0 || nombreUpper.indexOf('CAPILAR') >= 0;
             
             html += '<div class="trat-card">' +
               '<img src="' + img + '" class="trat-image" onerror="this.src=\'/fotos/logo.png\'">' +
               '<div class="trat-content">' +
-                '<div class="name">' + nombre + '</div>' +
-                '<div class="detail">' + t.duracion + ' min - ' + (t.descripcion || '') + '</div>' +
-                '<div class="precio">' + (precio > 0 ? '$' + precio.toLocaleString('es-AR') : 'Consultar precio') + '</div>';
+                '<div class="name">' + nombre + '</div>';
             
-            if (precio === 0) {
-              var mensaje = encodeURIComponent('Hola! Quiero consultar por el tratamiento: ' + nombre);
-              html += '<a href="https://wa.me/543388673804?text=' + mensaje + '" class="solicitar" style="display:block;text-align:center;text-decoration:none;">💬 Consultar</a>';
-            } else if (esFacial) {
-              html += '<button class="solicitar" onclick="mostrarPlanillaFacial(' + t.id + ', \'' + nombre.replace(/'/g, "\\'") + '\')">📋 Planilla</button>';
+            if (esLimpieza) {
+              html += '<div class="detail" style="font-size:12px;color:#555;margin:5px 0;">' + descripcion + '</div>';
+              html += '<div style="font-size:11px;color:#888;margin:5px 0;">💛 Todas incluyen alta frecuencia</div>';
             } else {
-              html += '<button class="solicitar" onclick="solicitarTurnoTratamiento(' + t.id + ', \'' + nombre.replace(/'/g, "\\'") + '\')">📅 Turno</button>';
+              html += '<div class="detail">' + t.duracion + ' min' + (descripcion ? ' - ' + descripcion : '') + '</div>';
+            }
+            
+            html += '<div class="precio">' + (precio > 0 ? '$' + precio.toLocaleString('es-AR') : 'Consultar precio') + '</div>';
+            
+            if (esAlisado) {
+              html += '<button class="solicitar" onclick="solicitarTurnoTratamiento(' + t.id + ', \'' + nombre.replace(/'/g, "\\'") + '\')">📅 Solicitar Turno</button>';
+              html += '<div style="font-size:10px;color:#999;margin-top:5px;">Seleccioná largo del cabello</div>';
+            } else if (precio === 0) {
+              var mensaje = encodeURIComponent('Hola! Quiero consultar por el tratamiento: ' + nombre);
+              html += '<a href="https://wa.me/543388673804?text=' + mensaje + '" class="solicitar" style="display:block;text-align:center;text-decoration:none;background:#128C7E;">💬 Consultar</a>';
+            } else {
+              html += '<button class="solicitar" onclick="solicitarTurnoTratamiento(' + t.id + ', \'' + nombre.replace(/'/g, "\\'") + '\')">📅 Solicitar Turno</button>';
             }
             
             html += '</div></div>';
@@ -250,23 +314,44 @@
     }
     
     function solicitarTurnoTratamiento(tratamientoId, tratamientoNombre) {
-      showSolicitarTurnoConTratamiento(tratamientoId, tratamientoNombre);
+      var nombreUpper = tratamientoNombre.toUpperCase();
+      var esAlisado = nombreUpper.indexOf('TRATAMIENTOS Y ALISADOS') >= 0 || nombreUpper.indexOf('ALISADO') >= 0 || nombreUpper.indexOf('BOTOX') >= 0 || nombreUpper.indexOf('TRATAMIENTO') >= 0 || nombreUpper.indexOf('CAPILAR') >= 0;
+      showSolicitarTurnoConTratamiento(tratamientoId, tratamientoNombre, esAlisado);
     }
     
-    async function showSolicitarTurnoConTratamiento(tratamientoId, tratamientoNombre) {
+    async function showSolicitarTurnoConTratamiento(tratamientoId, tratamientoNombre, requiereCM) {
       var manana = new Date();
       manana.setDate(manana.getDate() + 1);
       var fechaMin = manana.toISOString().split('T')[0];
       
       document.getElementById('app').innerHTML = 
         '<button class="back-btn" onclick="showServicios()">← Volver</button>' +
-        '<div class="header"><h1>📅 Turno: ' + tratamientoNombre + '</h1></div>' +
+        '<div class="header"><h1>📅 Solicitar Turno</h1></div>' +
         '<div class="card"><div id="solicitar-form"></div></div>';
+      
+      var cmOptions = '';
+      if (requiereCM) {
+        cmOptions = '<div class="form-group"><label>Largo del cabello *</label>' +
+          '<select id="sol-cm" required onchange="actualizarPrecioCM(this.value)">' +
+            '<option value="">Seleccionar largo</option>' +
+            '<option value="0-30">0 a 30 cm - $30.000</option>' +
+            '<option value="30-40">30 a 40 cm - $32.000</option>' +
+            '<option value="40-50">40 a 50 cm - $34.000</option>' +
+            '<option value="50-60">50 a 60 cm - $36.000</option>' +
+            '<option value="60-70">60 a 70 cm - $38.000</option>' +
+            '<option value="70-80">70 a 80 cm - $40.000</option>' +
+            '<option value="80-90">80 a 90 cm - $42.000</option>' +
+          '</select></div>' +
+          '<div id="precio-mostrado" style="background:#e8f5e9;padding:10px;border-radius:8px;text-align:center;font-weight:700;color:#4caf50;display:none;">Precio: <span id="precio-turno"></span></div>';
+      }
+      
+      var extraField = requiereCM ? '<input type="hidden" id="sol-precio-extra" value="0">' : '';
       
       document.getElementById('solicitar-form').innerHTML = 
         '<div id="solicitar-msg"></div>' +
         '<form id="solicitar-turno-form">' +
           '<div class="form-group"><label>Tratamiento</label><input type="text" value="' + tratamientoNombre + '" disabled></div>' +
+          cmOptions +
           '<div class="form-group"><label>Fecha *</label><input type="date" id="sol-fecha" min="' + fechaMin + '" required></div>' +
           '<div class="form-group"><label>Horario *</label><select id="sol-hora" required>' +
             '<option value="">Seleccionar</option>' +
@@ -281,21 +366,49 @@
             '<option value="17:00">17:00</option><option value="17:30">17:30</option>' +
             '<option value="18:00">18:00</option>' +
           '</select></div>' +
-          '<div class="form-group"><label>Notas</label><textarea id="sol-notas" rows="3" placeholder="Observaciones..."></textarea></div>' +
+          '<div class="form-group"><label>Notas</label><textarea id="sol-notas" rows="2" placeholder="Observaciones..."></textarea></div>' +
+          extraField +
           '<button type="submit" class="btn">📨 Solicitar Turno</button>' +
         '</form>';
+      
+      window.actualizarPrecioCM = function(valor) {
+        var precios = {
+          '0-30': 30000, '30-40': 32000, '40-50': 34000,
+          '50-60': 36000, '60-70': 38000, '70-80': 40000, '80-90': 42000
+        };
+        var precio = precios[valor] || 0;
+        if (precio > 0) {
+          document.getElementById('precio-mostrado').style.display = 'block';
+          document.getElementById('precio-turno').textContent = '$' + precio.toLocaleString('es-AR');
+          document.getElementById('sol-precio-extra').value = precio;
+        }
+      };
       
       document.getElementById('solicitar-turno-form').onsubmit = async function(e) {
         e.preventDefault();
         var msg = document.getElementById('solicitar-msg');
+        
+        var notasExtra = document.getElementById('sol-notas').value || '';
+        if (requiereCM) {
+          var cm = document.getElementById('sol-cm').value;
+          if (!cm) {
+            msg.innerHTML = '<div class="msg error">Seleccioná el largo de tu cabello</div>';
+            return;
+          }
+          notasExtra = 'Largo cabello: ' + cm + ' cm - ' + notasExtra;
+        }
         
         var data = {
           cliente_id: user.id,
           tratamiento_id: tratamientoId,
           fecha: document.getElementById('sol-fecha').value,
           hora: document.getElementById('sol-hora').value,
-          notas: document.getElementById('sol-notas').value || 'Solicitado por cliente'
+          notas: notasExtra || 'Solicitado por cliente'
         };
+        
+        if (requiereCM) {
+          data.precio = parseInt(document.getElementById('sol-precio-extra').value) || 0;
+        }
         
         try {
           var res = await fetch(API + '/turnos', {
@@ -332,15 +445,21 @@
           var html = '';
           data.turnos.forEach(function(t) {
             var badgeClass = t.estado === 'pendiente' ? 'pendiente' : (t.estado === 'completado' ? 'completado' : 'cancelado');
-            html += '<div class="turno-item">' +
-              '<div class="fecha">📅 ' + t.fecha + ' - ' + t.hora + '</div>' +
-              '<div class="detalle">💅 ' + t.tratamiento + '</div>' +
-              '<span class="estado ' + badgeClass + '">' + t.estado + '</span>' +
+            var badgeText = t.estado === 'pendiente' ? '⏳ Pendiente' : (t.estado === 'completado' ? '✅ Completado' : '❌ Cancelado');
+            html += '<div class="turno-item" style="padding:15px;border-bottom:1px solid #eee;">' +
+              '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+                '<span style="font-weight:700;color:#e91e63;font-size:16px;">📅 ' + t.fecha + '</span>' +
+                '<span style="font-weight:600;color:#333;font-size:16px;">' + t.hora + '</span>' +
+              '</div>' +
+              '<div style="background:#f8f8f8;padding:10px;border-radius:8px;margin-bottom:8px;">' +
+                '<span style="font-size:14px;color:#555;">💅 ' + (t.tratamiento || 'Servicio') + '</span>' +
+              '</div>' +
+              '<span class="estado ' + badgeClass + '" style="padding:5px 10px;border-radius:20px;font-size:12px;">' + badgeText + '</span>' +
             '</div>';
           });
           document.getElementById('turnos-content').innerHTML = html;
         } else {
-          document.getElementById('turnos-content').innerHTML = '<div class="empty-state">No tenés turnos</div>';
+          document.getElementById('turnos-content').innerHTML = '<div class="empty-state">No tenés turnos. Solicitá uno desde Servicios 💅</div>';
         }
       } catch(err) {
         document.getElementById('turnos-content').innerHTML = '<div class="empty-state">Error cargando</div>';
@@ -416,7 +535,7 @@
     
     function showAgregarTestimonio() {
       document.getElementById('modal-container').innerHTML = 
-        '<div class="modal" onclick="closeModal()">' +
+        '<div class="modal" style="display:flex;" onclick="if(event.target === this) closeModal()">' +
           '<div class="modal-content">' +
             '<h3>✍️ Tu Reseña</h3>' +
             '<div id="testimonio-msg"></div>' +
@@ -544,11 +663,12 @@
           '<h2>📋 Términos y Condiciones</h2>' +
           '<div style="font-size:13px;color:#555;line-height:1.6;text-align:justify;">' +
             '<p><strong>Última actualización:</strong> 2024</p>' +
-            '<p><strong>1. Turnos:</strong> Sujetos a confirmación. Se puede editar/cancelar 24h antes.</p>' +
-            '<p><strong>2. Cancelaciones:</strong> Con anticipación para no afectar futuras reservas.</p>' +
-            '<p><strong>3. Puntualidad:</strong> Se recomienda llegar a tiempo.</p>' +
+            '<p><strong>1. Turnos:</strong> Sujetos a confirmación. Se puede editar o cancelar 24h antes.</p>' +
+            '<p><strong>2. Puntualidad:</strong> Se toleran 15 minutos de demora. Pasado ese tiempo, el turno puede ser dado a otra clienta.</p>' +
+            '<p><strong>3. Cancelaciones:</strong> Con anticipación para no afectar futuras reservas.</p>' +
             '<p><strong>4. Pago:</strong> Se realiza en el local.</p>' +
-            '<p><strong>5. Contacto:</strong> WhatsApp +54 3388 673804</p>' +
+            '<p><strong>5. Datos de salud:</strong> La información de anamnesis es confidencial.</p>' +
+            '<p><strong>6. Contacto:</strong> WhatsApp +54 3388 673804</p>' +
           '</div>' +
         '</div>';
     }
@@ -635,7 +755,7 @@
     // EDITAR PERFIL
     function editarMiPerfil() {
       document.getElementById('modal-container').innerHTML = 
-        '<div class="modal" onclick="closeModal()">' +
+        '<div class="modal" style="display:flex;" onclick="if(event.target === this) closeModal()">' +
           '<div class="modal-content">' +
             '<h3>✏️ Editar Mi Perfil</h3>' +
             '<div id="edit-msg"></div>' +
@@ -688,18 +808,31 @@
     // PLANILLA FACIAL
     function mostrarPlanillaFacial(tratamientoId, tratamientoNombre) {
       document.getElementById('modal-container').innerHTML = 
-        '<div class="modal" onclick="closeModal()">' +
-          '<div class="modal-content" style="max-width:500px;">' +
-            '<h3>📋 Planilla Anamnesis</h3>' +
+        '<div class="modal" style="display:flex;" onclick="if(event.target === this) closeModal()">' +
+          '<div class="modal-content" style="max-width:550px;max-height:90vh;overflow-y:auto;" onclick="event.stopPropagation()">' +
+            '<h3>📋 Anamnesis Facial</h3>' +
+            '<div style="background:#fff3e0;padding:12px;border-radius:8px;margin-bottom:15px;font-size:12px;color:#e65100;">💡 <strong>Primera sesión:</strong> Comenzamos siempre con la limpieza simple para ver tu tipo de piel, hacerte tu planilla médica, ver cómo reacciona tu piel y determinar qué necesitás.</div>' +
+            '<p style="color:#666;font-size:13px;margin-bottom:15px;">Completá todos los datos antes de solicitar el turno</p>' +
             '<div id="planilla-msg"></div>' +
-            '<form id="planilla-form">' +
-              '<div class="form-group"><label>Tipo de piel</label><select id="plan-tipo-piel" required><option value="">Seleccionar</option><option value="Normal">Normal</option><option value="Seca">Seca</option><option value="Grasa">Grasa</option><option value="Mixta">Mixta</option><option value="Sensible">Sensible</option></select></div>' +
-              '<div class="form-group"><label>¿Alergias?</label><select id="plan-alergias"><option value="No">No</option><option value="Si">Sí</option></select></div>' +
-              '<div class="form-group"><label>¿Medicamentos?</label><select id="plan-medicamentos"><option value="No">No</option><option value="Si">Sí</option></select></div>' +
-              '<div class="form-group"><label>¿Problemas de salud?</label><select id="plan-problemas"><option value="No">No</option><option value="Si">Sí</option></select></div>' +
+            '<form id="planilla-form" style="text-align:left;">' +
+              '<div class="form-group"><label>Tipo de piel *</label><select id="plan-tipo-piel" required><option value="">Seleccionar</option><option value="Normal">Normal</option><option value="Seca">Seca</option><option value="Grasa">Grasa</option><option value="Mixta">Mixta</option><option value="Sensible">Sensible</option></select></div>' +
+              '<div class="form-group"><label>¿Tienes manchas en la piel?</label><select id="plan-manchas"><option value="No">No</option><option value="Si">Sí</option><option value="Algunas">Algunas</option></select></div>' +
+              '<div class="form-group"><label>¿Tienes acné o granitos?</label><select id="plan-acne"><option value="No">No</option><option value="Leve">Leve</option><option value="Moderado">Moderado</option><option value="Severo">Severo</option></select></div>' +
+              '<div class="form-group"><label>¿Tienes arrugas?</label><select id="plan-arrugas"><option value="No">No</option><option value="Ligeras">Ligeras</option><option value="Marcadas">Marcadas</option><option value="Muy marcadas">Muy marcadas</option></select></div>' +
+              '<div class="form-group"><label>¿Tienes rojeces o cuperosis?</label><select id="plan-rojeces"><option value="No">No</option><option value="Si">Sí</option><option value="Leve">Leve</option></select></div>' +
+              '<div class="form-group"><label>¿Tienes capilares visibles?</label><select id="plan-capilares"><option value="No">No</option><option value="Si">Sí</option></select></div>' +
+              '<div class="form-group"><label>¿Usás protector solar?</label><select id="plan-protector"><option value="">Seleccionar</option><option value="Siempre">Siempre</option><option value="A veces">A veces</option><option value="Nunca">Nunca</option></select></div>' +
+              '<div class="form-group"><label>¿Tenés piel sensible?</label><select id="plan-sensible"><option value="No">No</option><option value="Si">Sí</option><option value="A veces">A veces</option></select></div>' +
+              '<div class="form-group"><label>¿Has hecho tratamientos faciales antes?</label><select id="plan-tratamientos-anteriores"><option value="No">No</option><option value="Si">Sí</option></select></div>' +
+              '<div class="form-group"><label>¿Alergias a cosméticos o ingredientes?</label><select id="plan-alergias"><option value="No">No</option><option value="Si">Sí</option></select></div>' +
+              '<div class="form-group"><label>¿Tomás medicamentos regularmente?</label><select id="plan-medicamentos"><option value="No">No</option><option value="Si">Sí</option></select></div>' +
+              '<div class="form-group"><label>¿Problemas de salud importantes?</label><select id="plan-problemas"><option value="No">No</option><option value="Si">Sí</option></select></div>' +
               '<div class="form-group"><label>¿Embarazada?</label><select id="plan-embarazada"><option value="No">No</option><option value="Si">Sí</option></select></div>' +
-              '<div class="form-group"><label>Comentarios</label><textarea id="plan-comentarios" rows="3" placeholder="Algo a considerar..."></textarea></div>' +
-              '<button type="submit" class="btn">💾 Guardar y Solicitar Turno</button>' +
+              '<div class="form-group"><label>¿Fumás?</label><select id="plan-fuma"><option value="No">No</option><option value="Si">Sí</option><option value="A veces">A veces</option></select></div>' +
+              '<div class="form-group"><label>¿Qué zona te preocupa más?</label><select id="plan-zona"><option value="">Seleccionar</option><option value="Rostro completo">Rostro completo</option><option value="Frente">Frente</option><option value="Mejillas">Mejillas</option><option value="Nariz">Nariz</option><option value="Menton">Menton/Boca</option><option value="Ojos">Contorno de ojos</option><option value="Cuello">Cuello</option></select></div>' +
+              '<div class="form-group"><label>¿Qué esperás del tratamiento?</label><textarea id="plan-expectativas" rows="3" placeholder="Ej: Quiero mejorar las manchas, tener la piel más limpia..."></textarea></div>' +
+              '<div class="form-group"><label>Comentarios adicionales</label><textarea id="plan-comentarios" rows="2" placeholder="Algo que consideres importante..."></textarea></div>' +
+              '<button type="submit" class="btn">💾 Guardar Planilla y Solicitar Turno</button>' +
               '<button type="button" class="btn secondary" onclick="closeModal()">Cancelar</button>' +
             '</form>' +
           '</div>' +
@@ -707,14 +840,33 @@
       
       document.getElementById('planilla-form').onsubmit = async function(e) {
         e.preventDefault();
+        
+        var tipoPiel = document.getElementById('plan-tipo-piel').value;
+        if (!tipoPiel) {
+          document.getElementById('planilla-msg').innerHTML = '<div class="msg error">Debés seleccionar el tipo de piel</div>';
+          return;
+        }
+        
         var msg = document.getElementById('planilla-msg');
+        msg.innerHTML = '<div class="msg" style="background:#f0f0f0;">Guardando...</div>';
         
         var datos = {
           tipo_piel: document.getElementById('plan-tipo-piel').value,
+          manchas: document.getElementById('plan-manchas').value,
+          acne: document.getElementById('plan-acne').value,
+          arrugas: document.getElementById('plan-arrugas').value,
+          rojeces: document.getElementById('plan-rojeces').value,
+          capilares: document.getElementById('plan-capilares').value,
+          protector_solar: document.getElementById('plan-protector').value,
+          piel_sensible: document.getElementById('plan-sensible').value,
+          tratamientos_previos: document.getElementById('plan-tratamientos-anteriores').value,
           alergias: document.getElementById('plan-alergias').value,
           medicamentos: document.getElementById('plan-medicamentos').value,
-          problemas: document.getElementById('plan-problemas').value,
+          problemas_salud: document.getElementById('plan-problemas').value,
           embarazada: document.getElementById('plan-embarazada').value,
+          fuma: document.getElementById('plan-fuma').value,
+          zona_preocupa: document.getElementById('plan-zona').value,
+          expectativas: document.getElementById('plan-expectativas').value,
           comentarios: document.getElementById('plan-comentarios').value
         };
         
@@ -731,6 +883,14 @@
             })
           });
           
+          if (!res.ok) {
+            var errData = await res.json();
+            msg.innerHTML = '<div class="msg error">Error: ' + (errData.error || 'No se pudo guardar') + '</div>';
+            return;
+          }
+          
+          msg.innerHTML = '<div class="msg success">¡Planilla guardada! Solicitando turno...</div>';
+          
           var resTurno = await fetch(API + '/turnos', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -743,11 +903,17 @@
             })
           });
           
-          msg.innerHTML = '<div class="msg success">¡Planilla guardada! Turno solicitado.</div>';
-          setTimeout(function() { closeModal(); showMisTurnos(); }, 2000);
+          if (!resTurno.ok) {
+            msg.innerHTML = '<div class="msg error">Planilla guardada, pero no se pudo solicitar el turno. Contactá por WhatsApp.</div>';
+            return;
+          }
+          
+          msg.innerHTML = '<div class="msg success">¡Todo listo! Tu planilla fue guardada y el turno solicitado.</div>';
+          setTimeout(function() { closeModal(); showMisTurnos(); }, 2500);
           
         } catch(err) {
-          msg.innerHTML = '<div class="msg error">Error al guardar</div>';
+          console.error('Error:', err);
+          msg.innerHTML = '<div class="msg error">Error de conexión. Intentá de nuevo.</div>';
         }
       };
     }
