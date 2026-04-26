@@ -1192,15 +1192,14 @@
         
         if (delMes.length > 0) {
           html += '<h3 style="color:white;margin:15px 0 10px;font-size:14px;">📅 Turnos del Mes</h3>';
-          html += '<input type="text" id="buscar-turno" placeholder="Buscar..." onkeyup="filtrarIngresos()" style="width:93%;padding:10px;border-radius:8px;border:1px solid #555;background:#222;color:white;margin-bottom:10px;font-size:12px;">';
+          html += '<input type="text" id="buscar-turno" placeholder="Buscar por cliente o fecha (ej: 15/04)..." onkeyup="filtrarIngresos()" style="width:93%;padding:10px;border-radius:8px;border:1px solid #555;background:#222;color:white;margin-bottom:10px;font-size:12px;">';
           html += '<div>';
           delMes.sort(function(a, b) { return b.fecha.localeCompare(a.fecha); }).forEach(function(t) {
             var precio = parseFloat(t.precio || 0);
-            if (precio > 0) {
-              html += '<div class="turno-item" data-cli="'+(t.cliente_nombre || '')+'" style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #444;font-size:12px;color:white;">' +
-                '<div>' + t.fecha + ' - ' + (t.tratamiento_nombre || 'Servicio') + '<br><small style="color:#888;">' + (t.cliente_nombre || '') + '</small></div>' +
-                '<div style="font-weight:600;color:#4caf50;">$' + precio.toLocaleString('es-AR') + '</div></div>';
-            }
+            var estadoColor = t.estado === 'completado' ? '#4caf50' : '#ff9800';
+            html += '<div class="turno-item" data-cli="'+(t.cliente_nombre || '')+'" data-fecha="'+t.fecha+'" style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #444;font-size:12px;color:white;">' +
+              '<div>' + t.fecha + ' - ' + (t.tratamiento_nombre || 'Servicio') + '<br><small style="color:#888;">' + (t.cliente_nombre || '') + ' ('+(t.estado || 'pendiente')+')</small></div>' +
+              '<div style="font-weight:600;color:'+estadoColor+';">' + (precio > 0 ? '$' + precio.toLocaleString('es-AR') : '---') + '</div></div>';
           });
           html += '</div>';
         }
@@ -1214,8 +1213,10 @@
     function filtrarIngresos() {
       var busq = document.getElementById('buscar-turno').value.toLowerCase();
       document.querySelectorAll('.turno-item').forEach(function(item) {
-        var cli = item.getAttribute('data-cli').toLowerCase();
-        item.style.display = cli.indexOf(busq) >= 0 || busq === '' ? 'flex' : 'none';
+        var cli = (item.getAttribute('data-cli') || '').toLowerCase();
+        var fecha = (item.getAttribute('data-fecha') || '').toLowerCase();
+        var matches = cli.indexOf(busq) >= 0 || fecha.indexOf(busq) >= 0 || busq === '';
+        item.style.display = matches ? 'flex' : 'none';
       });
     }
     
