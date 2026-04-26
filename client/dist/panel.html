@@ -1181,6 +1181,7 @@
       try {
         var res = await fetch(API + '/turnos');
         var turnos = await res.json();
+        alert('Turnos cargados: ' + turnos.length + ' - Total: ' + JSON.stringify(turnos).substring(0,100));
         
         function getMonth(f) { if (!f || f.length < 5) return 0; return parseInt(f.split('-')[1]) - 1; }
         function getAnio(f) { if (!f || f.length < 4) return 2024; return parseInt(f.split('-')[0]); }
