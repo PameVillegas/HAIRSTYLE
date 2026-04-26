@@ -107,6 +107,9 @@
     .badge.completado { background: #e8f5e9; color: #4caf50; }
     .badge.cancelado { background: #ffebee; color: #f44336; }
     .badge-notif { background: #e91e63; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; }
+    .info-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+    .info-item .label { color: #666; font-size: 12px; font-weight: 500; }
+    .info-item .value { color: #333; font-size: 13px; font-weight: 600; }
     
     .empty-state { text-align: center; padding: 40px 20px; color: #666; }
     .loading { text-align: center; padding: 40px; color: #666; }
@@ -1007,7 +1010,6 @@
         var res = await fetch(API + '/legajos/' + id);
         var legajo = await res.json();
         
-        // Obtener cliente
         var clientesRes = await fetch(API + '/clientes');
         var clientes = await clientesRes.json();
         var cliente = clientes.find(function(c) { return c.id === legajo.cliente_id; });
@@ -1015,19 +1017,36 @@
         var datos = {};
         try { datos = JSON.parse(legajo.datos || '{}'); } catch(e) {}
         
-        var html = '<div style="max-height:400px;overflow-y:auto;">';
+        var html = '<div style="max-height:450px;overflow-y:auto;">';
         html += '<div class="info-item"><span class="label">Cliente</span><span class="value">' + (cliente ? (cliente.nombre || cliente.username) : 'Cliente') + '</span></div>';
         html += '<div class="info-item"><span class="label">Teléfono</span><span class="value">' + (cliente ? (cliente.telefono || '-') : '-') + '</span></div>';
         html += '<div class="info-item"><span class="label">Email</span><span class="value">' + (cliente ? (cliente.email || '-') : '-') + '</span></div>';
-        html += '<div class="info-item"><span class="label">Tratamiento</span><span class="value">' + (legajo.tratamiento || 'Facial') + '</span></div>';
+        html += '<div class="info-item"><span class="label">Tratamiento</span><span class="value">' + (legajo.tratamiento || '-') + '</span></div>';
         html += '<div class="info-item"><span class="label">Fecha</span><span class="value">' + (legajo.fecha ? legajo.fecha.substring(0,10) : '-') + '</span></div>';
         
+        html += '<h4 style="color:#e91e63;margin:15px 0 8px;font-size:13px;border-bottom:1px solid #eee;">📋 Datos de la Piel</h4>';
         if (datos.tipo_piel) html += '<div class="info-item"><span class="label">Tipo de piel</span><span class="value">' + datos.tipo_piel + '</span></div>';
+        if (datos.estado_piel) html += '<div class="info-item"><span class="label">Estado de piel</span><span class="value">' + datos.estado_piel + '</span></div>';
+        
+        html += '<h4 style="color:#e91e63;margin:15px 0 8px;font-size:13px;border-bottom:1px solid #eee;">🏥 Historia Médica</h4>';
         if (datos.alergias) html += '<div class="info-item"><span class="label">Alergias</span><span class="value">' + datos.alergias + (datos.alergias_detalle ? ' - ' + datos.alergias_detalle : '') + '</span></div>';
+        if (datos.embarazada) html += '<div class="info-item"><span class="label">¿Embarazada?</span><span class="value">' + datos.embarazada + '</span></div>';
+        if (datos.diabetes) html += '<div class="info-item"><span class="label">Diabetes</span><span class="value">' + datos.diabetes + '</span></div>';
+        if (datos.presion) html += '<div class="info-item"><span class="label">Presión arterial</span><span class="value">' + datos.presion + '</span></div>';
         if (datos.medicamentos) html += '<div class="info-item"><span class="label">Medicamentos</span><span class="value">' + datos.medicamentos + (datos.medicamentos_detalle ? ' - ' + datos.medicamentos_detalle : '') + '</span></div>';
         if (datos.problemas_salud) html += '<div class="info-item"><span class="label">Problemas de salud</span><span class="value">' + datos.problemas_salud + (datos.problemas_detalle ? ' - ' + datos.problemas_detalle : '') + '</span></div>';
-        if (datos.embarazada) html += '<div class="info-item"><span class="label">Embarazada</span><span class="value">' + datos.embarazada + '</span></div>';
+        
+        html += '<h4 style="color:#e91e63;margin:15px 0 8px;font-size:13px;border-bottom:1px solid #eee;">☀️ Exposición Solar</h4>';
+        if (datos.sol) html += '<div class="info-item"><span class="label">Exposición al sol</span><span class="value">' + datos.sol + '</span></div>';
+        if (datos.spf) html += '<div class="info-item"><span class="label">Usa protector solar</span><span class="value">' + datos.spf + '</span></div>';
+        
+        html += '<h4 style="color:#e91e63;margin:15px 0 8px;font-size:13px;border-bottom:1px solid #eee;">💆 Tratamientos Anteriores</h4>';
         if (datos.ultimo_tratamiento) html += '<div class="info-item"><span class="label">Último tratamiento</span><span class="value">' + datos.ultimo_tratamiento + '</span></div>';
+        if (datos.tratamientos_anteriores) html += '<div class="info-item"><span class="label">Tratamientos anteriores</span><span class="value">' + datos.tratamientos_anteriores + '</span></div>';
+        
+        html += '<h4 style="color:#e91e63;margin:15px 0 8px;font-size:13px;border-bottom:1px solid #eee;">🎯 Observaciones</h4>';
+        if (datos.rutina) html += '<div class="info-item"><span class="label">Rutina skincare</span><span class="value">' + datos.rutina + '</span></div>';
+        if (datos.objetivos) html += '<div class="info-item"><span class="label">Objetivos</span><span class="value">' + datos.objetivos + '</span></div>';
         if (datos.comentarios) html += '<div class="info-item"><span class="label">Comentarios</span><span class="value">' + datos.comentarios + '</span></div>';
         
         html += '</div>';
