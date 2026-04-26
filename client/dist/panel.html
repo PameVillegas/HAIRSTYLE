@@ -234,7 +234,7 @@
             '<div class="menu-item secondary" onclick="showSection(\'galeria\')"><span class="icon">📸</span><span class="label">Galería</span><span class="desc">Fotos</span></div>' +
             '<div class="menu-item secondary" onclick="showSection(\'legajos\')"><span class="icon">📋</span><span class="label">Legajos</span><span class="desc">Anamnesis</span></div>' +
             '<div class="menu-item secondary" onclick="showSection(\'nuevo-legajo\')"><span class="icon">📋</span><span class="label">Nueva Planilla</span><span class="desc">Anamnesis</span></div>' +
-            '<div class="menu-item secondary" onclick="showSection(\'testimonios\')"><span class="icon">⭐</span><span class="label">Reseñas</span><span class="desc">Testimonios</span></div>' +
+            '<div class="menu-item" onclick="showSection(\'ingresos\')"><span class="icon">💰</span><span class="label">Ingresos</span><span class="desc">Detalles</span></div>' +
           '</div>' +
         '</div>';
       
@@ -304,6 +304,7 @@
         case 'galeria': showGaleria(); break;
         case 'legajos': showLegajos(); break;
         case 'nuevo-legajo': showNuevaPlanilla(); break;
+        case 'ingresos': showIngresos(); break;
         case 'testimonios': showTestimoniosAdmin(); break;
       }
     }
@@ -1143,6 +1144,108 @@
     
     function verPlanillaFacial() {
       window.open('/fotos/planilla-anamnesis-facial.docx', '_blank');
+    }
+    
+    // INGRESOS
+    async function showIngresos() {
+      var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      var anioActual = new Date().getFullYear();
+      var mesActual = new Date().getMonth();
+      
+      var anios = [];
+      for (var a = 2023; a <= anioActual; a++) anios.push(a);
+      
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="header"><h1>💰 Mis Ingresos</h1></div>' +
+        '<div style="background:#333;padding:15px;border-radius:16px;margin-bottom:15px;">' +
+          '<div style="display:flex;gap:10px;justify-content:center;">' +
+            '<select id="ing-mes" onchange="cargarIngresos(parseInt(this.value), parseInt(document.getElementById(\'ing-anio\').value))" style="padding:10px;border-radius:8px;border:none;width:120px;">' +
+              meses.map(function(m,i){return '<option value="'+i+'"'+(i===mesActual?' selected':'')+'>'+m+'</option>';}).join('') +
+            '</select>' +
+            '<select id="ing-anio" onchange="cargarIngresos(parseInt(document.getElementById(\'ing-mes\').value), parseInt(this.value))" style="padding:10px;border-radius:8px;border:none;width:80px;">' +
+              anios.map(function(a){return '<option value="'+a+'"'+(a===anioActual?' selected':'')+'>'+a+'</option>';}).join('') +
+            '</select>' +
+          '</div>' +
+        '</div>' +
+        '<div id="ingresos-content" style="background:#333;border-radius:16px;padding:15px;color:white;"></div>';
+      
+      cargarIngresos(mesActual, anioActual);
+    }
+    
+    async function cargarIngresos(mes, anio) {
+      try {
+        var res = await fetch(API + '/turnos');
+        var turnos = await res.json();
+        
+        function getMonth(f) { if (!f || f.length < 5) return 0; return parseInt(f.split('-')[1]) - 1; }
+        function getAnio(f) { if (!f || f.length < 4) return 2024; return parseInt(f.split('-')[0]); }
+        
+        var delMes = turnos.filter(function(t) { return getMonth(t.fecha) === mes && getAnio(t.fecha) === anio && t.estado !== 'cancelado'; });
+        var total = delMes.reduce(function(s, t) { return s + parseFloat(t.precio || 0); }, 0);
+        
+        var html = '<div style="background:linear-gradient(135deg,#e91e63,#9c27b0);padding:25px;border-radius:16px;text-align:center;color:white;margin-bottom:15px;">' +
+          '<div style="font-size:16px;opacity:0.9;">💰 Ingresos de ' + meses[mes] + ' ' + anio + '</div>' +
+          '<div style="font-size:36px;font-weight:700;">$' + total.toLocaleString('es-AR') + '</div></div>';
+        
+        html += '<button onclick="mostrarIngresoExtra()" style="width:100%;padding:12px;background:#4caf50;color:white;border:none;border-radius:8px;font-weight:600;margin-bottom:15px;">+ Agregar Ingreso Extra</button>';
+        
+        if (delMes.length > 0) {
+          html += '<h3 style="color:white;margin:15px 0 10px;font-size:14px;">📅 Turnos del Mes</h3>';
+          html += '<input type="text" id="buscar-turno" placeholder="Buscar..." onkeyup="filtrarIngresos()" style="width:93%;padding:10px;border-radius:8px;border:1px solid #555;background:#222;color:white;margin-bottom:10px;font-size:12px;">';
+          html += '<div>';
+          delMes.sort(function(a, b) { return b.fecha.localeCompare(a.fecha); }).forEach(function(t) {
+            var precio = parseFloat(t.precio || 0);
+            if (precio > 0) {
+              html += '<div class="turno-item" data-cli="'+(t.cliente_nombre || '')+'" style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #444;font-size:12px;color:white;">' +
+                '<div>' + t.fecha + ' - ' + (t.tratamiento_nombre || 'Servicio') + '<br><small style="color:#888;">' + (t.cliente_nombre || '') + '</small></div>' +
+                '<div style="font-weight:600;color:#4caf50;">$' + precio.toLocaleString('es-AR') + '</div></div>';
+            }
+          });
+          html += '</div>';
+        }
+        
+        document.getElementById('ingresos-content').innerHTML = html;
+      } catch(err) {
+        document.getElementById('ingresos-content').innerHTML = '<div class="empty-state">Error cargando</div>';
+      }
+    }
+    
+    function filtrarIngresos() {
+      var busq = document.getElementById('buscar-turno').value.toLowerCase();
+      document.querySelectorAll('.turno-item').forEach(function(item) {
+        var cli = item.getAttribute('data-cli').toLowerCase();
+        item.style.display = cli.indexOf(busq) >= 0 || busq === '' ? 'flex' : 'none';
+      });
+    }
+    
+    function mostrarIngresoExtra() {
+      document.getElementById('modal-container').innerHTML = 
+        '<div class="modal" onclick="if(event.target===this)closeModal()">' +
+          '<div class="modal-content" onclick="event.stopPropagation()">' +
+            '<h3>💰 Agregar Ingreso Extra</h3>' +
+            '<form id="form-ie">' +
+              '<div class="form-group"><label>Concepto</label><input type="text" id="ie-concepto" required></div>' +
+              '<div class="form-group"><label>Monto</label><input type="number" id="ie-monto" required></div>' +
+              '<div class="form-group"><label>Fecha</label><input type="date" id="ie-fecha"></div>' +
+              '<button type="submit" class="btn">Guardar</button>' +
+              '<button type="button" class="btn secondary" onclick="closeModal()">Cancelar</button>' +
+            '</form>' +
+          '</div></div>';
+      document.getElementById('ie-fecha').value = new Date().toISOString().split('T')[0];
+      document.getElementById('form-ie').onsubmit = function(e) {
+        e.preventDefault();
+        var extras = JSON.parse(localStorage.getItem('ingresos_extras') || '[]');
+        extras.push({
+          concepto: document.getElementById('ie-concepto').value,
+          monto: parseInt(document.getElementById('ie-monto').value),
+          fecha: document.getElementById('ie-fecha').value
+        });
+        localStorage.setItem('ingresos_extras', JSON.stringify(extras));
+        closeModal();
+        document.getElementById('ingresos-content').innerHTML = '<div class="msg success">Ingreso extra guardado</div>';
+        setTimeout(function() { showIngresos(); }, 1000);
+      };
     }
     
     // TESTIMONIOS ADMIN
