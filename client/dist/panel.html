@@ -1052,17 +1052,27 @@
           comentarios: document.getElementById('plan-comentarios').value
         };
         
-        await fetch(API + '/legajos', {
+        console.log('Guardando legajo datos:', datos);
+        
+        var payload = {
+          cliente_id: clienteId,
+          tratamiento: document.getElementById('plan-tratamiento').value,
+          tipo: document.getElementById('plan-tratamiento').value,
+          fecha: new Date().toISOString().split('T')[0],
+          datos: JSON.stringify(datos)
+        };
+        
+        console.log('Payload:', payload);
+        
+        var res = await fetch(API + '/legajos', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            cliente_id: clienteId,
-            tratamiento: document.getElementById('plan-tratamiento').value,
-            tipo: document.getElementById('plan-tratamiento').value,
-            fecha: new Date().toISOString().split('T')[0],
-            datos: JSON.stringify(datos)
-          })
+          body: JSON.stringify(payload)
         });
+        
+        console.log('Response:', res);
+        var result = await res.json();
+        console.log('Result:', result);
         
         alert('¡Planilla guardada!');
         showLegajos();
