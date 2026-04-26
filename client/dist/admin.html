@@ -4,90 +4,1332 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>HairStyle - Panel Admin</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Roboto', sans-serif; background: linear-gradient(135deg, #e91e63, #9c27b0); min-height: 100vh; padding: 20px; }
-    .header { text-align: center; color: white; margin-bottom: 20px; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 12px; }
-    .header h1 { font-family: 'Poppins', sans-serif; margin-bottom: 5px; }
-    .logout-btn { background: rgba(255,255,255,0.2); color: white; border: 1px solid white; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; }
-    .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    .card h2 { color: #e91e63; font-family: 'Poppins', sans-serif; font-size: 18px; margin-bottom: 15px; }
-    .stats { display: flex; gap: 10px; flex-wrap: wrap; }
-    .stat-box { flex: 1; min-width: 80px; text-align: center; padding: 15px; background: linear-gradient(135deg, #e91e63, #9c27b0); border-radius: 8px; color: white; }
-    .stat-number { font-size: 24px; font-weight: bold; }
-    .stat-label { font-size: 12px; opacity: 0.9; }
-    .menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .menu-btn { display: block; text-align: center; padding: 20px; background: white; border-radius: 12px; text-decoration: none; color: #333; font-weight: 500; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    .menu-btn:active { background: #f0f0f0; }
-    .menu-btn.secondary { background: #f5f5f5; color: #666; }
-    .logout-section { margin-top: 20px; text-align: center; }
-    .no-login { background: white; padding: 40px; border-radius: 12px; text-align: center; }
-    .no-login a { color: #e91e63; }
+    html, body {
+      height: 100%;
+      overflow-x: hidden;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #e91e63, #9c27b0);
+      min-height: 100vh;
+      position: relative;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url('/fotos/fondo.jpg') no-repeat center center fixed;
+      background-size: cover;
+      opacity: 0.3;
+      z-index: 0;
+    }
+    .container {
+      position: relative;
+      z-index: 1;
+      padding: 20px;
+      padding-top: env(safe-area-inset-top, 20px);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .header {
+      text-align: center;
+      padding: 25px 20px;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .header h1 { font-family: 'Poppins', sans-serif; font-size: 28px; color: white; }
+    .header .user-name { color: #ffd54f; font-weight: 600; }
+    .logout-btn {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 8px 20px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid white;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+    .stat-box { background: white; border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .stat-icon { font-size: 24px; margin-bottom: 5px; }
+    .stat-number { font-family: 'Poppins', sans-serif; font-size: 24px; font-weight: 700; color: #e91e63; }
+    .stat-label { font-size: 12px; color: #666; }
+    .stat-card { background: white; border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .stat-card .stat-value { font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: 700; color: white; }
+    .stat-card .stat-label { font-size: 11px; color: rgba(255,255,255,0.9); margin-top: 5px; }
+    
+    .card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .card h2 { font-family: 'Poppins', sans-serif; color: #e91e63; font-size: 18px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+    
+    .menu { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .menu-item { display: flex; flex-direction: column; align-items: center; padding: 20px 10px; background: linear-gradient(135deg, #e91e63, #9c27b0); color: white; border-radius: 12px; cursor: pointer; transition: transform 0.2s; }
+    .menu-item:active { transform: scale(0.95); }
+    .menu-item .icon { font-size: 28px; margin-bottom: 8px; }
+    .menu-item .label { font-weight: 600; font-size: 13px; text-align: center; }
+    .menu-item .desc { font-size: 10px; opacity: 0.8; margin-top: 4px; }
+    .menu-item.secondary { background: white; color: #333; border: 2px solid #e91e63; }
+    .menu-item.secondary .icon { color: #e91e63; }
+    
+    .back-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 20px; cursor: pointer; margin-bottom: 20px; font-size: 14px; }
+    
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-weight: 600; color: #333; margin-bottom: 5px; font-size: 14px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; font-family: inherit; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: #e91e63; }
+    
+    .btn { display: block; width: 100%; padding: 14px; background: linear-gradient(135deg, #e91e63, #9c27b0); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+    .btn:active { opacity: 0.9; }
+    .btn.secondary { background: white; color: #e91e63; border: 2px solid #e91e63; }
+    .btn.small { padding: 8px 16px; font-size: 14px; width: auto; display: inline-block; }
+    .btn.danger { background: #f44336; }
+    
+    .list-item { padding: 15px; background: #f8f8f8; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .list-item .info .name { font-weight: 600; color: #333; }
+    .list-item .info .detail { font-size: 12px; color: #666; margin-top: 3px; }
+    .list-item .actions { display: flex; gap: 8px; }
+    .list-item .actions button { padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .list-item .actions .edit-btn { background: #2196f3; color: white; }
+    .list-item .actions .delete-btn { background: #f44336; color: white; }
+    .list-item .actions .view-btn { background: #4caf50; color: white; }
+    
+    .badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .badge.pendiente { background: #fff3e0; color: #ff9800; }
+    .badge.completado { background: #e8f5e9; color: #4caf50; }
+    .badge.cancelado { background: #ffebee; color: #f44336; }
+    .badge-notif { background: #e91e63; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; }
+    .info-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+    .info-item .label { color: #666; font-size: 12px; font-weight: 500; }
+    .info-item .value { color: #333; font-size: 13px; font-weight: 600; }
+    
+    .empty-state { text-align: center; padding: 40px 20px; color: #666; }
+    .loading { text-align: center; padding: 40px; color: #666; }
+    
+    .error-page { text-align: center; padding: 60px 20px; background: white; border-radius: 16px; }
+    .error-page h2 { color: #e91e63; margin-bottom: 15px; }
+    .error-page a { display: inline-block; margin-top: 20px; padding: 12px 30px; background: linear-gradient(135deg, #e91e63, #9c27b0); color: white; border-radius: 25px; text-decoration: none; font-weight: 600; }
+    
+    .msg { padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center; font-size: 14px; }
+    .msg.success { background: #e8f5e9; color: #4caf50; }
+    .msg.error { background: #ffebee; color: #f44336; }
+    
+    .trat-card { 
+      background: #f8f8f8; 
+      border-radius: 12px; 
+      margin-bottom: 12px; 
+      overflow: hidden; 
+      cursor: pointer;
+    }
+    .trat-card:active { opacity: 0.9; }
+    .trat-image { 
+      width: 100%; 
+      height: 120px; 
+      object-fit: cover; 
+      object-position: center;
+      background: #ddd;
+    }
+    .trat-content { padding: 12px; text-align: center; }
+    .trat-content .name { font-weight: 600; color: #333; font-size: 15px; }
+    .trat-content .detail { font-size: 12px; color: #666; margin-top: 4px; }
+    .trat-content .precio { font-weight: 700; color: #4caf50; margin-top: 8px; font-size: 16px; }
+    .trat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    
+    .galeria-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .galeria-img { 
+      width: 100%; 
+      height: 100px; 
+      object-fit: cover; 
+      border-radius: 8px; 
+      cursor: pointer;
+    }
+    .galeria-img:active { opacity: 0.8; }
+    .galeria-categoria { margin-bottom: 20px; }
+    .galeria-categoria h3 { color: #e91e63; font-size: 16px; margin-bottom: 10px; }
+    
+    .turno-detail { 
+      background: #f8f8f8; 
+      border-radius: 10px; 
+      padding: 15px; 
+      margin-bottom: 10px; 
+    }
+    .turno-detail .row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .turno-detail .label { color: #666; font-size: 13px; }
+    .turno-detail .value { font-weight: 600; color: #333; }
+    .turno-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .turno-actions button { flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .btn-completar { background: #4caf50; color: white; }
+    .btn-cancelar { background: #f44336; color: white; }
+    .btn-editar { background: #2196f3; color: white; }
+    
+    .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+    .modal-content { background: white; border-radius: 16px; padding: 25px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
+    .modal h3 { font-family: 'Poppins', sans-serif; color: #e91e63; margin-bottom: 20px; }
   </style>
 </head>
 <body>
-  <div id="app"></div>
+  <div class="container">
+    <div id="app"></div>
+  </div>
+  
+  <div id="modal-container"></div>
+
   <script>
-    const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
-    const tipo = localStorage.getItem('tipoUsuario');
+    var API = '/api';
+    var u = localStorage.getItem('u');
+    var t = localStorage.getItem('t');
     
-    if (!usuario) {
-      document.getElementById('app').innerHTML = `
-        <div class="no-login">
-          <h2 style="color:#e91e63;margin-bottom:15px;">Sesión no iniciada</h2>
-          <p>Primero debés iniciar sesión.</p>
-          <p style="margin-top:15px;"><a href="/">Ir al login</a></p>
-        </div>
-      `;
+    if (!u || t !== 'admin') {
+      document.getElementById('app').innerHTML = 
+        '<div class="error-page">' +
+          '<h2>Acceso denegado</h2>' +
+          '<p>Esta sección es solo para administradores</p>' +
+          '<a href="/entrar.html">Ir al login</a>' +
+        '</div>';
     } else {
-      document.getElementById('app').innerHTML = `
-        <div class="header">
-          <h1>HairStyle Admin</h1>
-          <p>Bienvenido, ${usuario.nombre}</p>
-          <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
-        </div>
-        
-        <div class="card">
-          <h2>📊 Estadísticas</h2>
-          <div class="stats">
-            <div class="stat-box">
-              <div class="stat-number">-</div>
-              <div class="stat-label">Turnos</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-number">-</div>
-              <div class="stat-label">Clientes</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-number">-</div>
-              <div class="stat-label">Tratamientos</div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="card">
-          <h2>📋 Menú Principal</h2>
-          <div class="menu">
-            <a href="#" class="menu-btn" onclick="alert('Cargando turnos...')">📅 Turnos</a>
-            <a href="#" class="menu-btn" onclick="alert('Cargando clientes...')">👥 Clientes</a>
-            <a href="#" class="menu-btn" onclick="alert('Cargando tratamientos...')">💅 Tratamientos</a>
-            <a href="#" class="menu-btn" onclick="alert('Cargando promociones...')">🎁 Promociones</a>
-            <a href="#" class="menu-btn" onclick="alert('Cargando galería...')">📷 Galería</a>
-            <a href="#" class="menu-btn" onclick="alert('Cargando legajos...')">📁 Legajos</a>
-          </div>
-        </div>
-        
-        <div class="logout-section">
-          <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
-        </div>
-      `;
+      var user = JSON.parse(u);
+      showDashboard();
     }
     
     function logout() {
-      localStorage.removeItem('usuario');
-      localStorage.removeItem('tipoUsuario');
-      window.location.href = '/';
+      localStorage.removeItem('u');
+      localStorage.removeItem('t');
+      window.location.href = '/entrar.html';
+    }
+    
+    function showDashboard() {
+      document.getElementById('app').innerHTML = 
+        '<div class="header">' +
+          '<h1>HairStyle</h1>' +
+          '<p>Bienvenido, <span class="user-name">' + user.nombre + '</span></p>' +
+          '<button class="logout-btn" onclick="logout()">Cerrar sesión</button>' +
+        '</div>' +
+        
+        '<div class="stats" id="stats">' +
+          '<div class="stat-box"><div class="stat-icon">💰</div><div class="stat-number" id="stat-ingresos">$0</div><div class="stat-label">Ingresos Mes</div></div>' +
+          '<div class="stat-box"><div class="stat-icon">👥</div><div class="stat-number" id="stat-clientes">0</div><div class="stat-label">Clientes</div></div>' +
+          '<div class="stat-box"><div class="stat-icon">📅</div><div class="stat-number" id="stat-turnos">0</div><div class="stat-label">Turnos Mes</div></div>' +
+          '<div class="stat-box"><div class="stat-icon">⏳</div><div class="stat-number" id="stat-pendientes">0</div><div class="stat-label">Pendientes</div></div>' +
+        '</div>' +
+        
+        '<div class="stats" id="stats-grid" style="margin-top:10px;"></div>' +
+        
+        '<div class="card">' +
+          '<h2>📋 Menú Principal</h2>' +
+          '<div class="menu">' +
+            '<div class="menu-item" onclick="showSection(\'turnos\')"><span class="icon">📅</span><span class="label">Turnos</span><span class="desc" id="menu-turnos-badge">Ver turnos</span></div>' +
+            '<div class="menu-item" onclick="showSection(\'nuevo-turno\')"><span class="icon">➕</span><span class="label">Nuevo Turno</span><span class="desc">Crear turno</span></div>' +
+            '<div class="menu-item secondary" onclick="showSection(\'registrar-cliente\')"><span class="icon">👤</span><span class="label">Registrar</span><span class="desc">Nuevo cliente</span></div>' +
+            '<div class="menu-item secondary" onclick="showSection(\'lista-clientes\')"><span class="icon">📋</span><span class="label">Clientes</span><span class="desc">Ver todos</span></div>' +
+            '<div class="menu-item" onclick="showSection(\'tratamientos\')"><span class="icon">💅</span><span class="label">Servicios</span><span class="desc">Tratamientos</span></div>' +
+            '<div class="menu-item" onclick="showSection(\'promociones\')"><span class="icon">🎉</span><span class="label">Promociones</span><span class="desc">Ofertas</span></div>' +
+            '<div class="menu-item secondary" onclick="showSection(\'galeria\')"><span class="icon">📸</span><span class="label">Galería</span><span class="desc">Fotos</span></div>' +
+            '<div class="menu-item secondary" onclick="showSection(\'legajos\')"><span class="icon">📋</span><span class="label">Legajos</span><span class="desc">Anamnesis</span></div>' +
+            '<div class="menu-item secondary" onclick="showSection(\'nuevo-legajo\')"><span class="icon">📋</span><span class="label">Nueva Planilla</span><span class="desc">Anamnesis</span></div>' +
+            '<div class="menu-item" onclick="showSection(\'ingresos\')"><span class="icon">💰</span><span class="label">Ingresos</span><span class="desc">Detalles</span></div>' +
+          '</div>' +
+        '</div>';
+      
+      cargarEstadisticas();
+    }
+    
+    async function cargarEstadisticas() {
+      try {
+        var [turnosRes, clientesRes, tratamientosRes] = await Promise.all([
+          fetch(API + '/turnos'),
+          fetch(API + '/clientes'),
+          fetch(API + '/tratamientos')
+        ]);
+        var turnos = await turnosRes.json();
+        var clientes = await clientesRes.json();
+        var tratamientos = await tratamientosRes.json();
+        
+        var hoy = new Date();
+        var mesActual = hoy.getMonth();
+        var anioActual = hoy.getFullYear();
+        
+        var turnosMes = turnos.filter(function(t) {
+          var fechaTurno = new Date(t.fecha);
+          return fechaTurno.getMonth() === mesActual && fechaTurno.getFullYear() === anioActual;
+        });
+        
+        var completadosMes = turnosMes.filter(function(t) { return t.estado === 'completado'; });
+        var pendientes = turnos.filter(function(t) { return t.estado === 'pendiente'; }).length;
+        var completadosTotal = turnos.filter(function(t) { return t.estado === 'completado'; });
+        
+        var ingresosMes = completadosMes.reduce(function(sum, t) { return sum + parseFloat(t.precio || 0); }, 0);
+        var ingresosTotal = completadosTotal.reduce(function(sum, t) { return sum + parseFloat(t.precio || 0); }, 0);
+        
+        document.getElementById('stat-ingresos').textContent = '$' + ingresosMes.toLocaleString('es-AR');
+        document.getElementById('stat-clientes').textContent = clientes.length;
+        document.getElementById('stat-turnos').textContent = completadosMes.length;
+        document.getElementById('stat-pendientes').textContent = pendientes;
+        
+        if (pendientes > 0 && document.getElementById('menu-turnos-badge')) {
+          document.getElementById('menu-turnos-badge').innerHTML = '<span class="badge-notif">' + pendientes + '</span>';
+        }
+        
+        document.getElementById('stats-grid').innerHTML = 
+          '<div class="stat-card" style="background:linear-gradient(135deg,#4caf50,#2e7d32);">' +
+            '<div class="stat-value">$' + ingresosTotal.toLocaleString('es-AR') + '</div>' +
+            '<div class="stat-label">💰 Ingresos Totales</div>' +
+          '</div>' +
+          '<div class="stat-card" style="background:linear-gradient(135deg,#2196f3,#1565c0);">' +
+            '<div class="stat-value">' + completadosTotal.length + '</div>' +
+            '<div class="stat-label">✅ Turnos Completados</div>' +
+          '</div>' +
+          '<div class="stat-card" style="background:linear-gradient(135deg,#9c27b0,#7b1fa2);">' +
+            '<div class="stat-value">' + tratamientos.length + '</div>' +
+            '<div class="stat-label">💅 Servicios Activos</div>' +
+          '</div>';
+      } catch(err) { console.error('Error cargando stats:', err); }
+    }
+    
+    function showSection(section) {
+      switch(section) {
+        case 'turnos': showTurnos(); break;
+        case 'nuevo-turno': showNuevoTurno(); break;
+        case 'registrar-cliente': showRegistrarCliente(); break;
+        case 'lista-clientes': showListaClientes(); break;
+        case 'tratamientos': showTratamientos(); break;
+        case 'promociones': showPromociones(); break;
+        case 'galeria': showGaleria(); break;
+        case 'legajos': showLegajos(); break;
+        case 'nuevo-legajo': showNuevaPlanilla(); break;
+        case 'ingresos': showIngresos(); break;
+        case 'testimonios': showTestimoniosAdmin(); break;
+      }
+    }
+    
+    function showBackButton() {
+      return '<button class="back-btn" onclick="showDashboard()">← Volver</button>';
+    }
+    
+    // REGISTRAR CLIENTE
+    function showRegistrarCliente() {
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="card">' +
+          '<h2>👤 Registrar Nuevo Cliente</h2>' +
+          '<div id="msg"></div>' +
+          '<form id="registro-form">' +
+            '<div class="form-group"><label>Nombre completo *</label><input type="text" id="nombre" required placeholder="Nombre y apellido"></div>' +
+            '<div class="form-group"><label>Usuario *</label><input type="text" id="username" required placeholder="Nombre de usuario para login"></div>' +
+            '<div class="form-group"><label>Contraseña *</label><input type="password" id="password" required placeholder="Contraseña"></div>' +
+            '<div class="form-group"><label>Teléfono</label><input type="tel" id="telefono" placeholder="Ej: 3388673804"></div>' +
+            '<div class="form-group"><label>Email</label><input type="email" id="email" placeholder="email@ejemplo.com"></div>' +
+            '<button type="submit" class="btn">Registrar Cliente</button>' +
+          '</form>' +
+        '</div>';
+      
+      document.getElementById('registro-form').onsubmit = async function(e) {
+        e.preventDefault();
+        var msg = document.getElementById('msg');
+        
+        var data = {
+          username: document.getElementById('username').value,
+          nombre: document.getElementById('nombre').value,
+          password: document.getElementById('password').value,
+          telefono: document.getElementById('telefono').value || null,
+          email: document.getElementById('email').value || null
+        };
+        
+        try {
+          var res = await fetch(API + '/auth/registrar', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+          });
+          var result = await res.json();
+          
+          if (result.success) {
+            msg.innerHTML = '<div class="msg success">¡Cliente registrado exitosamente!</div>';
+            setTimeout(function() { showListaClientes(); }, 1500);
+          } else {
+            msg.innerHTML = '<div class="msg error">' + result.error + '</div>';
+          }
+        } catch(err) {
+          msg.innerHTML = '<div class="msg error">Error de conexión</div>';
+        }
+      };
+    }
+    
+    // LISTA DE CLIENTES
+    function showListaClientes() {
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="card">' +
+          '<h2>📋 Lista de Clientes</h2>' +
+          '<div id="clientes-list"><div class="loading">Cargando...</div></div>' +
+        '</div>';
+      
+      loadClientes();
+    }
+    
+    async function loadClientes() {
+      try {
+        var res = await fetch(API + '/clientes');
+        var clientes = await res.json();
+        
+        if (clientes.length === 0) {
+          document.getElementById('clientes-list').innerHTML = '<div class="empty-state">No hay clientes registrados</div>';
+        } else {
+          var html = '';
+          clientes.forEach(function(c) {
+            html += '<div class="list-item">' +
+              '<div class="info">' +
+                '<div class="name">' + (c.nombre || c.username) + '</div>' +
+                '<div class="detail">' + (c.telefono || 'Sin teléfono') + ' - ' + (c.email || 'Sin email') + '</div>' +
+              '</div>' +
+              '<div class="actions">' +
+                '<button class="view-btn" onclick="verCliente(' + c.id + ')">Ver</button>' +
+                '<button class="edit-btn" onclick="editarCliente(' + c.id + ')">Editar</button>' +
+                '<button class="delete-btn" onclick="eliminarCliente(' + c.id + ', \'' + (c.nombre || c.username) + '\')">X</button>' +
+              '</div>' +
+            '</div>';
+          });
+          document.getElementById('clientes-list').innerHTML = html;
+        }
+      } catch(err) {
+        document.getElementById('clientes-list').innerHTML = '<div class="empty-state">Error cargando clientes</div>';
+      }
+    }
+    
+    // VER CLIENTE
+    async function verCliente(id) {
+      try {
+        var res = await fetch(API + '/cliente/' + id);
+        var data = await res.json();
+        
+        if (data.success) {
+          var c = data.cliente;
+          var turnos = data.turnos || [];
+          
+          var turnosHtml = '';
+          if (turnos.length > 0) {
+            turnos.forEach(function(t) {
+              var badgeClass = t.estado === 'pendiente' ? 'pendiente' : (t.estado === 'completado' ? 'completado' : 'cancelado');
+              turnosHtml += '<div class="list-item" style="font-size:13px;">' +
+                '<div class="info"><div class="name">' + t.fecha + ' ' + t.hora + '</div><div class="detail">' + t.tratamiento + '</div></div>' +
+                '<span class="badge ' + badgeClass + '">' + t.estado + '</span>' +
+              '</div>';
+            });
+          } else {
+            turnosHtml = '<div class="empty-state" style="padding:20px;">Sin turnos</div>';
+          }
+          
+          document.getElementById('modal-container').innerHTML = 
+            '<div class="modal" onclick="closeModal()">' +
+              '<div class="modal-content" onclick="event.stopPropagation()">' +
+                '<h3>👤 ' + (c.nombre || c.username) + '</h3>' +
+                '<div class="form-group"><label>Usuario</label><div style="color:#333;">' + c.username + '</div></div>' +
+                '<div class="form-group"><label>Teléfono</label><div style="color:#333;">' + (c.telefono || '-') + '</div></div>' +
+                '<div class="form-group"><label>Email</label><div style="color:#333;">' + (c.email || '-') + '</div></div>' +
+                '<div class="form-group"><label>Registrado</label><div style="color:#333;">' + (c.created_at ? c.created_at.substring(0,10) : '-') + '</div></div>' +
+                '<hr style="margin:15px 0;border:none;border-top:1px solid #eee;">' +
+                '<h3 style="font-size:16px;">📅 Turnos</h3>' +
+                '<div style="max-height:200px;overflow-y:auto;">' + turnosHtml + '</div>' +
+                '<button class="btn secondary" onclick="closeModal()">Cerrar</button>' +
+              '</div>' +
+            '</div>';
+        }
+      } catch(err) { alert('Error cargando datos'); }
+    }
+    
+    // EDITAR CLIENTE
+    async function editarCliente(id) {
+      try {
+        var res = await fetch(API + '/cliente/' + id);
+        var data = await res.json();
+        
+        if (data.success) {
+          var c = data.cliente;
+          
+          document.getElementById('modal-container').innerHTML = 
+            '<div class="modal" onclick="closeModal()">' +
+              '<div class="modal-content" onclick="event.stopPropagation()">' +
+                '<h3>✏️ Editar Cliente</h3>' +
+                '<div id="edit-msg"></div>' +
+                '<form id="edit-form">' +
+                  '<div class="form-group"><label>Nombre</label><input type="text" id="edit-nombre" value="' + (c.nombre || '') + '"></div>' +
+                  '<div class="form-group"><label>Usuario</label><input type="text" id="edit-username" value="' + (c.username || '') + '"></div>' +
+                  '<div class="form-group"><label>Nueva contraseña (dejar vacío para no cambiar)</label><input type="password" id="edit-password" placeholder="Nueva contraseña"></div>' +
+                  '<div class="form-group"><label>Teléfono</label><input type="tel" id="edit-telefono" value="' + (c.telefono || '') + '"></div>' +
+                  '<div class="form-group"><label>Email</label><input type="email" id="edit-email" value="' + (c.email || '') + '"></div>' +
+                  '<button type="submit" class="btn">Guardar Cambios</button>' +
+                  '<button type="button" class="btn secondary" onclick="closeModal()">Cancelar</button>' +
+                '</form>' +
+              '</div>' +
+            '</div>';
+          
+          document.getElementById('edit-form').onsubmit = async function(e) {
+            e.preventDefault();
+            var msg = document.getElementById('edit-msg');
+            var password = document.getElementById('edit-password').value;
+            var updateData = {
+              username: document.getElementById('edit-username').value,
+              nombre: document.getElementById('edit-nombre').value,
+              telefono: document.getElementById('edit-telefono').value || null,
+              email: document.getElementById('edit-email').value || null
+            };
+            if (password) updateData.password = password;
+            
+            try {
+              var res = await fetch(API + '/clientes/' + id, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(updateData)
+              });
+              var result = await res.json();
+              
+              if (result.success) {
+                msg.innerHTML = '<div class="msg success">¡Cliente actualizado!</div>';
+                setTimeout(function() { closeModal(); loadClientes(); }, 1000);
+              } else {
+                msg.innerHTML = '<div class="msg error">' + result.error + '</div>';
+              }
+            } catch(err) {
+              msg.innerHTML = '<div class="msg error">Error de conexión</div>';
+            }
+          };
+        }
+      } catch(err) { alert('Error cargando datos'); }
+    }
+    
+    // ELIMINAR CLIENTE
+    async function eliminarCliente(id, nombre) {
+      if (!confirm('¿Estás seguro de eliminar a ' + nombre + '?\n\nEsta acción no se puede deshacer.')) return;
+      
+      try {
+        var res = await fetch(API + '/clientes/' + id, { method: 'DELETE' });
+        var result = await res.json();
+        
+        if (result.success) {
+          loadClientes();
+        } else {
+          alert(result.error || 'Error al eliminar');
+        }
+      } catch(err) {
+        alert('Error de conexión');
+      }
+    }
+    
+    function closeModal() {
+      document.getElementById('modal-container').innerHTML = '';
+    }
+    
+    // TURNOS
+    async function showTurnos() {
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="card">' +
+          '<h2>📅 Turnos</h2>' +
+          '<div class="menu" style="grid-template-columns:1fr;gap:10px;">' +
+            '<div class="menu-item secondary" onclick="showSection(\'nuevo-turno\')"><span class="icon">➕</span><span class="label">Nuevo Turno</span><span class="desc">Crear nuevo turno</span></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="card"><h2>Lista de Turnos</h2><div id="turnos-list"><div class="loading">Cargando...</div></div></div>';
+      
+      loadTurnos();
+    }
+    
+    async function loadTurnos() {
+      try {
+        var res = await fetch(API + '/turnos');
+        var turnos = await res.json();
+        
+        if (turnos.length === 0) {
+          document.getElementById('turnos-list').innerHTML = '<div class="empty-state">No hay turnos registrados</div>';
+        } else {
+          // Ordenar por fecha (más recientes primero)
+          turnos.sort(function(a, b) { return new Date(b.fecha) - new Date(a.fecha); });
+          
+          var html = '';
+          turnos.forEach(function(t) {
+            var badgeClass = t.estado === 'pendiente' ? 'pendiente' : (t.estado === 'completado' ? 'completado' : 'cancelado');
+            var precio = parseFloat(t.tratamiento_precio || 0);
+            html += '<div class="turno-detail">' +
+              '<div class="row"><span class="label">Cliente:</span><span class="value">' + (t.cliente_nombre || 'Cliente') + '</span></div>' +
+              '<div class="row"><span class="label">Teléfono:</span><span class="value">' + (t.cliente_telefono || '-') + '</span></div>' +
+              '<div class="row"><span class="label">Servicio:</span><span class="value">' + (t.tratamiento_nombre || 'Tratamiento') + '</span></div>' +
+              '<div class="row"><span class="label">Fecha:</span><span class="value">' + t.fecha + ' ' + t.hora + '</span></div>' +
+              '<div class="row"><span class="label">Precio:</span><span class="value">$' + (precio > 0 ? precio.toLocaleString('es-AR') : 'Consultar') + '</span></div>' +
+              '<div class="row"><span class="label">Estado:</span><span class="badge ' + badgeClass + '">' + (t.estado || 'pendiente') + '</span></div>';
+            
+            if (t.notas) {
+              html += '<div class="row"><span class="label">Notas:</span><span class="value" style="font-size:12px;">' + t.notas + '</span></div>';
+            }
+            
+            if (t.estado === 'pendiente') {
+              html += '<div class="turno-actions">' +
+                '<button class="btn-completar" onclick="completarTurno(' + t.id + ')">✅ Completar</button>' +
+                '<button class="btn-cancelar" onclick="cancelarTurno(' + t.id + ')">❌ Cancelar</button>' +
+              '</div>';
+            }
+            
+            html += '</div>';
+          });
+          document.getElementById('turnos-list').innerHTML = html;
+        }
+      } catch(err) {
+        document.getElementById('turnos-list').innerHTML = '<div class="empty-state">Error cargando turnos</div>';
+      }
+    }
+    
+    async function completarTurno(id) {
+      if (!confirm('¿Marcar este turno como completado?')) return;
+      try {
+        await fetch(API + '/turnos/' + id, {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({estado: 'completado'})
+        });
+        loadTurnos();
+      } catch(err) { alert('Error'); }
+    }
+    
+    async function cancelarTurno(id) {
+      if (!confirm('¿Cancelar este turno?')) return;
+      try {
+        await fetch(API + '/turnos/' + id, {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({estado: 'cancelado'})
+        });
+        loadTurnos();
+      } catch(err) { alert('Error'); }
+    }
+    
+    // NUEVO TURNO
+    function showNuevoTurno() {
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="card">' +
+          '<h2>➕ Nuevo Turno</h2>' +
+          '<p style="color:#666;margin-bottom:15px;">Seleccioná cliente y tratamiento</p>' +
+          '<div id="nuevo-turno-form"></div>' +
+        '</div>';
+      
+      loadNuevoTurnoForm();
+    }
+    
+    async function loadNuevoTurnoForm() {
+      try {
+        var [clientesRes, tratamientosRes] = await Promise.all([
+          fetch(API + '/clientes'),
+          fetch(API + '/tratamientos')
+        ]);
+        var clientes = await clientesRes.json();
+        var tratamientos = await tratamientosRes.json();
+        
+        var clienteOptions = '<option value="">Seleccionar cliente</option>';
+        clientes.forEach(function(c) { clienteOptions += '<option value="' + c.id + '">' + (c.nombre || c.username) + '</option>'; });
+        
+        var tratamientoOptions = '<option value="">Seleccionar tratamiento</option>';
+        tratamientos.forEach(function(t) { tratamientoOptions += '<option value="' + t.id + '">' + t.nombre + ' - $' + parseFloat(t.precio || 0).toLocaleString('es-AR') + '</option>'; });
+        
+        document.getElementById('nuevo-turno-form').innerHTML = 
+          '<form id="turno-form">' +
+            '<div class="form-group"><label>Cliente *</label><select id="turno-cliente">' + clienteOptions + '</select></div>' +
+            '<div class="form-group"><label>Tratamiento *</label><select id="turno-tratamiento">' + tratamientoOptions + '</select></div>' +
+            '<div class="form-group"><label>Fecha *</label><input type="date" id="turno-fecha" required></div>' +
+            '<div class="form-group"><label>Hora *</label><input type="time" id="turno-hora" required></div>' +
+            '<div class="form-group"><label>Notas</label><textarea id="turno-notas" rows="3" placeholder="Observaciones..."></textarea></div>' +
+            '<button type="submit" class="btn">Crear Turno</button>' +
+          '</form>';
+        
+        document.getElementById('turno-form').onsubmit = async function(e) {
+          e.preventDefault();
+          var data = {
+            cliente_id: document.getElementById('turno-cliente').value,
+            tratamiento_id: document.getElementById('turno-tratamiento').value,
+            fecha: document.getElementById('turno-fecha').value,
+            hora: document.getElementById('turno-hora').value,
+            notas: document.getElementById('turno-notas').value || null
+          };
+          
+          try {
+            var res = await fetch(API + '/turnos', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify(data)
+            });
+            var result = await res.json();
+            
+            if (result.success) {
+              alert('¡Turno creado exitosamente!');
+              showTurnos();
+            } else {
+              alert(result.error || 'Error al crear turno');
+            }
+          } catch(err) { alert('Error de conexión'); }
+        };
+      } catch(err) {
+        document.getElementById('nuevo-turno-form').innerHTML = '<div class="empty-state">Error cargando datos</div>';
+      }
+    }
+    
+    // TRATAMIENTOS
+    async function showTratamientos() {
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="card">' +
+          '<h2>💅 Servicios</h2>' +
+          '<div class="menu" style="grid-template-columns:repeat(2,1fr);gap:10px;">' +
+            '<div class="menu-item secondary" onclick="showAgregarTratamiento()"><span class="icon">➕</span><span class="label">Agregar Nuevo</span></div>' +
+            '<div class="menu-item secondary" onclick="inicializarTratamientos()"><span class="icon">🔄</span><span class="label">Actualizar Default</span></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="card"><h2>Lista de Servicios</h2><div id="trat-list"><div class="loading">Cargando...</div></div></div>';
+      
+      loadTratamientos();
+    }
+    
+    async function loadTratamientos() {
+      try {
+        var res = await fetch(API + '/tratamientos');
+        var tratamientos = await res.json();
+        
+        // Si no hay tratamientos O hay más de 5 (duplicados), cargar los default automáticamente
+        if (tratamientos.length === 0 || tratamientos.length > 5) {
+          // Verificar si hay duplicados por nombre
+          var nombres = tratamientos.map(function(t) { return t.nombre; });
+          var unicos = new Set(nombres);
+          if (unicos.size !== nombres.length) {
+            await inicializarTratamientos(false);
+            return;
+          }
+        }
+        
+        var html = '<div class="trat-grid">';
+        tratamientos.forEach(function(t) {
+          var precio = parseFloat(t.precio || 0);
+          var img = t.imagen_url || '/fotos/logo.png';
+          html += '<div class="trat-card" onclick="editarTratamiento(' + t.id + ')">' +
+            '<img src="' + img + '" class="trat-image" onerror="this.src=\'/fotos/logo.png\'">' +
+            '<div class="trat-content">' +
+              '<div class="name">' + t.nombre + '</div>' +
+              '<div class="detail">' + t.duracion + ' min - ' + (t.descripcion || '') + '</div>' +
+              '<div class="precio">' + (precio > 0 ? '$' + precio.toLocaleString('es-AR') : 'Consultar') + '</div>' +
+            '</div>' +
+          '</div>';
+        });
+        html += '</div>';
+        document.getElementById('trat-list').innerHTML = html;
+      } catch(err) {
+        document.getElementById('trat-list').innerHTML = '<div class="empty-state">Error cargando</div>';
+      }
+    }
+    
+    // INICIALIZAR TRATAMIENTOS (crear/actualizar los tratamientos base con imagen)
+    async function inicializarTratamientos(confirmar) {
+      if (confirmar && !confirm('¿Crear/actualizar tratamientos con las categorías correctas?')) return;
+      
+      // Primero eliminar TODOS los tratamientos (borrado real)
+      try {
+        var res = await fetch(API + '/tratamientos');
+        var existing = await res.json();
+        
+        // Eliminar uno por uno esperando entre cada uno
+        for (var i = 0; i < existing.length; i++) {
+          await fetch(API + '/tratamientos/' + existing[i].id, { 
+            method: 'DELETE',
+            headers: {'Content-Type': 'application/json'}
+          });
+          // Pequeña pausa entre cada eliminación
+          await new Promise(function(r) { setTimeout(r, 100); });
+        }
+      } catch(e) { 
+        console.log('Error eliminando:', e); 
+      }
+      
+      // Pequeña pausa antes de crear nuevos
+      await new Promise(function(r) { setTimeout(r, 200); });
+      
+      // Crear tratamientos con las imágenes correctas
+      var tratamientos = [
+        { nombre: 'LIFTING DE PESTAÑAS', precio: 14000, duracion: 90, descripcion: 'Lifting profesional de pestañas', imagen_url: '/fotos/liftingpestanas.jpg' },
+        { nombre: 'DISEÑO Y PERFILADO DE CEJAS', precio: 10000, duracion: 45, descripcion: 'Diseño personalizado de cejas', imagen_url: '/fotos/perfilaydisenocejas.jpg' },
+        { nombre: 'TRATAMIENTOS Y ALISADOS', precio: 0, duracion: 180, descripcion: 'Baños de crema y alisados', imagen_url: '/fotos/tratamientosyalisados.jpg' },
+        { nombre: 'PEINADOS', precio: 0, duracion: 60, descripcion: 'Peinados para eventos', imagen_url: '/fotos/peinado.jpg' },
+        { nombre: 'LIMPIEZA FACIAL', precio: 20000, duracion: 75, descripcion: 'Limpieza facial profunda', imagen_url: '/fotos/limpiezafacial.jpg' }
+      ];
+      
+      for (var j = 0; j < tratamientos.length; j++) {
+        var t = tratamientos[j];
+        try {
+          await fetch(API + '/tratamientos', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(t)
+          });
+          // Pausa entre cada creación
+          await new Promise(function(r) { setTimeout(r, 100); });
+        } catch(e) { 
+          console.log('Error creando:', e); 
+        }
+      }
+      
+      if (confirmar) alert('¡Servicios actualizados!');
+      loadTratamientos();
+    }
+    
+    // AGREGAR TRATAMIENTO
+    function showAgregarTratamiento() {
+      document.getElementById('modal-container').innerHTML = 
+        '<div class="modal" onclick="closeModal()">' +
+          '<div class="modal-content" onclick="event.stopPropagation()">' +
+            '<h3>➕ Nuevo Tratamiento</h3>' +
+            '<div id="trat-msg"></div>' +
+            '<form id="trat-form">' +
+              '<div class="form-group"><label>Nombre *</label><input type="text" id="trat-nombre" required></div>' +
+              '<div class="form-group"><label>Precio</label><input type="number" id="trat-precio" placeholder="0 = Consultar"></div>' +
+              '<div class="form-group"><label>Duración (min)</label><input type="number" id="trat-duracion" value="60"></div>' +
+              '<div class="form-group"><label>Descripción</label><input type="text" id="trat-desc" placeholder="Descripción del servicio"></div>' +
+              '<div class="form-group"><label>URL de imagen</label><input type="text" id="trat-img" placeholder="/fotos/imagen.jpg"></div>' +
+              '<button type="submit" class="btn">Guardar</button>' +
+              '<button type="button" class="btn secondary" onclick="closeModal()">Cancelar</button>' +
+            '</form>' +
+          '</div>' +
+        '</div>';
+      
+      document.getElementById('trat-form').onsubmit = async function(e) {
+        e.preventDefault();
+        var data = {
+          nombre: document.getElementById('trat-nombre').value,
+          precio: parseFloat(document.getElementById('trat-precio').value) || 0,
+          duracion: parseInt(document.getElementById('trat-duracion').value) || 60,
+          descripcion: document.getElementById('trat-desc').value || null,
+          imagen_url: document.getElementById('trat-img').value || null
+        };
+        
+        try {
+          var res = await fetch(API + '/tratamientos', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+          });
+          var result = await res.json();
+          
+          if (result.id) {
+            document.getElementById('trat-msg').innerHTML = '<div class="msg success">¡Tratamiento creado!</div>';
+            setTimeout(function() { closeModal(); loadTratamientos(); }, 1000);
+          }
+        } catch(err) {
+          document.getElementById('trat-msg').innerHTML = '<div class="msg error">Error</div>';
+        }
+      };
+    }
+    
+    // EDITAR TRATAMIENTO
+    async function editarTratamiento(id) {
+      try {
+        var res = await fetch(API + '/tratamientos');
+        var tratamientos = await res.json();
+        var t = tratamientos.find(function(x) { return x.id === id; });
+        
+        if (t) {
+          document.getElementById('modal-container').innerHTML = 
+            '<div class="modal" onclick="closeModal()">' +
+              '<div class="modal-content" onclick="event.stopPropagation()">' +
+                '<h3>✏️ Editar Tratamiento</h3>' +
+                '<div id="edit-trat-msg"></div>' +
+                '<form id="edit-trat-form">' +
+                  '<div class="form-group"><label>Nombre</label><input type="text" id="edit-trat-nombre" value="' + (t.nombre || '') + '"></div>' +
+                  '<div class="form-group"><label>Precio</label><input type="number" id="edit-trat-precio" value="' + (t.precio || 0) + '"></div>' +
+                  '<div class="form-group"><label>Duración (min)</label><input type="number" id="edit-trat-duracion" value="' + (t.duracion || 60) + '"></div>' +
+                  '<div class="form-group"><label>Descripción</label><input type="text" id="edit-trat-desc" value="' + (t.descripcion || '') + '"></div>' +
+                  '<div class="form-group"><label>URL imagen</label><input type="text" id="edit-trat-img" value="' + (t.imagen_url || '') + '"></div>' +
+                  '<button type="submit" class="btn">Guardar</button>' +
+                  '<button type="button" class="btn danger" onclick="eliminarTratamiento(' + id + ')">Eliminar</button>' +
+                  '<button type="button" class="btn secondary" onclick="closeModal()">Cancelar</button>' +
+                '</form>' +
+              '</div>' +
+            '</div>';
+          
+          document.getElementById('edit-trat-form').onsubmit = async function(e) {
+            e.preventDefault();
+            var data = {
+              nombre: document.getElementById('edit-trat-nombre').value,
+              precio: parseFloat(document.getElementById('edit-trat-precio').value) || 0,
+              duracion: parseInt(document.getElementById('edit-trat-duracion').value) || 60,
+              descripcion: document.getElementById('edit-trat-desc').value || null,
+              imagen_url: document.getElementById('edit-trat-img').value || null
+            };
+            
+            try {
+              var res = await fetch(API + '/tratamientos/' + id, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+              });
+              var result = await res.json();
+              
+              if (result.id) {
+                document.getElementById('edit-trat-msg').innerHTML = '<div class="msg success">¡Actualizado!</div>';
+                setTimeout(function() { closeModal(); loadTratamientos(); }, 1000);
+              }
+            } catch(err) {
+              document.getElementById('edit-trat-msg').innerHTML = '<div class="msg error">Error</div>';
+            }
+          };
+        }
+      } catch(err) { alert('Error'); }
+    }
+    
+    async function eliminarTratamiento(id) {
+      if (!confirm('¿Eliminar este tratamiento?')) return;
+      try {
+        await fetch(API + '/tratamientos/' + id, { method: 'DELETE' });
+        closeModal();
+        loadTratamientos();
+      } catch(err) { alert('Error'); }
+    }
+    
+    // PROMOCIONES
+    async function showPromociones() {
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="card"><h2>🎉 Promociones</h2><div id="promo-list"><div class="loading">Cargando...</div></div></div>';
+      
+      try {
+        var res = await fetch(API + '/promociones');
+        var promos = await res.json();
+        
+        if (promos.length === 0) {
+          document.getElementById('promo-list').innerHTML = '<div class="empty-state">No hay promociones activas</div>';
+        } else {
+          var html = '';
+          promos.forEach(function(p) {
+            html += '<div class="list-item">' +
+              '<div class="info"><div class="name">' + p.titulo + '</div><div class="detail">' + (p.descripcion || '') + '</div></div>' +
+            '</div>';
+          });
+          document.getElementById('promo-list').innerHTML = html;
+        }
+      } catch(err) {
+        document.getElementById('promo-list').innerHTML = '<div class="empty-state">Error cargando promociones</div>';
+      }
+    }
+    
+    function showGaleria() {
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="card"><h2>📸 Galería de Fotos</h2><div id="galeria-content"><div class="loading">Cargando...</div></div></div>';
+      
+      loadGaleria();
+    }
+    
+    async function loadGaleria() {
+      try {
+        var res = await fetch(API + '/galeria/local');
+        var galeria = await res.json();
+        
+        if (galeria.length === 0) {
+          document.getElementById('galeria-content').innerHTML = '<div class="empty-state">No hay fotos en la galería</div>';
+        } else {
+          var html = '';
+          galeria.forEach(function(cat) {
+            html += '<div class="galeria-categoria">' +
+              '<h3>' + (cat.icon || '📷') + ' ' + cat.nombre + '</h3>' +
+              '<div class="galeria-grid">';
+            cat.imagenes.forEach(function(img) {
+              html += '<img src="' + img.url + '" class="galeria-img" onclick="alert(\'Ver imagen: ' + img.nombre + '\')" onerror="this.style.display=\'none\'">';
+            });
+            html += '</div></div>';
+          });
+          document.getElementById('galeria-content').innerHTML = html;
+        }
+      } catch(err) {
+        document.getElementById('galeria-content').innerHTML = '<div class="empty-state">Error cargando galería</div>';
+      }
+    }
+    
+    // LEGAJOS
+    function showLegajos() {
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="card">' +
+          '<h2>📋 Legajos - Planillas de Anamnesis</h2>' +
+          '<div class="menu" style="grid-template-columns:1fr;gap:10px;">' +
+            '<div class="menu-item secondary" onclick="verPlanillaFacial()">' +
+              '<span class="icon">✨</span>' +
+              '<span class="label">Planilla Anamnesis Facial</span>' +
+              '<span class="desc">Descargar/Llenar planilla</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="card"><h2>Legajos de Clientes</h2><div id="legajos-list"><div class="loading">Cargando...</div></div></div>';
+      
+      loadLegajos();
+    }
+    
+    async function showNuevaPlanilla() {
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="header"><h1>📋 Nueva Planilla de Anamnesis</h1></div>' +
+        '<div class="card"><div id="planilla-form"><div class="loading">Cargando...</div></div></div>';
+      
+      var res = await fetch(API + '/clientes');
+      var clientes = await res.json();
+      
+      var opts = '<option value="">Seleccionar clienta</option>';
+      clientes.forEach(function(c) { opts += '<option value="' + c.id + '">' + (c.nombre || c.username) + '</option>'; });
+      
+      document.getElementById('planilla-form').innerHTML = 
+        '<form id="form-planilla">' +
+          '<div class="form-group"><label>Clienta *</label><select id="plan-cliente" required>' + opts + '</select></div>' +
+          '<div class="form-group"><label>Tipo de tratamiento</label><select id="plan-tratamiento"><option value="facial">Limpieza Facial</option><option value="alisado">Alisado</option><option value="perfilado">Perfilado de Cejas</option><option value="pestañas">Pestañas</option><option value="otro">Otro</option></select></div>' +
+          '<h3 style="color:#e91e63;margin:20px 0 10px;font-size:14px;">📋 Datos de la Piel</h3>' +
+          '<div class="form-group"><label>Tipo de piel</label><select id="plan-tipo-piel"><option>Normal</option><option>Seca</option><option>Grasa</option><option>Mixta</option><option>Sensible</option></select></div>' +
+          '<div class="form-group"><label>Estado de la piel</label><select id="plan-estado-piel"><option>Saludable</option><option>Deshidrata</option><option>Con manchas</option><option>Con Acne</option></select></div>' +
+          '<h3 style="color:#e91e63;margin:20px 0 10px;font-size:14px;">🏥 Historia Médica</h3>' +
+          '<div class="form-group"><label>Alergias</label><select id="plan-alergias"><option>No</option><option>Sí</option></select></div>' +
+          '<div class="form-group"><label>¿Embarazada?</label><select id="plan-embarazada"><option>No</option><option>Sí</option></select></div>' +
+          '<div class="form-group"><label>Diabetes</label><select id="plan-diabetes"><option>No</option><option>Sí</option></select></div>' +
+          '<div class="form-group"><label>Presión arterial</label><select id="plan-presion"><option>Normal</option><option>Baja</option><option>Alta</option></select></div>' +
+          '<div class="form-group"><label>Medicamentos actuales</label><select id="plan-medicamentos"><option>No</option><option>Sí</option></select></div>' +
+          '<div class="form-group"><label>Problemas de salud</label><select id="plan-problemas"><option>No</option><option>Sí</option></select></div>' +
+          '<h3 style="color:#e91e63;margin:20px 0 10px;font-size:14px;">☀️ Exposición Solar</h3>' +
+          '<div class="form-group"><label>¿Exposición al sol?</label><select id="plan-sol"><option>No</option><option>Sí</option></select></div>' +
+          '<div class="form-group"><label>¿Usa protector solar?</label><select id="plan-spf"><option>Sí</option><option>No</option></select></div>' +
+          '<h3 style="color:#e91e63;margin:20px 0 10px;font-size:14px;">🎯 Observaciones</h3>' +
+          '<div class="form-group"><label>Rutina de skincare</label><textarea id="plan-rutina" rows="2" placeholder="Qué productos usa?"></textarea></div>' +
+          '<div class="form-group"><label>Objetivos/Expectativas</label><textarea id="plan-objetivos" rows="2" placeholder="Qué espera del tratamiento?"></textarea></div>' +
+          '<div class="form-group"><label>Comentarios</label><textarea id="plan-comentarios" rows="3"></textarea></div>' +
+          '<button type="submit" class="btn">💾 Guardar Planilla</button>' +
+        '</form>';
+      
+      document.getElementById('form-planilla').onsubmit = async function(e) {
+        e.preventDefault();
+        var clienteId = document.getElementById('plan-cliente').value;
+        if (!clienteId) { alert('Seleccioná una clienta'); return; }
+        
+        var datos = {
+          tratamiento: document.getElementById('plan-tratamiento').value,
+          tipo_piel: document.getElementById('plan-tipo-piel').value,
+          estado_piel: document.getElementById('plan-estado-piel').value,
+          alergias: document.getElementById('plan-alergias').value,
+          embarazada: document.getElementById('plan-embarazada').value,
+          diabetes: document.getElementById('plan-diabetes').value,
+          presion: document.getElementById('plan-presion').value,
+          medicamentos: document.getElementById('plan-medicamentos').value,
+          problemas_salud: document.getElementById('plan-problemas').value,
+          sol: document.getElementById('plan-sol').value,
+          spf: document.getElementById('plan-spf').value,
+          rutina: document.getElementById('plan-rutina').value,
+          objetivos: document.getElementById('plan-objetivos').value,
+          comentarios: document.getElementById('plan-comentarios').value
+        };
+        
+        await fetch(API + '/legajos', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            cliente_id: clienteId,
+            tratamiento: document.getElementById('plan-tratamiento').value,
+            tipo: document.getElementById('plan-tratamiento').value,
+            fecha: new Date().toISOString().split('T')[0],
+            datos: JSON.stringify(datos)
+          })
+        });
+        
+        alert('¡Planilla guardada!');
+        showLegajos();
+      };
+    }
+    
+    async function loadLegajos() {
+      try {
+        var res = await fetch(API + '/legajos');
+        var legajos = await res.json();
+        
+        if (legajos.length === 0) {
+          document.getElementById('legajos-list').innerHTML = '<div class="empty-state">No hay legajos registrados</div>';
+        } else {
+          var html = '';
+          // Obtener clientes para mostrar nombres
+          var clientesRes = await fetch(API + '/clientes');
+          var clientes = await clientesRes.json();
+          var clientesMap = {};
+          clientes.forEach(function(c) { clientesMap[c.id] = c; });
+          
+          legajos.forEach(function(l) {
+            var cliente = clientesMap[l.cliente_id];
+            var nombreCliente = cliente ? (cliente.nombre || cliente.username) : 'Cliente #' + l.cliente_id;
+            var fecha = l.fecha ? l.fecha.substring(0, 10) : '-';
+            
+            html += '<div class="list-item" style="flex-direction:column;align-items:flex-start;">' +
+              '<div style="width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+                '<span class="name" style="font-size:15px;">👤 ' + nombreCliente + '</span>' +
+                '<span class="badge" style="background:#e91e63;color:white;">' + (l.tipo || 'facial') + '</span>' +
+              '</div>' +
+              '<div class="detail" style="width:100%;">📅 Fecha: ' + fecha + ' | 💅 Tratamiento: ' + (l.tratamiento || 'Facial') + '</div>' +
+              '<button class="btn small secondary" style="margin-top:10px;" onclick="verDetalleLegajo(' + l.id + ')">👁️ Ver Detalles</button>' +
+            '</div>';
+          });
+          document.getElementById('legajos-list').innerHTML = html;
+        }
+      } catch(err) {
+        document.getElementById('legajos-list').innerHTML = '<div class="empty-state">Error cargando legajos</div>';
+      }
+    }
+    
+    async function verDetalleLegajo(id) {
+      try {
+        var res = await fetch(API + '/legajos/' + id);
+        var legajo = await res.json();
+        
+        var clientesRes = await fetch(API + '/clientes');
+        var clientes = await clientesRes.json();
+        var cliente = clientes.find(function(c) { return c.id === legajo.cliente_id; });
+        
+        var datos = {};
+        try { datos = JSON.parse(legajo.datos || '{}'); } catch(e) {}
+        
+        var html = '<div style="max-height:450px;overflow-y:auto;">';
+        html += '<div class="info-item"><span class="label">Cliente</span><span class="value">' + (cliente ? (cliente.nombre || cliente.username) : 'Cliente') + '</span></div>';
+        html += '<div class="info-item"><span class="label">Teléfono</span><span class="value">' + (cliente ? (cliente.telefono || '-') : '-') + '</span></div>';
+        html += '<div class="info-item"><span class="label">Email</span><span class="value">' + (cliente ? (cliente.email || '-') : '-') + '</span></div>';
+        html += '<div class="info-item"><span class="label">Tratamiento</span><span class="value">' + (legajo.tratamiento || '-') + '</span></div>';
+        html += '<div class="info-item"><span class="label">Fecha</span><span class="value">' + (legajo.fecha ? legajo.fecha.substring(0,10) : '-') + '</span></div>';
+        
+        html += '<h4 style="color:#e91e63;margin:15px 0 8px;font-size:13px;border-bottom:1px solid #eee;">📋 Datos de la Piel</h4>';
+        if (datos.tipo_piel) html += '<div class="info-item"><span class="label">Tipo de piel</span><span class="value">' + datos.tipo_piel + '</span></div>';
+        if (datos.estado_piel) html += '<div class="info-item"><span class="label">Estado de piel</span><span class="value">' + datos.estado_piel + '</span></div>';
+        
+        html += '<h4 style="color:#e91e63;margin:15px 0 8px;font-size:13px;border-bottom:1px solid #eee;">🏥 Historia Médica</h4>';
+        if (datos.alergias) html += '<div class="info-item"><span class="label">Alergias</span><span class="value">' + datos.alergias + (datos.alergias_detalle ? ' - ' + datos.alergias_detalle : '') + '</span></div>';
+        if (datos.embarazada) html += '<div class="info-item"><span class="label">¿Embarazada?</span><span class="value">' + datos.embarazada + '</span></div>';
+        if (datos.diabetes) html += '<div class="info-item"><span class="label">Diabetes</span><span class="value">' + datos.diabetes + '</span></div>';
+        if (datos.presion) html += '<div class="info-item"><span class="label">Presión arterial</span><span class="value">' + datos.presion + '</span></div>';
+        if (datos.medicamentos) html += '<div class="info-item"><span class="label">Medicamentos</span><span class="value">' + datos.medicamentos + (datos.medicamentos_detalle ? ' - ' + datos.medicamentos_detalle : '') + '</span></div>';
+        if (datos.problemas_salud) html += '<div class="info-item"><span class="label">Problemas de salud</span><span class="value">' + datos.problemas_salud + (datos.problemas_detalle ? ' - ' + datos.problemas_detalle : '') + '</span></div>';
+        
+        html += '<h4 style="color:#e91e63;margin:15px 0 8px;font-size:13px;border-bottom:1px solid #eee;">☀️ Exposición Solar</h4>';
+        if (datos.sol) html += '<div class="info-item"><span class="label">Exposición al sol</span><span class="value">' + datos.sol + '</span></div>';
+        if (datos.spf) html += '<div class="info-item"><span class="label">Usa protector solar</span><span class="value">' + datos.spf + '</span></div>';
+        
+        html += '<h4 style="color:#e91e63;margin:15px 0 8px;font-size:13px;border-bottom:1px solid #eee;">💆 Tratamientos Anteriores</h4>';
+        if (datos.ultimo_tratamiento) html += '<div class="info-item"><span class="label">Último tratamiento</span><span class="value">' + datos.ultimo_tratamiento + '</span></div>';
+        if (datos.tratamientos_anteriores) html += '<div class="info-item"><span class="label">Tratamientos anteriores</span><span class="value">' + datos.tratamientos_anteriores + '</span></div>';
+        
+        html += '<h4 style="color:#e91e63;margin:15px 0 8px;font-size:13px;border-bottom:1px solid #eee;">🎯 Observaciones</h4>';
+        if (datos.rutina) html += '<div class="info-item"><span class="label">Rutina skincare</span><span class="value">' + datos.rutina + '</span></div>';
+        if (datos.objetivos) html += '<div class="info-item"><span class="label">Objetivos</span><span class="value">' + datos.objetivos + '</span></div>';
+        if (datos.comentarios) html += '<div class="info-item"><span class="label">Comentarios</span><span class="value">' + datos.comentarios + '</span></div>';
+        
+        html += '</div>';
+        
+        document.getElementById('modal-container').innerHTML = 
+          '<div class="modal" onclick="closeModal()">' +
+            '<div class="modal-content" onclick="event.stopPropagation()">' +
+              '<h3>📋 Detalles del Legajo</h3>' +
+              html +
+              '<button class="btn secondary" onclick="closeModal()">Cerrar</button>' +
+            '</div>' +
+          '</div>';
+      } catch(err) {
+        alert('Error cargando detalles');
+      }
+    }
+    
+    function verPlanillaFacial() {
+      window.open('/fotos/planilla-anamnesis-facial.docx', '_blank');
+    }
+    
+    // INGRESOS
+    async function showIngresos() {
+      var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      var anioActual = new Date().getFullYear();
+      var mesActual = new Date().getMonth();
+      
+      var anios = [];
+      for (var a = 2023; a <= anioActual; a++) anios.push(a);
+      
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="header"><h1>💰 Mis Ingresos</h1></div>' +
+        '<div style="background:#333;padding:15px;border-radius:16px;margin-bottom:15px;">' +
+          '<div style="display:flex;gap:10px;justify-content:center;">' +
+            '<select id="ing-mes" onchange="cargarIngresos(parseInt(this.value), parseInt(document.getElementById(\'ing-anio\').value))" style="padding:10px;border-radius:8px;border:none;width:120px;">' +
+              meses.map(function(m,i){return '<option value="'+i+'"'+(i===mesActual?' selected':'')+'>'+m+'</option>';}).join('') +
+            '</select>' +
+            '<select id="ing-anio" onchange="cargarIngresos(parseInt(document.getElementById(\'ing-mes\').value), parseInt(this.value))" style="padding:10px;border-radius:8px;border:none;width:80px;">' +
+              anios.map(function(a){return '<option value="'+a+'"'+(a===anioActual?' selected':'')+'>'+a+'</option>';}).join('') +
+            '</select>' +
+          '</div>' +
+        '</div>' +
+        '<div id="ingresos-content" style="background:#333;border-radius:16px;padding:15px;color:white;"></div>';
+      
+      cargarIngresos(mesActual, anioActual);
+    }
+    
+    async function cargarIngresos(mes, anio) {
+      try {
+        var res = await fetch(API + '/turnos');
+        var turnos = await res.json();
+        
+        function getMonth(f) { if (!f || f.length < 5) return 0; return parseInt(f.split('-')[1]) - 1; }
+        function getAnio(f) { if (!f || f.length < 4) return 2024; return parseInt(f.split('-')[0]); }
+        
+        var delMes = turnos.filter(function(t) { return getMonth(t.fecha) === mes && getAnio(t.fecha) === anio && t.estado !== 'cancelado'; });
+        var total = delMes.reduce(function(s, t) { return s + parseFloat(t.precio || 0); }, 0);
+        
+        var html = '<div style="background:linear-gradient(135deg,#e91e63,#9c27b0);padding:25px;border-radius:16px;text-align:center;color:white;margin-bottom:15px;">' +
+          '<div style="font-size:16px;opacity:0.9;">💰 Ingresos de ' + meses[mes] + ' ' + anio + '</div>' +
+          '<div style="font-size:36px;font-weight:700;">$' + total.toLocaleString('es-AR') + '</div></div>';
+        
+        html += '<button onclick="mostrarIngresoExtra()" style="width:100%;padding:12px;background:#4caf50;color:white;border:none;border-radius:8px;font-weight:600;margin-bottom:15px;">+ Agregar Ingreso Extra</button>';
+        
+        if (delMes.length > 0) {
+          html += '<h3 style="color:white;margin:15px 0 10px;font-size:14px;">📅 Turnos del Mes</h3>';
+          html += '<input type="text" id="buscar-turno" placeholder="Buscar por cliente o fecha (ej: 15/04)..." onkeyup="filtrarIngresos()" style="width:93%;padding:10px;border-radius:8px;border:1px solid #555;background:#222;color:white;margin-bottom:10px;font-size:12px;">';
+          html += '<div>';
+          delMes.sort(function(a, b) { return b.fecha.localeCompare(a.fecha); }).forEach(function(t) {
+            var precio = parseFloat(t.precio || 0);
+            var estadoColor = t.estado === 'completado' ? '#4caf50' : '#ff9800';
+            html += '<div class="turno-item" data-cli="'+(t.cliente_nombre || '')+'" data-fecha="'+t.fecha+'" style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #444;font-size:12px;color:white;">' +
+              '<div>' + t.fecha + ' - ' + (t.tratamiento_nombre || 'Servicio') + '<br><small style="color:#888;">' + (t.cliente_nombre || '') + ' ('+(t.estado || 'pendiente')+')</small></div>' +
+              '<div style="font-weight:600;color:'+estadoColor+';">' + (precio > 0 ? '$' + precio.toLocaleString('es-AR') : '---') + '</div></div>';
+          });
+          html += '</div>';
+        }
+        
+        document.getElementById('ingresos-content').innerHTML = html;
+      } catch(err) {
+        document.getElementById('ingresos-content').innerHTML = '<div class="empty-state">Error cargando</div>';
+      }
+    }
+    
+    function filtrarIngresos() {
+      var busq = document.getElementById('buscar-turno').value.toLowerCase();
+      document.querySelectorAll('.turno-item').forEach(function(item) {
+        var cli = (item.getAttribute('data-cli') || '').toLowerCase();
+        var fecha = (item.getAttribute('data-fecha') || '').toLowerCase();
+        var matches = cli.indexOf(busq) >= 0 || fecha.indexOf(busq) >= 0 || busq === '';
+        item.style.display = matches ? 'flex' : 'none';
+      });
+    }
+    
+    function mostrarIngresoExtra() {
+      document.getElementById('modal-container').innerHTML = 
+        '<div class="modal" onclick="if(event.target===this)closeModal()">' +
+          '<div class="modal-content" onclick="event.stopPropagation()">' +
+            '<h3>💰 Agregar Ingreso Extra</h3>' +
+            '<form id="form-ie">' +
+              '<div class="form-group"><label>Concepto</label><input type="text" id="ie-concepto" required></div>' +
+              '<div class="form-group"><label>Monto</label><input type="number" id="ie-monto" required></div>' +
+              '<div class="form-group"><label>Fecha</label><input type="date" id="ie-fecha"></div>' +
+              '<button type="submit" class="btn">Guardar</button>' +
+              '<button type="button" class="btn secondary" onclick="closeModal()">Cancelar</button>' +
+            '</form>' +
+          '</div></div>';
+      document.getElementById('ie-fecha').value = new Date().toISOString().split('T')[0];
+      document.getElementById('form-ie').onsubmit = function(e) {
+        e.preventDefault();
+        var extras = JSON.parse(localStorage.getItem('ingresos_extras') || '[]');
+        extras.push({
+          concepto: document.getElementById('ie-concepto').value,
+          monto: parseInt(document.getElementById('ie-monto').value),
+          fecha: document.getElementById('ie-fecha').value
+        });
+        localStorage.setItem('ingresos_extras', JSON.stringify(extras));
+        closeModal();
+        document.getElementById('ingresos-content').innerHTML = '<div class="msg success">Ingreso extra guardado</div>';
+        setTimeout(function() { showIngresos(); }, 1000);
+      };
+    }
+    
+    // TESTIMONIOS ADMIN
+    function showTestimoniosAdmin() {
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="card">' +
+          '<h2>⭐ Reseñas de Clientes</h2>' +
+          '<div id="testimonios-admin-list"><div class="loading">Cargando...</div></div>' +
+        '</div>';
+      
+      loadTestimoniosAdmin();
+    }
+    
+    async function loadTestimoniosAdmin() {
+      try {
+        var res = await fetch(API + '/testimonios/todos');
+        var testimonios = await res.json();
+        
+        var container = document.getElementById('testimonios-admin-list');
+        
+        if (testimonios.length === 0) {
+          container.innerHTML = '<div class="empty-state">No hay reseñas aún</div>';
+        } else {
+          var html = '';
+          testimonios.forEach(function(t) {
+            var estrellas = '⭐'.repeat(t.calificacion || 5);
+            var estadoBadge = t.aprobado ? 
+              '<span class="badge completado">Aprobado</span>' : 
+              '<span class="badge pendiente">Pendiente</span>';
+            
+            html += '<div class="list-item" style="flex-direction:column;align-items:flex-start;">' +
+              '<div style="width:100%;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+                '<span style="font-weight:600;">' + (t.cliente_nombre || 'Cliente') + '</span>' +
+                estadoBadge +
+              '</div>' +
+              '<div style="color:#666;font-size:13px;margin-bottom:5px;">' + estrellas + '</div>' +
+              '<div style="color:#444;font-size:14px;">"' + t.texto + '"</div>' +
+              '<div style="display:flex;gap:8px;margin-top:10px;">';
+            
+            if (!t.aprobado) {
+              html += '<button class="btn small" style="background:#4caf50;color:white;" onclick="aprobarTestimonio(' + t.id + ', true)">✅ Aprobar</button>';
+            } else {
+              html += '<button class="btn small" style="background:#ff9800;color:white;" onclick="aprobarTestimonio(' + t.id + ', false)">❌ Desaprobar</button>';
+            }
+            html += '<button class="btn small danger" onclick="eliminarTestimonio(' + t.id + ')">🗑️ Eliminar</button>' +
+              '</div>' +
+            '</div>';
+          });
+          container.innerHTML = html;
+        }
+      } catch(err) {
+        document.getElementById('testimonios-admin-list').innerHTML = '<div class="empty-state">Error cargando reseñas</div>';
+      }
+    }
+    
+    async function aprobarTestimonio(id, aprobado) {
+      try {
+        var res = await fetch(API + '/testimonios/' + id + '/aprobar', {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({aprobado: aprobado})
+        });
+        var result = await res.json();
+        if (result.success) {
+          loadTestimoniosAdmin();
+        }
+      } catch(err) {
+        alert('Error');
+      }
+    }
+    
+    async function eliminarTestimonio(id) {
+      if (!confirm('¿Eliminar esta reseña?')) return;
+      try {
+        var res = await fetch(API + '/testimonios/' + id, { method: 'DELETE' });
+        var result = await res.json();
+        if (result.success) {
+          loadTestimoniosAdmin();
+        }
+      } catch(err) {
+        alert('Error');
+      }
     }
   </script>
 </body>
