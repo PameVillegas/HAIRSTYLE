@@ -1216,7 +1216,8 @@
         
         document.getElementById('ingresos-content').innerHTML = html;
       } catch(err) {
-        document.getElementById('ingresos-content').innerHTML = '<div class="empty-state">Error cargando</div>';
+        alert('Error: ' + err.message);
+        document.getElementById('ingresos-content').innerHTML = '<div class="empty-state">Error: ' + err.message + '</div>';
       }
     }
     
