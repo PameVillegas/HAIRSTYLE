@@ -993,21 +993,31 @@
           '<div class="form-group"><label>Tipo de tratamiento</label><select id="plan-tratamiento"><option value="facial">Limpieza Facial</option><option value="alisado">Alisado</option><option value="perfilado">Perfilado de Cejas</option><option value="pestañas">Pestañas</option><option value="otro">Otro</option></select></div>' +
           '<h3 style="color:#e91e63;margin:20px 0 10px;font-size:14px;">📋 Datos de la Piel</h3>' +
           '<div class="form-group"><label>Tipo de piel</label><select id="plan-tipo-piel"><option>Normal</option><option>Seca</option><option>Grasa</option><option>Mixta</option><option>Sensible</option></select></div>' +
-          '<div class="form-group"><label>Estado de la piel</label><select id="plan-estado-piel"><option>Saludable</option><option>Deshidrata</option><option>Con manchas</option><option>Con Acne</option></select></div>' +
+          '<div class="form-group"><label>Estado de la piel</label><select id="plan-estado-piel"><option>Saludable</option><option>Deshidrata</option><option>Con manchas</option><option>Con Acne</option><option>Con rojeces</option></select></div>' +
           '<h3 style="color:#e91e63;margin:20px 0 10px;font-size:14px;">🏥 Historia Médica</h3>' +
           '<div class="form-group"><label>Alergias</label><select id="plan-alergias"><option>No</option><option>Sí</option></select></div>' +
+          '<div class="form-group"><label>Detalle alergia</label><input type="text" id="plan-alergias-detalle" placeholder="A qué es alérgca?"></div>' +
           '<div class="form-group"><label>¿Embarazada?</label><select id="plan-embarazada"><option>No</option><option>Sí</option></select></div>' +
+          '<div class="form-group"><label>¿En período de lactancia?</label><select id="plan-lactancia"><option>No</option><option>Sí</option></select></div>' +
           '<div class="form-group"><label>Diabetes</label><select id="plan-diabetes"><option>No</option><option>Sí</option></select></div>' +
           '<div class="form-group"><label>Presión arterial</label><select id="plan-presion"><option>Normal</option><option>Baja</option><option>Alta</option></select></div>' +
+          '<div class="form-group"><label>Problemas circulatorios</label><select id="plan-circulacion"><option>No</option><option>Sí</option></select></div>' +
           '<div class="form-group"><label>Medicamentos actuales</label><select id="plan-medicamentos"><option>No</option><option>Sí</option></select></div>' +
+          '<div class="form-group"><label>Detalle medicamento</label><input type="text" id="plan-medicamentos-detalle" placeholder="Qué medicamento?"></div>' +
           '<div class="form-group"><label>Problemas de salud</label><select id="plan-problemas"><option>No</option><option>Sí</option></select></div>' +
+          '<div class="form-group"><label>Detalle problema</label><input type="text" id="plan-problemas-detalle" placeholder="Qué problema?"></div>' +
           '<h3 style="color:#e91e63;margin:20px 0 10px;font-size:14px;">☀️ Exposición Solar</h3>' +
-          '<div class="form-group"><label>¿Exposición al sol?</label><select id="plan-sol"><option>No</option><option>Sí</option></select></div>' +
+          '<div class="form-group"><label>¿Exposición al sol últimos 30 días?</label><select id="plan-sol"><option>No</option><option>Sí, poco</option><option>Sí, moderado</option><option>Sí, mucho</option></select></div>' +
           '<div class="form-group"><label>¿Usa protector solar?</label><select id="plan-spf"><option>Sí</option><option>No</option></select></div>' +
+          '<h3 style="color:#e91e63;margin:20px 0 10px;font-size:14px;">💆 Tratamientos Anteriores</h3>' +
+          '<div class="form-group"><label>Último tratamiento facial</label><select id="plan-ultimo-tratamiento"><option>Nunca</option><option>Hace menos de 1 mes</option><option>Hace 1-3 meses</option><option>Hace 3-6 meses</option><option>Hace más de 6 meses</option></select></div>' +
+          '<div class="form-group"><label>Tratamientos anteriores</label><select id="plan-anteriores"><option>No</option><option>Sí, en este salón</option><option>Sí, en otro salón</option></select></div>' +
+          '<div class="form-group"><label>¿Ha hecho tratamientos con ácido?</label><select id="plan-acido"><option>No</option><option>Sí</option></select></div>' +
+          '<div class="form-group"><label>¿Ha hecho lifting de pestañas?</label><select id="plan-lifting"><option>No</option><option>Sí</option></select></div>' +
           '<h3 style="color:#e91e63;margin:20px 0 10px;font-size:14px;">🎯 Observaciones</h3>' +
           '<div class="form-group"><label>Rutina de skincare</label><textarea id="plan-rutina" rows="2" placeholder="Qué productos usa?"></textarea></div>' +
           '<div class="form-group"><label>Objetivos/Expectativas</label><textarea id="plan-objetivos" rows="2" placeholder="Qué espera del tratamiento?"></textarea></div>' +
-          '<div class="form-group"><label>Comentarios</label><textarea id="plan-comentarios" rows="3"></textarea></div>' +
+          '<div class="form-group"><label>Comentarios adicionales</label><textarea id="plan-comentarios" rows="3"></textarea></div>' +
           '<button type="submit" class="btn">💾 Guardar Planilla</button>' +
         '</form>';
       
@@ -1021,13 +1031,22 @@
           tipo_piel: document.getElementById('plan-tipo-piel').value,
           estado_piel: document.getElementById('plan-estado-piel').value,
           alergias: document.getElementById('plan-alergias').value,
+          alergias_detalle: document.getElementById('plan-alergias-detalle').value,
           embarazada: document.getElementById('plan-embarazada').value,
+          lactation: document.getElementById('plan-lactancia').value,
           diabetes: document.getElementById('plan-diabetes').value,
           presion: document.getElementById('plan-presion').value,
+          circulacion: document.getElementById('plan-circulacion').value,
           medicamentos: document.getElementById('plan-medicamentos').value,
+          medicamentos_detalle: document.getElementById('plan-medicamentos-detalle').value,
           problemas_salud: document.getElementById('plan-problemas').value,
+          problemas_detalle: document.getElementById('plan-problemas-detalle').value,
           sol: document.getElementById('plan-sol').value,
           spf: document.getElementById('plan-spf').value,
+          ultimo_tratamiento: document.getElementById('plan-ultimo-tratamiento').value,
+          tratamientos_anteriores: document.getElementById('plan-anteriores').value,
+          acido: document.getElementById('plan-acido').value,
+          lifting: document.getElementById('plan-lifting').value,
           rutina: document.getElementById('plan-rutina').value,
           objetivos: document.getElementById('plan-objetivos').value,
           comentarios: document.getElementById('plan-comentarios').value
