@@ -1180,6 +1180,12 @@
       try {
         var res = await fetch(API + '/turnos');
         var turnos = await res.json();
+        alert('Status: ' + res.status + ' - Turnos: ' + turnos.length);
+        
+        if (!res.ok) {
+          document.getElementById('ingresos-content').innerHTML = '<div class="empty-state">Error del servidor: ' + res.status + '</div>';
+          return;
+        }
         
         function getMonth(f) { if (!f || f.length < 5) return 0; return parseInt(f.split('-')[1]) - 1; }
         function getAnio(f) { if (!f || f.length < 4) return 2024; return parseInt(f.split('-')[0]); }
