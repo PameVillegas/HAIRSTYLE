@@ -1128,21 +1128,21 @@
         if (datos.tipo_piel) html += '<div class="info-item"><span class="label">Tipo de piel</span><span class="value">' + datos.tipo_piel + '</span></div>';
         if (datos.estado_piel) html += '<div class="info-item"><span class="label">Estado de piel</span><span class="value">' + datos.estado_piel + '</span></div>';
         
-        html += '<h4 style="color:#e91e63;margin:15px 0 8px;font-size:13px;border-bottom:1px solid #eee;">🏥 Historia Médica</h4>';
+html += '<h4 style="color:#e91e63;margin:15px 0 8px;font-size:13px;border-bottom:1px solid #eee;">🏥 Historia Médica</h4>';
         if (datos.alergias) html += '<div class="info-item"><span class="label">Alergias</span><span class="value">' + datos.alergias + (datos.alergias_detalle ? ' - ' + datos.alergias_detalle : '') + '</span></div>';
         if (datos.embarazada) html += '<div class="info-item"><span class="label">¿Embarazada?</span><span class="value">' + datos.embarazada + '</span></div>';
+        if (datos.lactacion) html += '<div class="info-item"><span class="label">Lactancia</span><span class="value">' + datos.lactacion + '</span></div>';
         if (datos.diabetes) html += '<div class="info-item"><span class="label">Diabetes</span><span class="value">' + datos.diabetes + '</span></div>';
         if (datos.presion) html += '<div class="info-item"><span class="label">Presión arterial</span><span class="value">' + datos.presion + '</span></div>';
+        if (datos.circulacion) html += '<div class="info-item"><span class="label">Circulación</span><span class="value">' + datos.circulacion + '</span></div>';
         if (datos.medicamentos) html += '<div class="info-item"><span class="label">Medicamentos</span><span class="value">' + datos.medicamentos + (datos.medicamentos_detalle ? ' - ' + datos.medicamentos_detalle : '') + '</span></div>';
         if (datos.problemas_salud) html += '<div class="info-item"><span class="label">Problemas de salud</span><span class="value">' + datos.problemas_salud + (datos.problemas_detalle ? ' - ' + datos.problemas_detalle : '') + '</span></div>';
-        
-        html += '<h4 style="color:#e91e63;margin:15px 0 8px;font-size:13px;border-bottom:1px solid #eee;">☀️ Exposición Solar</h4>';
-        if (datos.sol) html += '<div class="info-item"><span class="label">Exposición al sol</span><span class="value">' + datos.sol + '</span></div>';
-        if (datos.spf) html += '<div class="info-item"><span class="label">Usa protector solar</span><span class="value">' + datos.spf + '</span></div>';
         
         html += '<h4 style="color:#e91e63;margin:15px 0 8px;font-size:13px;border-bottom:1px solid #eee;">💆 Tratamientos Anteriores</h4>';
         if (datos.ultimo_tratamiento) html += '<div class="info-item"><span class="label">Último tratamiento</span><span class="value">' + datos.ultimo_tratamiento + '</span></div>';
         if (datos.tratamientos_anteriores) html += '<div class="info-item"><span class="label">Tratamientos anteriores</span><span class="value">' + datos.tratamientos_anteriores + '</span></div>';
+        if (datos.acido) html += '<div class="info-item"><span class="label">Tratamientos con ácido</span><span class="value">' + datos.acido + '</span></div>';
+        if (datos.lifting) html += '<div class="info-item"><span class="label">Lifting pestañas</span><span class="value">' + datos.lifting + '</span></div>';
         
         html += '<h4 style="color:#e91e63;margin:15px 0 8px;font-size:13px;border-bottom:1px solid #eee;">🎯 Observaciones</h4>';
         if (datos.rutina) html += '<div class="info-item"><span class="label">Rutina skincare</span><span class="value">' + datos.rutina + '</span></div>';
