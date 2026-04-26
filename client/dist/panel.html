@@ -1205,11 +1205,12 @@
           html += '<input type="text" id="buscar-turno" placeholder="Buscar por cliente o fecha (ej: 15/04)..." onkeyup="filtrarIngresos()" style="width:93%;padding:10px;border-radius:8px;border:1px solid #555;background:#222;color:white;margin-bottom:10px;font-size:12px;">';
           html += '<div>';
           delMes.sort(function(a, b) { return b.fecha.localeCompare(a.fecha); }).forEach(function(t) {
-            var precio = parseFloat(t.precio || 0);
+            var precio = parseFloat(t.precio || t.tratamiento_precio || 0);
+            alert('Turno: ' + (t.tratamiento_nombre || 'Servicio') + ' - precio field: ' + t.precio + ' - tratamiento_precio: ' + t.tratamiento_precio + ' - parsed: ' + precio);
             var estadoColor = t.estado === 'completado' ? '#4caf50' : '#ff9800';
             html += '<div class="turno-item" data-cli="'+(t.cliente_nombre || '')+'" data-fecha="'+t.fecha+'" style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #444;font-size:12px;color:white;">' +
               '<div>' + t.fecha + ' - ' + (t.tratamiento_nombre || 'Servicio') + '<br><small style="color:#888;">' + (t.cliente_nombre || '') + ' ('+(t.estado || 'pendiente')+')</small></div>' +
-              '<div style="font-weight:600;color:'+estadoColor+';">' + (precio > 0 ? '$' + precio.toLocaleString('es-AR') : '---') + '</div></div>';
+              '<div style="font-weight:600;color:'+estadoColor+'">' + (precio > 0 ? '$' + precio.toLocaleString('es-AR') : '-') + '</div></div>';
           });
           html += '</div>';
         }
