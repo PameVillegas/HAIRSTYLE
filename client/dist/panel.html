@@ -1180,7 +1180,8 @@
       try {
         var res = await fetch(API + '/turnos');
         var turnos = await res.json();
-        alert('Status: ' + res.status + ' - Turnos: ' + turnos.length);
+        
+        alert('Status: ' + res.status + ' - Turnos: ' + turnos.length + ' - Mes: ' + mes + ' - Anio: ' + anio);
         
         if (!res.ok) {
           document.getElementById('ingresos-content').innerHTML = '<div class="empty-state">Error del servidor: ' + res.status + '</div>';
@@ -1189,6 +1190,8 @@
         
         function getMonth(f) { if (!f || f.length < 5) return 0; return parseInt(f.split('-')[1]) - 1; }
         function getAnio(f) { if (!f || f.length < 4) return 2024; return parseInt(f.split('-')[0]); }
+        
+        alert('DelMes filtering: mes=' + mes + ', anio=' + anio + ', primera fecha=' + (turnos[0] ? turnos[0].fecha : 'none'));
         
         var delMes = turnos.filter(function(t) { return getMonth(t.fecha) === mes && getAnio(t.fecha) === anio && t.estado !== 'cancelado'; });
         var total = delMes.reduce(function(s, t) { return s + parseFloat(t.precio || 0); }, 0);
