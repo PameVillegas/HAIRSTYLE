@@ -1128,8 +1128,12 @@
         var cliente = clientes.find(function(c) { return c.id === legajo.cliente_id; });
         
         var datos = {};
-        try { datos = JSON.parse(legajo.datos || '{}'); } catch(e) {}
-        console.log('Legajo datos:', datos);
+        if (typeof legajo.datos === 'string') {
+          try { datos = JSON.parse(legajo.datos || '{}'); } catch(e) {}
+        } else if (legajo.datos) {
+          datos = legajo.datos;
+        }
+        console.log('Parsed datos:', datos);
         
         var html = '<div style="max-height:450px;overflow-y:auto;">';
         html += '<div class="info-item"><span class="label">Cliente</span><span class="value">' + (cliente ? (cliente.nombre || cliente.username) : 'Cliente') + '</span></div>';
