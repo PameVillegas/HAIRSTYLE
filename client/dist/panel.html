@@ -233,6 +233,7 @@
             '<div class="menu-item" onclick="showSection(\'promociones\')"><span class="icon">🎉</span><span class="label">Promociones</span><span class="desc">Ofertas</span></div>' +
             '<div class="menu-item secondary" onclick="showSection(\'galeria\')"><span class="icon">📸</span><span class="label">Galería</span><span class="desc">Fotos</span></div>' +
             '<div class="menu-item secondary" onclick="showSection(\'legajos\')"><span class="icon">📋</span><span class="label">Legajos</span><span class="desc">Anamnesis</span></div>' +
+            '<div class="menu-item secondary" onclick="showSection(\'nuevo-legajo\')"><span class="icon">📋</span><span class="label">Nueva Planilla</span><span class="desc">Anamnesis</span></div>' +
             '<div class="menu-item secondary" onclick="showSection(\'testimonios\')"><span class="icon">⭐</span><span class="label">Reseñas</span><span class="desc">Testimonios</span></div>' +
           '</div>' +
         '</div>';
@@ -302,6 +303,7 @@
         case 'promociones': showPromociones(); break;
         case 'galeria': showGaleria(); break;
         case 'legajos': showLegajos(); break;
+        case 'nuevo-legajo': showNuevaPlanilla(); break;
         case 'testimonios': showTestimoniosAdmin(); break;
       }
     }
@@ -967,6 +969,81 @@
         '<div class="card"><h2>Legajos de Clientes</h2><div id="legajos-list"><div class="loading">Cargando...</div></div></div>';
       
       loadLegajos();
+    }
+    
+    async function showNuevaPlanilla() {
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="header"><h1>📋 Nueva Planilla de Anamnesis</h1></div>' +
+        '<div class="card"><div id="planilla-form"><div class="loading">Cargando...</div></div></div>';
+      
+      var res = await fetch(API + '/clientes');
+      var clientes = await res.json();
+      
+      var opts = '<option value="">Seleccionar clienta</option>';
+      clientes.forEach(function(c) { opts += '<option value="' + c.id + '">' + (c.nombre || c.username) + '</option>'; });
+      
+      document.getElementById('planilla-form').innerHTML = 
+        '<form id="form-planilla">' +
+          '<div class="form-group"><label>Clienta *</label><select id="plan-cliente" required>' + opts + '</select></div>' +
+          '<div class="form-group"><label>Tipo de tratamiento</label><select id="plan-tratamiento"><option value="facial">Limpieza Facial</option><option value="alisado">Alisado</option><option value="perfilado">Perfilado de Cejas</option><option value="pestañas">Pestañas</option><option value="otro">Otro</option></select></div>' +
+          '<h3 style="color:#e91e63;margin:20px 0 10px;font-size:14px;">📋 Datos de la Piel</h3>' +
+          '<div class="form-group"><label>Tipo de piel</label><select id="plan-tipo-piel"><option>Normal</option><option>Seca</option><option>Grasa</option><option>Mixta</option><option>Sensible</option></select></div>' +
+          '<div class="form-group"><label>Estado de la piel</label><select id="plan-estado-piel"><option>Saludable</option><option>Deshidrata</option><option>Con manchas</option><option>Con Acne</option></select></div>' +
+          '<h3 style="color:#e91e63;margin:20px 0 10px;font-size:14px;">🏥 Historia Médica</h3>' +
+          '<div class="form-group"><label>Alergias</label><select id="plan-alergias"><option>No</option><option>Sí</option></select></div>' +
+          '<div class="form-group"><label>¿Embarazada?</label><select id="plan-embarazada"><option>No</option><option>Sí</option></select></div>' +
+          '<div class="form-group"><label>Diabetes</label><select id="plan-diabetes"><option>No</option><option>Sí</option></select></div>' +
+          '<div class="form-group"><label>Presión arterial</label><select id="plan-presion"><option>Normal</option><option>Baja</option><option>Alta</option></select></div>' +
+          '<div class="form-group"><label>Medicamentos actuales</label><select id="plan-medicamentos"><option>No</option><option>Sí</option></select></div>' +
+          '<div class="form-group"><label>Problemas de salud</label><select id="plan-problemas"><option>No</option><option>Sí</option></select></div>' +
+          '<h3 style="color:#e91e63;margin:20px 0 10px;font-size:14px;">☀️ Exposición Solar</h3>' +
+          '<div class="form-group"><label>¿Exposición al sol?</label><select id="plan-sol"><option>No</option><option>Sí</option></select></div>' +
+          '<div class="form-group"><label>¿Usa protector solar?</label><select id="plan-spf"><option>Sí</option><option>No</option></select></div>' +
+          '<h3 style="color:#e91e63;margin:20px 0 10px;font-size:14px;">🎯 Observaciones</h3>' +
+          '<div class="form-group"><label>Rutina de skincare</label><textarea id="plan-rutina" rows="2" placeholder="Qué productos usa?"></textarea></div>' +
+          '<div class="form-group"><label>Objetivos/Expectativas</label><textarea id="plan-objetivos" rows="2" placeholder="Qué espera del tratamiento?"></textarea></div>' +
+          '<div class="form-group"><label>Comentarios</label><textarea id="plan-comentarios" rows="3"></textarea></div>' +
+          '<button type="submit" class="btn">💾 Guardar Planilla</button>' +
+        '</form>';
+      
+      document.getElementById('form-planilla').onsubmit = async function(e) {
+        e.preventDefault();
+        var clienteId = document.getElementById('plan-cliente').value;
+        if (!clienteId) { alert('Seleccioná una clienta'); return; }
+        
+        var datos = {
+          tratamiento: document.getElementById('plan-tratamiento').value,
+          tipo_piel: document.getElementById('plan-tipo-piel').value,
+          estado_piel: document.getElementById('plan-estado-piel').value,
+          alergias: document.getElementById('plan-alergias').value,
+          embarazada: document.getElementById('plan-embarazada').value,
+          diabetes: document.getElementById('plan-diabetes').value,
+          presion: document.getElementById('plan-presion').value,
+          medicamentos: document.getElementById('plan-medicamentos').value,
+          problemas_salud: document.getElementById('plan-problemas').value,
+          sol: document.getElementById('plan-sol').value,
+          spf: document.getElementById('plan-spf').value,
+          rutina: document.getElementById('plan-rutina').value,
+          objetivos: document.getElementById('plan-objetivos').value,
+          comentarios: document.getElementById('plan-comentarios').value
+        };
+        
+        await fetch(API + '/legajos', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            cliente_id: clienteId,
+            tratamiento: document.getElementById('plan-tratamiento').value,
+            tipo: document.getElementById('plan-tratamiento').value,
+            fecha: new Date().toISOString().split('T')[0],
+            datos: JSON.stringify(datos)
+          })
+        });
+        
+        alert('¡Planilla guardada!');
+        showLegajos();
+      };
     }
     
     async function loadLegajos() {
