@@ -1213,17 +1213,10 @@
           html += '</div>';
         }
         
-        document.getElementById('ingresos-content').innerHTML = html;
-    }
-    
-    function filtrarIngresos() {
-      var busq = document.getElementById('buscar-turno').value.toLowerCase();
-      document.querySelectorAll('.turno-item').forEach(function(item) {
-        var cli = (item.getAttribute('data-cli') || '').toLowerCase();
-        var fecha = (item.getAttribute('data-fecha') || '').toLowerCase();
-        var matches = cli.indexOf(busq) >= 0 || fecha.indexOf(busq) >= 0 || busq === '';
-        item.style.display = matches ? 'flex' : 'none';
-      });
+document.getElementById('ingresos-content').innerHTML = html;
+      } catch(err) {
+        alert('Error: ' + err.message);
+      }
     }
     
     function mostrarIngresoExtra() {
