@@ -1023,6 +1023,7 @@
       
       document.getElementById('form-planilla').onsubmit = async function(e) {
         e.preventDefault();
+        alert('Guardando...');
         var clienteId = document.getElementById('plan-cliente').value;
         if (!clienteId) { alert('Seleccioná una clienta'); return; }
         
