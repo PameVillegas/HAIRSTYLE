@@ -1120,6 +1120,8 @@
       try {
         var res = await fetch(API + '/legajos/' + id);
         var legajo = await res.json();
+        console.log('API response legajo:', legajo);
+        console.log('legajo.datos:', legajo.datos);
         
         var clientesRes = await fetch(API + '/clientes');
         var clientes = await clientesRes.json();
