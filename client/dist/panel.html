@@ -1116,6 +1116,7 @@
         
         var datos = {};
         try { datos = JSON.parse(legajo.datos || '{}'); } catch(e) {}
+        console.log('Legajo datos:', datos);
         
         var html = '<div style="max-height:450px;overflow-y:auto;">';
         html += '<div class="info-item"><span class="label">Cliente</span><span class="value">' + (cliente ? (cliente.nombre || cliente.username) : 'Cliente') + '</span></div>';
