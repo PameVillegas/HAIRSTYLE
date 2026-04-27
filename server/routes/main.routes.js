@@ -231,36 +231,17 @@ router.post('/turnos', async (req, res) => {
     if (tratResult.rows.length === 0) {
       return res.status(400).json({ error: 'Tratamiento no encontrado' });
     }
-    const duracionTratamiento = duracion || tratResult.rows[0].duracion || 60;
     
-    // Convertir hora a minutos para calcular conflicto
-    const [horaTurno, minutoTurno] = hora.split(':').map(Number);
-    const inicioMinutos = horaTurno * 60 + minutoTurno;
-    const finMinutos = inicioMinutos + duracionTratamiento;
-    
-    // Verificar que no haya conflicto de horarios considerando la duración
+    // Verificar que no haya conflicto de horarios (solo mismo horario)
     const existentes = await pool.query(`
-      SELECT t.id, t.hora, tr.duracion as duracion
+      SELECT t.id, t.hora
       FROM turnos t
-      JOIN tratamientos tr ON t.tratamiento_id = tr.id
-      WHERE t.fecha = $1 AND t.estado != 'cancelado'
-    `, [fecha]);
+      WHERE t.fecha = $1 AND t.hora = $2 AND t.estado != 'cancelado'
+    `, [fecha, hora]);
     
-    var conflictivo = null;
-    for (var i = 0; i < existentes.rows.length; i++) {
-      var t = existentes.rows[i];
-      var [h, m] = t.hora.split(':').map(Number);
-      var ini = h * 60 + m;
-      var fin = ini + (t.duracion || 60);
-      if (inicioMinutos < fin && finMinutos > ini) {
-        conflictivo = t;
-        break;
-      }
-    }
-    
-    if (conflictivo) {
+    if (existentes.rows.length > 0) {
       return res.status(400).json({ 
-        error: 'Horario ocupado. Ya hay un turno nesse horario.'
+        error: 'Ya hay un turno agendado a esa hora.'
       });
     }
 
