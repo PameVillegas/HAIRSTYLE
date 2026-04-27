@@ -194,23 +194,71 @@ router.get('/turnos', async (req, res) => {
   }
 });
 
+// Obtener horarios ocupados para una fecha específica
+router.get('/turnos/fecha/:fecha', async (req, res) => {
+  try {
+    const { fecha } = req.params;
+    const result = await pool.query(`
+      SELECT 
+        t.hora,
+        tr.duracion as tratamiento_duracion,
+        tr.nombre as tratamiento_nombre,
+        c.nombre as cliente_nombre
+      FROM turnos t
+      JOIN tratamientos tr ON t.tratamiento_id = tr.id
+      JOIN clientes c ON t.cliente_id = c.id
+      WHERE t.fecha = $1 AND t.estado != 'cancelado'
+      ORDER BY t.hora
+    `, [fecha]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error obteniendo horarios ocupados:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
 // Crear nuevo turno
 router.post('/turnos', async (req, res) => {
   try {
-    const { cliente_id, tratamiento_id, fecha, hora, notas, precio } = req.body;
+    const { cliente_id, tratamiento_id, fecha, hora, notas, precio, duracion } = req.body;
     
     if (!cliente_id || !tratamiento_id || !fecha || !hora) {
       return res.status(400).json({ error: 'Cliente, tratamiento, fecha y hora son requeridos' });
     }
 
-    // Verificar que no haya conflicto de horarios
-    const conflicto = await pool.query(
-      'SELECT id FROM turnos WHERE fecha = $1 AND hora = $2 AND estado != $3',
-      [fecha, hora, 'cancelado']
-    );
+    // Obtener la duración del tratamiento
+    const tratResult = await pool.query('SELECT nombre, duracion FROM tratamientos WHERE id = $1', [tratamiento_id]);
+    if (tratResult.rows.length === 0) {
+      return res.status(400).json({ error: 'Tratamiento no encontrado' });
+    }
+    const duracionTratamiento = duracion || tratResult.rows[0].duracion || 60;
     
-    if (conflicto.rows.length > 0) {
-      return res.status(400).json({ error: 'Ya hay un turno agendado en esa fecha y hora' });
+    // Convertir hora a minutos para calcular conflicto
+    const [horaTurno, minutoTurno] = hora.split(':').map(Number);
+    const inicioMinutos = horaTurno * 60 + minutoTurno;
+    const finMinutos = inicioMinutos + duracionTratamiento;
+    
+    // Verificar que no haya conflicto de horarios considerando la duración
+    const conflictos = await pool.query(`
+      SELECT t.id, t.hora, t.fecha, tr.nombre as tratamiento_nombre, tr.duracion as duracion
+      FROM turnos t
+      JOIN tratamientos tr ON t.tratamiento_id = tr.id
+      WHERE t.fecha = $1 
+      AND t.estado != 'cancelado'
+      AND (
+        (EXTRACT(HOUR FROM t.hora::time) * 60 + EXTRACT(MINUTE FROM t.hora::time)) < $4
+        AND (EXTRACT(HOUR FROM t.hora::time) * 60 + EXTRACT(MINUTE FROM t.hora::time) + COALESCE(tr.duracion, 60)) > $3
+      )
+    `, [fecha, hora, inicioMinutos, finMinutos]);
+    
+    if (conflictos.rows.length > 0) {
+      const conf = conflictos.rows[0];
+      const [hConf, mConf] = conf.hora.split(':').map(Number);
+      const horaFinConf = hConf + Math.floor((hConf * 60 + mConf + conf.duracion) / 60);
+      const minFinConf = (hConf * 60 + mConf + conf.duracion) % 60;
+      return res.status(400).json({ 
+        error: 'Ya hay un turnocreado en esa fecha y horario. El turno de ' + conf.tratamiento_nombre + ' empieza a las ' + conf.hora + ' y termina a las ' + horaFinConf + ':' + minFinConf.toString().padStart(2, '0')
+      });
     }
 
     // Si hay precio especial (alisado por cm), actualizar las notas

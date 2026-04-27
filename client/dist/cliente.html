@@ -333,7 +333,7 @@
       var cmOptions = '';
       if (requiereCM) {
         cmOptions = '<div class="form-group"><label>Largo del cabello *</label>' +
-          '<select id="sol-cm" required onchange="actualizarPrecioCM(this.value)">' +
+          '<select id="sol-cm" required onchange="actualizarPrecioCM(this.value); cargarHorariosOcupados();">' +
             '<option value="">Seleccionar largo</option>' +
             '<option value="0-30">0 a 30 cm - $30.000</option>' +
             '<option value="30-40">30 a 40 cm - $32.000</option>' +
@@ -353,7 +353,7 @@
         '<form id="solicitar-turno-form">' +
           '<div class="form-group"><label>Tratamiento</label><input type="text" value="' + tratamientoNombre + '" disabled></div>' +
           cmOptions +
-          '<div class="form-group"><label>Fecha *</label><input type="date" id="sol-fecha" min="' + fechaMin + '" required></div>' +
+          '<div class="form-group"><label>Fecha *</label><input type="date" id="sol-fecha" min="' + fechaMin + '" required onchange="cargarHorariosOcupados()"></div>' +
           '<div class="form-group"><label>Horario *</label><select id="sol-hora" required>' +
             '<option value="">Seleccionar</option>' +
             '<option value="09:00">09:00</option><option value="09:30">09:30</option>' +
@@ -371,6 +371,61 @@
           extraField +
           '<button type="submit" class="btn">📨 Solicitar Turno</button>' +
         '</form>';
+        
+        var duracionGlobal = 60;
+        
+        function horaToMinutos(hora) {
+          var h = parseInt(hora.split(':')[0]);
+          var m = parseInt(hora.split(':')[1]);
+          return h * 60 + m;
+        }
+        
+        function cargarHorariosOcupados() {
+          var fecha = document.getElementById('sol-fecha').value;
+          if (!fecha || !requiereCM) return;
+          
+          var cm = document.getElementById('sol-cm')?.value;
+          var duracion = 60;
+          if (cm === '0-30') duracion = 90;
+          else if (cm === '30-40') duracion = 120;
+          else if (cm === '40-50') duracion = 150;
+          else if (cm === '50-60') duracion = 180;
+          else if (cm === '60-70') duracion = 210;
+          else if (cm === '70-80') duracion = 240;
+          else if (cm === '80-90') duracion = 270;
+          
+          var duracionGlobal = duracion;
+          
+          fetch(API + '/turnos/fecha/' + fecha).then(function(res) { return res.json(); }).then(function(turnos) {
+            var select = document.getElementById('sol-hora');
+            if (!select) return;
+            var opciones = select.options;
+            for (var i = 1; i < opciones.length; i++) {
+              opciones[i].disabled = false;
+              opciones[i].style.color = '';
+              opciones[i].text = opciones[i].value;
+            }
+            for (var i = 1; i < opciones.length; i++) {
+              var horaOpt = opciones[i].value;
+              var minutosOpt = horaToMinutos(horaOpt);
+              var bloqueado = false;
+              for (var j = 0; j < turnos.length; j++) {
+                var ini = horaToMinutos(turnos[j].hora);
+                var durTurno = turnos[j].tratamiento_duracion || 60;
+                var finTurno = ini + durTurno;
+                if (minutosOpt >= ini && minutosOpt < finTurno) {
+                  bloqueado = true;
+                  break;
+                }
+              }
+              if (bloqueado) {
+                opciones[i].disabled = true;
+                opciones[i].style.color = '#ccc';
+                opciones[i].text = horaOpt + ' (ocupado)';
+              }
+            }
+          }).catch(function(err) { console.error('Error:', err); });
+        }
       
       window.actualizarPrecioCM = function(valor) {
         var precios = {
@@ -701,7 +756,8 @@
           '<form id="solicitar-turno-form">' +
             '<div class="form-group"><label>Tratamiento *</label><select id="sol-tratamiento" required onchange="checkTratamientoCM()">' + tratamientoOptions + '</select></div>' +
             '<div id="cm-options" style="display:none;"></div>' +
-            '<div class="form-group"><label>Fecha *</label><input type="date" id="sol-fecha" min="' + fechaMin + '" required></div>' +
+            '<div class="form-group"><label>Fecha *</label><input type="date" id="sol-fecha" min="' + fechaMin + '" required onchange="cargarHorariosBloqueados()"></div>' +
+            '<div id="horarios-bloqueados" style="display:none;"></div>' +
             '<div class="form-group"><label>Horario *</label><select id="sol-hora" required>' +
               '<option value="">Seleccionar</option>' +
               '<option value="09:00">09:00</option><option value="09:30">09:30</option>' +
@@ -743,6 +799,90 @@
             document.getElementById('cm-options').style.display = 'block';
           } else {
             document.getElementById('cm-options').style.display = 'none';
+          }
+        }
+        
+        function horaToMinutos(hora) {
+          var h = parseInt(hora.split(':')[0]);
+          var m = parseInt(hora.split(':')[1]);
+          return h * 60 + m;
+        }
+        
+        async function cargarHorariosBloqueados() {
+          var fecha = document.getElementById('sol-fecha').value;
+          if (!fecha) return;
+          
+          var tratamientoId = document.getElementById('sol-tratamiento')?.value;
+          if (!tratamientoId) {
+            alert('Seleccioná primero un tratamiento');
+            document.getElementById('sol-fecha').value = '';
+            return;
+          }
+          
+          var tratamientos = document.getElementById('sol-tratamiento').options;
+          var nombre = tratamientos[tratamientos.selectedIndex].text;
+          var duracion = 60;
+          
+          if (document.getElementById('sol-cm')) {
+            var cm = document.getElementById('sol-cm').value;
+            if (cm === '0-30') duracion = 90;
+            else if (cm === '30-40') duracion = 120;
+            else if (cm === '40-50') duracion = 150;
+            else if (cm === '50-60') duracion = 180;
+            else if (cm === '60-70') duracion = 210;
+            else if (cm === '70-80') duracion = 240;
+            else if (cm === '80-90') duracion = 270;
+          }
+          
+          try {
+            var res = await fetch(API + '/turnos/fecha/' + fecha);
+            var turnos = await res.json();
+            
+            var bloques = [];
+            turnos.forEach(function(t) {
+              var inicio = horaToMinutos(t.hora);
+              var dur = t.tratamiento_duracion || 60;
+              var fin = inicio + dur;
+              for (var m = inicio; m < fin; m += 30) {
+                var h = Math.floor(m / 60);
+                var min = m % 60;
+                var horaBloque = h + ':' + min.toString().padStart(2, '0');
+                if (!bloques.includes(horaBloque) && h >= 9 && h < 19) {
+                  bloques.push(horaBloque);
+                }
+              }
+            });
+            
+            var select = document.getElementById('sol-hora');
+            var opciones = select.options;
+            for (var i = 1; i < opciones.length; i++) {
+              opciones[i].disabled = false;
+              opciones[i].style.color = '';
+            }
+            
+            for (var i = 1; i < opciones.length; i++) {
+              var horaOpt = opciones[i].value;
+              var minutosOpt = horaToMinutos(horaOpt);
+              var finOpt = minutosOpt + duracion;
+              var bloqueado = false;
+              for (var j = 0; j < turnos.length; j++) {
+                var ini = horaToMinutos(turnos[j].hora);
+                var durTurno = turnos[j].tratamiento_duracion || 60;
+                var finTurno = ini + durTurno;
+                if (minutosOpt >= ini && minutosOpt < finTurno) {
+                  bloqueado = true;
+                  break;
+                }
+              }
+              if (bloqueado) {
+                opciones[i].disabled = true;
+                opciones[i].style.color = '#ccc';
+                opciones[i].text = horaOpt + ' (ocupado)';
+              }
+            }
+            
+          } catch(err) {
+            console.error('Error cargando horarios:', err);
           }
         }
         
