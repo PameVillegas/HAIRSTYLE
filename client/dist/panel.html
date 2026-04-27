@@ -643,7 +643,9 @@
           '</form>' +
           '<script>window.checkTratamientoAdmin = function() {' +
             'var sel = document.getElementById("turno-tratamiento");' +
+            'alert("Cambio");' +
             'var nombre = sel.options[sel.selectedIndex]?.text || "";' +
+            'alert("Tratamiento: " + nombre);' +
             'var nombreUpper = nombre.toUpperCase();' +
             'var esAlisado = nombreUpper.indexOf("ALISADO") >= 0 || nombreUpper.indexOf("BOTOX") >= 0 || nombreUpper.indexOf("CAPILAR") >= 0 || nombreUpper.indexOf("TRATAMIENTO") >= 0 || nombreUpper.indexOf("LISS") >= 0;' +
             'if (esAlisado) {' +
