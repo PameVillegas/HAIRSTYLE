@@ -785,7 +785,9 @@ var select = document.getElementById('sol-hora');
           var nombre = tratamientos[tratamientos.selectedIndex].text;
           var nombreUpper = nombre.toUpperCase();
           var esAlisado = nombreUpper.indexOf('ALISADO') >= 0 || nombreUpper.indexOf('BOTOX') >= 0 || nombreUpper.indexOf('CAPILAR') >= 0 || nombreUpper.indexOf('TRATAMIENTO') >= 0 || nombreUpper.indexOf('LISS') >= 0 || nombreUpper.indexOf('BRUSHING') >= 0 || nombreUpper.indexOf('PLANCHA') >= 0;
-          var esConsultar = nombreUpper.indexOf('CONSULTAR') >= 0 || nombre.indexOf('$0') >= 0 || nombre.indexOf('Consultar') >= 0;
+          var esConsultar = nombre.indexOf('Consultar') >= 0 || nombre.indexOf('$0') >= 0;
+          
+          console.log('Tratamiento:', nombre, 'esAlisado:', esAlisado, 'esConsultar:', esConsultar);
           
           if (esAlisado || esConsultar) {
             document.getElementById('cm-options').innerHTML = 
