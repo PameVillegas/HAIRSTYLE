@@ -211,7 +211,7 @@ if (parseInt(clienteTest.rows[0].count) === 0) {
       { nombre: 'Alisados', precio: 0, duracion: 180, descripcion: 'Consultar precio' },
       { nombre: 'Peinados', precio: 0, duracion: 60, descripcion: 'Consultar precio' },
       { nombre: 'Baños de crema', precio: 15000, duracion: 60, descripcion: 'Tratamiento nutritivo' },
-      { nombre: 'Limpiezas faciales', precio: 20000, duracion: 75, descripcion: 'Limpieza facial profunda' }
+      { nombre: 'Limpiezas faciales', precio: 20000, duracion: 75, descripcion: 'Limpieza facial profunda', imagen_url: '/fotos/facial.jpg' }
     ];
 
     for (const t of tratamientos) {
