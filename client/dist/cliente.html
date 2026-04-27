@@ -775,6 +775,7 @@ var select = document.getElementById('sol-hora');
               '<option value="18:00">18:00</option>' +
             '</select></div>' +
             '<div class="form-group"><label>Notas</label><textarea id="sol-notas" rows="3" placeholder="Algo especial..."></textarea></div>' +
+            '<input type="hidden" id="sol-precio-extra" value="0">' +
             '<button type="submit" class="btn">📨 Enviar Solicitud</button>' +
           '</form>';
         
@@ -794,19 +795,30 @@ var select = document.getElementById('sol-hora');
           if (esAlisado || esConsultar) {
             document.getElementById('cm-options').innerHTML = 
               '<div class="form-group" style="background:#f8f9fa;padding:10px;border-radius:8px;margin:10px 0;"><label style="display:block;margin-bottom:5px;font-weight:600;">💇 Largo del cabello *</label>' +
-              '<select id="sol-cm" required style="width:100%;padding:10px;border-radius:5px;border:1px solid #ddd;" onchange="cargarHorariosBloqueados()">' +
+              '<select id="sol-cm" required style="width:100%;padding:10px;border-radius:5px;border:1px solid #ddd;" onchange="actualizarPrecioCM(this.value); cargarHorariosBloqueados();">' +
                 '<option value="">Seleccionar largo</option>' +
-                '<option value="0-30">0 a 30 cm</option>' +
-                '<option value="30-40">30 a 40 cm</option>' +
-                '<option value="40-50">40 a 50 cm</option>' +
-                '<option value="50-60">50 a 60 cm</option>' +
-                '<option value="60-70">60 a 70 cm</option>' +
-                '<option value="70-80">70 a 80 cm</option>' +
-                '<option value="80-90">80 a 90 cm</option>' +
-              '</select></div>';
+                '<option value="0-30">0 a 30 cm - $30.000</option>' +
+                '<option value="30-40">30 a 40 cm - $32.000</option>' +
+                '<option value="40-50">40 a 50 cm - $34.000</option>' +
+                '<option value="50-60">50 a 60 cm - $36.000</option>' +
+                '<option value="60-70">60 a 70 cm - $38.000</option>' +
+                '<option value="70-80">70 a 80 cm - $40.000</option>' +
+                '<option value="80-90">80 a 90 cm - $42.000</option>' +
+              '</select></div>' +
+              '<div id="precio-mostrado" style="display:none;background:#e8f5e9;padding:10px;border-radius:8px;text-align:center;font-weight:700;color:#4caf50;">Precio: <span id="precio-turno"></span></div>';
             document.getElementById('cm-options').style.display = 'block';
           } else {
             document.getElementById('cm-options').style.display = 'none';
+          }
+        }
+        
+        window.actualizarPrecioCM = function(valor) {
+          var precios = { '0-30': 30000, '30-40': 32000, '40-50': 34000, '50-60': 36000, '60-70': 38000, '70-80': 40000, '80-90': 42000 };
+          var precio = precios[valor] || 0;
+          if (precio > 0) {
+            document.getElementById('precio-mostrado').style.display = 'block';
+            document.getElementById('precio-turno').textContent = '$' + precio.toLocaleString('es-AR');
+            document.getElementById('sol-precio-extra').value = precio;
           }
         }
         
@@ -900,13 +912,27 @@ var select = document.getElementById('sol-hora');
           e.preventDefault();
           var msg = document.getElementById('solicitar-msg');
           
+          var notasExtra = document.getElementById('sol-notas').value || '';
+          if (document.getElementById('sol-cm')) {
+            var cm = document.getElementById('sol-cm').value;
+            if (!cm) {
+              msg.innerHTML = '<div class="msg error">Seleccioná el largo de tu cabello</div>';
+              return;
+            }
+            notasExtra = 'Largo: ' + cm + ' cm - ' + notasExtra;
+          }
+          
           var data = {
             cliente_id: user.id,
             tratamiento_id: document.getElementById('sol-tratamiento').value,
             fecha: document.getElementById('sol-fecha').value,
             hora: document.getElementById('sol-hora').value,
-            notas: document.getElementById('sol-notas').value || 'Solicitado'
+            notas: notasExtra || 'Solicitado'
           };
+          
+          if (document.getElementById('sol-precio-extra')) {
+            data.precio = parseInt(document.getElementById('sol-precio-extra').value) || 0;
+          }
           
           try {
             var res = await fetch(API + '/turnos', {
