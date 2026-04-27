@@ -785,11 +785,12 @@ var select = document.getElementById('sol-hora');
           var nombre = tratamientos[tratamientos.selectedIndex].text;
           var nombreUpper = nombre.toUpperCase();
           var esAlisado = nombreUpper.indexOf('ALISADO') >= 0 || nombreUpper.indexOf('BOTOX') >= 0 || nombreUpper.indexOf('CAPILAR') >= 0 || nombreUpper.indexOf('TRATAMIENTO') >= 0 || nombreUpper.indexOf('LISS') >= 0 || nombreUpper.indexOf('BRUSHING') >= 0 || nombreUpper.indexOf('PLANCHA') >= 0;
+          var esConsultar = nombreUpper.indexOf('CONSULTAR') >= 0;
           
-          if (esAlisado) {
+          if (esAlisado || esConsultar) {
             document.getElementById('cm-options').innerHTML = 
               '<div class="form-group"><label>Largo del cabello *</label>' +
-              '<select id="sol-cm" required>' +
+              '<select id="sol-cm" required onchange="cargarHorariosBloqueados()">' +
                 '<option value="">Seleccionar largo</option>' +
                 '<option value="0-30">0 a 30 cm - $30.000</option>' +
                 '<option value="30-40">30 a 40 cm - $32.000</option>' +
