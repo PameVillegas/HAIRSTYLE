@@ -778,7 +778,7 @@ var select = document.getElementById('sol-hora');
             '<button type="submit" class="btn">📨 Enviar Solicitud</button>' +
           '</form>';
         
-        function checkTratamientoCM() {
+        window.checkTratamientoCM = function() {
           var tratamientoId = document.getElementById('sol-tratamiento').value;
           if (!tratamientoId || !document.getElementById('sol-tratamiento')) { 
             document.getElementById('cm-options').style.display = 'none'; 
