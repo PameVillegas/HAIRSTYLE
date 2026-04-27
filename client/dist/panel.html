@@ -690,7 +690,7 @@
             '}' +
           '}</';
         
-        document.getElementById('turno-form').onsubmit = async function(e) {
+document.getElementById('turno-form').onsubmit = async function(e) {
           e.preventDefault();
           var notasExtra = document.getElementById('turno-notas').value || '';
           if (document.getElementById('turno-cm')) {
@@ -698,6 +698,7 @@
             if (!cm) { alert('Seleccioná el largo del cabello'); return; }
             notasExtra = 'Largo: ' + cm + ' cm - ' + notasExtra;
           }
+          
           var data = {
             cliente_id: document.getElementById('turno-cliente').value,
             tratamiento_id: document.getElementById('turno-tratamiento').value,
@@ -707,6 +708,8 @@
             precio: parseInt(document.getElementById('turno-precio').value) || 0
           };
           
+          console.log('Enviando turno:', data);
+          
           try {
             var res = await fetch(API + '/turnos', {
               method: 'POST',
@@ -714,9 +717,10 @@
               body: JSON.stringify(data)
             });
             var result = await res.json();
+            console.log('Response:', res.status, result);
             
-            if (result.success) {
-              alert('¡Turno creado exitosamente!');
+            if (result.id || result.success) {
+              alert('¡Turno creado!');
               showTurnos();
             } else {
               alert(result.error || 'Error al crear turno');
