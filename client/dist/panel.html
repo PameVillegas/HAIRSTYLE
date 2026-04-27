@@ -1234,11 +1234,18 @@
           return t.estado !== 'cancelado' && getMonth(t.fecha) === mes && getAnio(t.fecha) === anio; 
         });
         
+        console.log('Ingresos - turnos:', turnos.length, 'delMes:', delMes.length, 'mes:', mes, 'anio:', anio);
+        
         var extras = JSON.parse(localStorage.getItem('ingresos_extras') || '[]');
         var extrasMes = extras.filter(function(e) { return getMonth(e.fecha) === mes && getAnio(e.fecha) === anio; });
         var totalExtras = extrasMes.reduce(function(s, e) { return s + parseFloat(e.monto || 0); }, 0);
         
-        var total = delMes.reduce(function(s, t) { return s + parseFloat(t.precio || t.tratamiento_precio || 0); }, 0) + totalExtras;
+        var total = delMes.reduce(function(s, t) { 
+          var p = parseFloat(t.precio || t.tratamiento_precio || t.precio_tratamiento || 0);
+          return s + p; 
+        }, 0) + totalExtras;
+        
+        console.log('Total:', total, 'delMes:', delMes.map(function(t) { return t.precio || t.tratamiento_precio; }));
         
         var html = '<div style="background:linear-gradient(135deg,#e91e63,#9c27b0);padding:25px;border-radius:16px;text-align:center;color:white;margin-bottom:15px;">' +
           '<div style="font-size:16px;opacity:0.9;">💰 Ingresos de ' + meses[mes] + ' ' + anio + '</div>' +
