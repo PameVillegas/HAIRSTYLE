@@ -785,20 +785,20 @@ var select = document.getElementById('sol-hora');
           var nombre = tratamientos[tratamientos.selectedIndex].text;
           var nombreUpper = nombre.toUpperCase();
           var esAlisado = nombreUpper.indexOf('ALISADO') >= 0 || nombreUpper.indexOf('BOTOX') >= 0 || nombreUpper.indexOf('CAPILAR') >= 0 || nombreUpper.indexOf('TRATAMIENTO') >= 0 || nombreUpper.indexOf('LISS') >= 0 || nombreUpper.indexOf('BRUSHING') >= 0 || nombreUpper.indexOf('PLANCHA') >= 0;
-          var esConsultar = nombreUpper.indexOf('CONSULTAR') >= 0;
+          var esConsultar = nombreUpper.indexOf('CONSULTAR') >= 0 || nombre.indexOf('$0') >= 0 || nombre.indexOf('Consultar') >= 0;
           
           if (esAlisado || esConsultar) {
             document.getElementById('cm-options').innerHTML = 
-              '<div class="form-group"><label>Largo del cabello *</label>' +
-              '<select id="sol-cm" required onchange="cargarHorariosBloqueados()">' +
+              '<div class="form-group" style="background:#f8f9fa;padding:10px;border-radius:8px;margin:10px 0;"><label style="display:block;margin-bottom:5px;font-weight:600;">💇 Largo del cabello *</label>' +
+              '<select id="sol-cm" required style="width:100%;padding:10px;border-radius:5px;border:1px solid #ddd;" onchange="cargarHorariosBloqueados()">' +
                 '<option value="">Seleccionar largo</option>' +
-                '<option value="0-30">0 a 30 cm - $30.000</option>' +
-                '<option value="30-40">30 a 40 cm - $32.000</option>' +
-                '<option value="40-50">40 a 50 cm - $34.000</option>' +
-                '<option value="50-60">50 a 60 cm - $36.000</option>' +
-                '<option value="60-70">60 a 70 cm - $38.000</option>' +
-                '<option value="70-80">70 a 80 cm - $40.000</option>' +
-                '<option value="80-90">80 a 90 cm - $42.000</option>' +
+                '<option value="0-30">0 a 30 cm</option>' +
+                '<option value="30-40">30 a 40 cm</option>' +
+                '<option value="40-50">40 a 50 cm</option>' +
+                '<option value="50-60">50 a 60 cm</option>' +
+                '<option value="60-70">60 a 70 cm</option>' +
+                '<option value="70-80">70 a 80 cm</option>' +
+                '<option value="80-90">80 a 90 cm</option>' +
               '</select></div>';
             document.getElementById('cm-options').style.display = 'block';
           } else {
