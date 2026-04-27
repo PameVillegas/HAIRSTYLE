@@ -274,6 +274,7 @@
             var nombre = t.nombre || '';
             var descripcion = t.descripcion || '';
             var esLimpieza = nombre.toUpperCase().indexOf('LIMPIEZA') >= 0;
+            var nombreUpper = nombre.toUpperCase();
             var esAlisado = nombreUpper.indexOf('ALISADO') >= 0 || nombreUpper.indexOf('BOTOX') >= 0 || nombreUpper.indexOf('CAPILAR') >= 0 || nombreUpper.indexOf('TRATAMIENTO') >= 0 || nombreUpper.indexOf('LISS') >= 0 || nombreUpper.indexOf('BRUSHING') >= 0 || nombreUpper.indexOf('PLANCHA') >= 0;
             
             var mostrarCM = esAlisado || precio === 0;
