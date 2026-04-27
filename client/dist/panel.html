@@ -632,22 +632,48 @@
         
         document.getElementById('nuevo-turno-form').innerHTML = 
           '<form id="turno-form">' +
-            '<div class="form-group"><label>Cliente *</label><select id="turno-cliente">' + clienteOptions + '</select></div>' +
-            '<div class="form-group"><label>Tratamiento *</label><select id="turno-tratamiento">' + tratamientoOptions + '</select></div>' +
+            '<div class="form-group"><label>Cliente *</label><select id="turno-cliente" required></select></div>' +
+            '<div class="form-group"><label>Tratamiento *</label><select id="turno-tratamiento" required onchange="checkTratamientoAdmin()"></select></div>' +
+            '<div id="cm-options-admin" style="display:none;"></div>' +
             '<div class="form-group"><label>Fecha *</label><input type="date" id="turno-fecha" required></div>' +
             '<div class="form-group"><label>Hora *</label><input type="time" id="turno-hora" required></div>' +
             '<div class="form-group"><label>Notas</label><textarea id="turno-notas" rows="3" placeholder="Observaciones..."></textarea></div>' +
+            '<input type="hidden" id="turno-precio" value="0">' +
             '<button type="submit" class="btn">Crear Turno</button>' +
-          '</form>';
+          '</form>' +
+          '<script>window.checkTratamientoAdmin = function() {' +
+            'var sel = document.getElementById("turno-tratamiento");' +
+            'var nombre = sel.options[sel.selectedIndex]?.text || "";' +
+            'var nombreUpper = nombre.toUpperCase();' +
+            'var esAlisado = nombreUpper.indexOf("ALISADO") >= 0 || nombreUpper.indexOf("BOTOX") >= 0 || nombreUpper.indexOf("CAPILAR") >= 0 || nombreUpper.indexOf("TRATAMIENTO") >= 0 || nombreUpper.indexOf("LISS") >= 0;' +
+            'if (esAlisado) {' +
+              'document.getElementById("cm-options-admin").innerHTML = \'<div class="form-group"><label>Largo del cabello *</label><select id="turno-cm" required><option value="">Seleccionar</option><option value="0-30">0-30 cm - $30.000</option><option value="30-40">30-40 cm - $32.000</option><option value="40-50">40-50 cm - $34.000</option><option value="50-60">50-60 cm - $36.000</option><option value="60-70">60-70 cm - $38.000</option><option value="70-80">70-80 cm - $40.000</option><option value="80-90">80-90 cm - $42.000</option></select></div><div id="precio-mostrado" style="display:none;background:#e8f5e9;padding:10px;border-radius:8px;text-align:center;font-weight:700;color:#4caf50;">Precio: <span id="precio-turno"></span></div>\';' +
+              'document.getElementById("cm-options-admin").style.display = "block";' +
+              'document.getElementById("turno-cm").onchange = function() {' +
+                'var precios = {"0-30":30000,"30-40":32000,"40-50":34000,"50-60":36000,"60-70":38000,"70-80":40000,"80-90":42000};' +
+                'var p = precios[this.value] || 0;' +
+                'if (p > 0) { document.getElementById("precio-mostrado").style.display = "block"; document.getElementById("precio-turno").textContent = "$" + p.toLocaleString("es-AR"); document.getElementById("turno-precio").value = p; }' +
+              '};' +
+            '} else {' +
+              'document.getElementById("cm-options-admin").style.display = "none";' +
+            '}' +
+          '}</';
         
         document.getElementById('turno-form').onsubmit = async function(e) {
           e.preventDefault();
+          var notasExtra = document.getElementById('turno-notas').value || '';
+          if (document.getElementById('turno-cm')) {
+            var cm = document.getElementById('turno-cm').value;
+            if (!cm) { alert('Seleccioná el largo del cabello'); return; }
+            notasExtra = 'Largo: ' + cm + ' cm - ' + notasExtra;
+          }
           var data = {
             cliente_id: document.getElementById('turno-cliente').value,
             tratamiento_id: document.getElementById('turno-tratamiento').value,
             fecha: document.getElementById('turno-fecha').value,
             hora: document.getElementById('turno-hora').value,
-            notas: document.getElementById('turno-notas').value || null
+            notas: notasExtra,
+            precio: parseInt(document.getElementById('turno-precio').value) || 0
           };
           
           try {
