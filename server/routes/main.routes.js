@@ -239,25 +239,28 @@ router.post('/turnos', async (req, res) => {
     const finMinutos = inicioMinutos + duracionTratamiento;
     
     // Verificar que no haya conflicto de horarios considerando la duración
-    const conflictos = await pool.query(`
-      SELECT t.id, t.hora, t.fecha, tr.nombre as tratamiento_nombre, tr.duracion as duracion
+    const existentes = await pool.query(`
+      SELECT t.id, t.hora, tr.duracion as duracion
       FROM turnos t
       JOIN tratamientos tr ON t.tratamiento_id = tr.id
-      WHERE t.fecha = $1 
-      AND t.estado != 'cancelado'
-      AND (
-        (EXTRACT(HOUR FROM t.hora::time) * 60 + EXTRACT(MINUTE FROM t.hora::time)) < $4
-        AND (EXTRACT(HOUR FROM t.hora::time) * 60 + EXTRACT(MINUTE FROM t.hora::time) + COALESCE(tr.duracion, 60)) > $3
-      )
-    `, [fecha, hora, inicioMinutos, finMinutos]);
+      WHERE t.fecha = $1 AND t.estado != 'cancelado'
+    `, [fecha]);
     
-    if (conflictos.rows.length > 0) {
-      const conf = conflictos.rows[0];
-      const [hConf, mConf] = conf.hora.split(':').map(Number);
-      const horaFinConf = hConf + Math.floor((hConf * 60 + mConf + conf.duracion) / 60);
-      const minFinConf = (hConf * 60 + mConf + conf.duracion) % 60;
+    var conflictivo = null;
+    for (var i = 0; i < existentes.rows.length; i++) {
+      var t = existentes.rows[i];
+      var [h, m] = t.hora.split(':').map(Number);
+      var ini = h * 60 + m;
+      var fin = ini + (t.duracion || 60);
+      if (inicioMinutos < fin && finMinutos > ini) {
+        conflictivo = t;
+        break;
+      }
+    }
+    
+    if (conflictivo) {
       return res.status(400).json({ 
-        error: 'Ya hay un turnocreado en esa fecha y horario. El turno de ' + conf.tratamiento_nombre + ' empieza a las ' + conf.hora + ' y termina a las ' + horaFinConf + ':' + minFinConf.toString().padStart(2, '0')
+        error: 'Horario ocupado. Ya hay un turno nesse horario.'
       });
     }
 
