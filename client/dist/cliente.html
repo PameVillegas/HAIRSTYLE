@@ -397,12 +397,13 @@
           var duracionGlobal = duracion;
           
           fetch(API + '/turnos/fecha/' + fecha).then(function(res) { return res.json(); }).then(function(turnos) {
-            var select = document.getElementById('sol-hora');
+var select = document.getElementById('sol-hora');
             if (!select) return;
             var opciones = select.options;
             for (var i = 1; i < opciones.length; i++) {
               opciones[i].disabled = false;
               opciones[i].style.color = '';
+              opciones[i].style.textDecoration = 'none';
               opciones[i].text = opciones[i].value;
             }
             for (var i = 1; i < opciones.length; i++) {
@@ -420,7 +421,8 @@
               }
               if (bloqueado) {
                 opciones[i].disabled = true;
-                opciones[i].style.color = '#ccc';
+                opciones[i].style.color = '#999';
+                opciones[i].style.textDecoration = 'line-through';
                 opciones[i].text = horaOpt + ' (ocupado)';
               }
             }
@@ -858,6 +860,7 @@
             for (var i = 1; i < opciones.length; i++) {
               opciones[i].disabled = false;
               opciones[i].style.color = '';
+              opciones[i].style.textDecoration = 'none';
             }
             
             for (var i = 1; i < opciones.length; i++) {
@@ -876,7 +879,8 @@
               }
               if (bloqueado) {
                 opciones[i].disabled = true;
-                opciones[i].style.color = '#ccc';
+                opciones[i].style.color = '#999';
+                opciones[i].style.textDecoration = 'line-through';
                 opciones[i].text = horaOpt + ' (ocupado)';
               }
             }
