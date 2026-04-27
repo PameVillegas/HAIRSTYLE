@@ -632,8 +632,8 @@
         
         document.getElementById('nuevo-turno-form').innerHTML = 
           '<form id="turno-form">' +
-            '<div class="form-group"><label>Cliente *</label><select id="turno-cliente" required></select></div>' +
-            '<div class="form-group"><label>Tratamiento *</label><select id="turno-tratamiento" required onchange="checkTratamientoAdmin()"></select></div>' +
+            '<div class="form-group"><label>Cliente *</label><select id="turno-cliente" required>' + clienteOptions + '</select></div>' +
+            '<div class="form-group"><label>Tratamiento *</label><select id="turno-tratamiento" required onchange="checkTratamientoAdmin()">' + tratamientoOptions + '</select></div>' +
             '<div id="cm-options-admin" style="display:none;"></div>' +
             '<div class="form-group"><label>Fecha *</label><input type="date" id="turno-fecha" required></div>' +
             '<div class="form-group"><label>Hora *</label><input type="time" id="turno-hora" required></div>' +
