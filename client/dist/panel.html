@@ -191,7 +191,14 @@
     var t = localStorage.getItem('t');
     var user = null;
     
-    try { user = u ? JSON.parse(u) : null; } catch(e) { user = null; }
+    console.log('u:', u, 't:', t);
+    
+    try { user = u ? JSON.parse(u) : null; } catch(e) { 
+      console.log('Error parse:', e);
+      user = null; 
+    }
+    
+    console.log('user:', user);
     
     if (!u || t !== 'admin' || !user) {
       document.getElementById('app').innerHTML = 
