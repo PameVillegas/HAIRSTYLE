@@ -783,11 +783,10 @@ var select = document.getElementById('sol-hora');
           if (!tratamientoId) { document.getElementById('cm-options').style.display = 'none'; return; }
           var tratamientos = document.getElementById('sol-tratamiento').options;
           var nombre = tratamientos[tratamientos.selectedIndex].text;
+          alert('Tratamiento: ' + nombre);
           var nombreUpper = nombre.toUpperCase();
           var esAlisado = nombreUpper.indexOf('ALISADO') >= 0 || nombreUpper.indexOf('BOTOX') >= 0 || nombreUpper.indexOf('CAPILAR') >= 0 || nombreUpper.indexOf('TRATAMIENTO') >= 0 || nombreUpper.indexOf('LISS') >= 0 || nombreUpper.indexOf('BRUSHING') >= 0 || nombreUpper.indexOf('PLANCHA') >= 0;
           var esConsultar = nombre.indexOf('Consultar') >= 0 || nombre.indexOf('$0') >= 0;
-          
-          console.log('Tratamiento:', nombre, 'esAlisado:', esAlisado, 'esConsultar:', esConsultar);
           
           if (esAlisado || esConsultar) {
             document.getElementById('cm-options').innerHTML = 
