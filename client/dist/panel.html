@@ -1191,8 +1191,10 @@
     }
     
     // INGRESOS
+    var mesesGlobal = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    
     async function showIngresos() {
-      var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      var meses = mesesGlobal;
       var anioActual = new Date().getFullYear();
       var mesActual = new Date().getMonth();
       
@@ -1204,17 +1206,17 @@
         '<div class="header"><h1>💰 Mis Ingresos</h1></div>' +
         '<div style="background:#333;padding:15px;border-radius:16px;margin-bottom:15px;">' +
           '<div style="display:flex;gap:10px;justify-content:center;">' +
-            '<select id="ing-mes" onchange="cargarIngresos(parseInt(this.value), parseInt(document.getElementById(\'ing-anio\').value), meses)" style="padding:10px;border-radius:8px;border:none;width:120px;">' +
-              meses.map(function(m,i){return '<option value="'+i+'"'+(i===mesActual?' selected':'')+'>'+m+'</option>';}).join('') +
+            '<select id="ing-mes" onchange="cargarIngresos(parseInt(this.value), parseInt(document.getElementById(\'ing-anio\').value), mesesGlobal)" style="padding:10px;border-radius:8px;border:none;width:120px;">' +
+              mesesGlobal.map(function(m,i){return '<option value="'+i+'"'+(i===mesActual?' selected':'')+'>'+m+'</option>';}).join('') +
             '</select>' +
-            '<select id="ing-anio" onchange="cargarIngresos(parseInt(document.getElementById(\'ing-mes\').value), parseInt(this.value), meses)" style="padding:10px;border-radius:8px;border:none;width:80px;">' +
+            '<select id="ing-anio" onchange="cargarIngresos(parseInt(document.getElementById(\'ing-mes\').value), parseInt(this.value), mesesGlobal)" style="padding:10px;border-radius:8px;border:none;width:80px;">' +
               anios.map(function(a){return '<option value="'+a+'"'+(a===anioActual?' selected':'')+'>'+a+'</option>';}).join('') +
             '</select>' +
           '</div>' +
         '</div>' +
         '<div id="ingresos-content" style="background:#333;border-radius:16px;padding:15px;color:white;"></div>';
       
-      cargarIngresos(mesActual, anioActual, meses);
+      cargarIngresos(mesActual, anioActual, mesesGlobal);
     }
     
     async function cargarIngresos(mes, anio, meses) {
