@@ -73,13 +73,16 @@ router.delete('/clientes/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
+    // Primero eliminar turnos asociados
+    await pool.query('DELETE FROM turnos WHERE cliente_id = $1', [id]);
+    
     const result = await pool.query('DELETE FROM clientes WHERE id = $1 RETURNING *', [id]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Cliente no encontrado' });
     }
     
-    res.json({ message: 'Cliente eliminado correctamente' });
+    res.json({ success: true });
   } catch (error) {
     console.error('Error eliminando cliente:', error);
     res.status(500).json({ error: 'Error del servidor' });
