@@ -873,7 +873,9 @@
           
           try {
             var res = await fetch(API + '/turnos/fecha/' + fecha);
-            var turnos = await res.json();
+            var data = await res.json();
+            var turnos = data.turnos || data;
+            var bloqueos = data.bloqueos || [];
             
             var bloques = [];
             turnos.forEach(function(t) {
@@ -890,6 +892,18 @@
               }
             });
             
+            // Agregar bloqueos manuales
+            bloqueos.forEach(function(b) {
+              if (b.todo_el_dia) {
+                for (var h = 9; h < 19; h++) {
+                  var horaBloque = h + ':00';
+                  if (!bloques.includes(horaBloque)) bloques.push(horaBloque);
+                }
+              } else if (b.hora) {
+                if (!bloques.includes(b.hora)) bloques.push(b.hora);
+              }
+            });
+            
             var select = document.getElementById('sol-hora');
             var opciones = select.options;
             for (var i = 1; i < opciones.length; i++) {
@@ -903,6 +917,7 @@
               var minutosOpt = horaToMinutos(horaOpt);
               var finOpt = minutosOpt + duracion;
               var bloqueado = false;
+              
               for (var j = 0; j < turnos.length; j++) {
                 var ini = horaToMinutos(turnos[j].hora);
                 var durTurno = turnos[j].tratamiento_duracion || 60;
@@ -912,6 +927,20 @@
                   break;
                 }
               }
+              
+              if (!bloqueado) {
+                for (var k = 0; k < bloqueos.length; k++) {
+                  if (bloqueos[k].todo_el_dia) {
+                    bloqueado = true;
+                    break;
+                  }
+                  if (bloqueos[k].hora === horaOpt) {
+                    bloqueado = true;
+                    break;
+                  }
+                }
+              }
+              
               if (bloqueado) {
                 opciones[i].disabled = true;
                 opciones[i].style.color = '#999';
