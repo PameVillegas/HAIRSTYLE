@@ -259,8 +259,9 @@
             '<div class="menu-item secondary" onclick="showSection(\'galeria\')"><span class="icon">📸</span><span class="label">Galería</span><span class="desc">Fotos</span></div>' +
             '<div class="menu-item secondary" onclick="showSection(\'legajos\')"><span class="icon">📋</span><span class="label">Legajos</span><span class="desc">Anamnesis</span></div>' +
             '<div class="menu-item secondary" onclick="showSection(\'nuevo-legajo\')"><span class="icon">📋</span><span class="label">Nueva Planilla</span><span class="desc">Anamnesis</span></div>' +
-            '<div class="menu-item" onclick="showSection(\'ingresos\')"><span class="icon">💰</span><span class="label">Ingresos</span><span class="desc">Detalles</span></div>' +
-          '</div>' +
+             '<div class="menu-item" onclick="showSection(\'ingresos\')"><span class="icon">💰</span><span class="label">Ingresos</span><span class="desc">Detalles</span></div>' +
+             '<div class="menu-item secondary" onclick="showSection(\'bloqueos\')"><span class="icon">🚫</span><span class="label">Bloqueos</span><span class="desc">Días/horarios</span></div>' +
+           '</div>' +
         '</div>';
       
       cargarEstadisticas();
@@ -331,6 +332,7 @@
         case 'nuevo-legajo': showNuevaPlanilla(); break;
         case 'ingresos': showIngresos(); break;
         case 'testimonios': showTestimoniosAdmin(); break;
+        case 'bloqueos': showBloqueos(); break;
       }
     }
     
@@ -1324,6 +1326,100 @@ document.getElementById('turno-form').onsubmit = async function(e) {
 document.getElementById('ingresos-content').innerHTML = html;
       } catch(err) {
         alert('Error: ' + err.message);
+      }
+    }
+    
+    // BLOQUEOS
+    async function showBloqueos() {
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="header"><h1>🚫 Bloqueos</h1></div>' +
+        '<div class="card">' +
+          '<h3>Nuevo Bloqueo</h3>' +
+          '<div class="form-group"><label>Fecha *</label><input type="date" id="bloq-fecha" required></div>' +
+          '<div class="form-group"><label><input type="checkbox" id="bloq-todo-dia"> Bloquear todo el día</label></div>' +
+          '<div class="form-group"><label>Hora (opcional)</label><input type="time" id="bloq-hora"></div>' +
+          '<div class="form-group"><label>Motivo</label><input type="text" id="bloq-motivo" placeholder="Ej: Urgencia médica"></div>' +
+          '<button class="btn" onclick="crearBloqueo()">Bloquear</button>' +
+        '</div>' +
+        '<div class="card" style="margin-top:15px;">' +
+          '<h3>Bloqueos Activos</h3>' +
+          '<div id="bloqueos-list"><div class="loading">Cargando...</div></div>' +
+        '</div>';
+      
+      document.getElementById('bloq-fecha').value = new Date().toISOString().split('T')[0];
+      loadBloqueos();
+    }
+    
+    async function loadBloqueos() {
+      try {
+        var res = await fetch(API + '/bloqueos');
+        var bloqueos = await res.json();
+        
+        if (bloqueos.length === 0) {
+          document.getElementById('bloqueos-list').innerHTML = '<div class="empty-state">No hay bloqueos</div>';
+        } else {
+          var html = '';
+          bloqueos.forEach(function(b) {
+            html += '<div class="list-item">' +
+              '<div class="info">' +
+                '<div class="name">' + b.fecha + (b.hora ? ' ' + b.hora : ' (Todo el día)') + '</div>' +
+                '<div class="detail">' + (b.motivo || 'Sin motivo') + '</div>' +
+              '</div>' +
+              '<div class="actions">' +
+                '<button class="delete-btn" onclick="eliminarBloqueo(' + b.id + ')">X</button>' +
+              '</div>' +
+            '</div>';
+          });
+          document.getElementById('bloqueos-list').innerHTML = html;
+        }
+      } catch(err) {
+        document.getElementById('bloqueos-list').innerHTML = '<div class="empty-state">Error cargando bloqueos</div>';
+      }
+    }
+    
+    async function crearBloqueo() {
+      var fecha = document.getElementById('bloq-fecha').value;
+      var hora = document.getElementById('bloq-hora').value || null;
+      var todoElDia = document.getElementById('bloq-todo-dia').checked;
+      var motivo = document.getElementById('bloq-motivo').value || null;
+      
+      if (!fecha) { alert('Fecha es requerida'); return; }
+      
+      try {
+        var res = await fetch(API + '/bloqueos', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ fecha, hora, todo_el_dia: todoElDia, motivo })
+        });
+        var result = await res.json();
+        
+        if (result.success) {
+          document.getElementById('bloq-hora').value = '';
+          document.getElementById('bloq-motivo').value = '';
+          loadBloqueos();
+        } else {
+          alert(result.error || 'Error al crear bloqueo');
+        }
+      } catch(err) {
+        alert('Error de conexión');
+      }
+    }
+    
+    async function eliminarBloqueo(id) {
+      if (!confirm('¿Eliminar este bloqueo?')) return;
+      
+      try {
+        var res = await fetch(API + '/bloqueos/' + id, { method: 'DELETE' });
+        var result = await res.json();
+        
+        if (result.success) {
+          loadBloqueos();
+        } else {
+          alert(result.error || 'Error al eliminar');
+        }
+      } catch(err) {
+        alert('Error de conexión');
       }
     }
     

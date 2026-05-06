@@ -397,8 +397,10 @@
           
           var duracionGlobal = duracion;
           
-          fetch(API + '/turnos/fecha/' + fecha).then(function(res) { return res.json(); }).then(function(turnos) {
-var select = document.getElementById('sol-hora');
+          fetch(API + '/turnos/fecha/' + fecha).then(function(res) { return res.json(); }).then(function(data) {
+            var turnos = data.turnos || data;
+            var bloqueos = data.bloqueos || [];
+            var select = document.getElementById('sol-hora');
             if (!select) return;
             var opciones = select.options;
             for (var i = 1; i < opciones.length; i++) {
@@ -411,6 +413,7 @@ var select = document.getElementById('sol-hora');
               var horaOpt = opciones[i].value;
               var minutosOpt = horaToMinutos(horaOpt);
               var bloqueado = false;
+              
               for (var j = 0; j < turnos.length; j++) {
                 var ini = horaToMinutos(turnos[j].hora);
                 var durTurno = turnos[j].tratamiento_duracion || 60;
@@ -420,6 +423,20 @@ var select = document.getElementById('sol-hora');
                   break;
                 }
               }
+              
+              if (!bloqueado) {
+                for (var k = 0; k < bloqueos.length; k++) {
+                  if (bloqueos[k].todo_el_dia) {
+                    bloqueado = true;
+                    break;
+                  }
+                  if (bloqueos[k].hora === horaOpt) {
+                    bloqueado = true;
+                    break;
+                  }
+                }
+              }
+              
               if (bloqueado) {
                 opciones[i].disabled = true;
                 opciones[i].style.color = '#999';

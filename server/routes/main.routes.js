@@ -89,6 +89,49 @@ router.delete('/clientes/:id', async (req, res) => {
   }
 });
 
+// ==================== BLOQUEOS ====================
+
+router.get('/bloqueos', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM bloqueos WHERE activo = TRUE ORDER BY fecha, hora');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error obteniendo bloqueos:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.post('/bloqueos', async (req, res) => {
+  try {
+    const { fecha, hora, todo_el_dia, motivo } = req.body;
+    if (!fecha) {
+      return res.status(400).json({ error: 'Fecha es requerida' });
+    }
+    const result = await pool.query(
+      'INSERT INTO bloqueos (fecha, hora, todo_el_dia, motivo) VALUES ($1, $2, $3, $4) RETURNING *',
+      [fecha, hora || null, todo_el_dia || false, motivo || null]
+    );
+    res.status(201).json({ success: true, bloqueo: result.rows[0] });
+  } catch (error) {
+    console.error('Error creando bloqueo:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.delete('/bloqueos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('DELETE FROM bloqueos WHERE id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Bloqueo no encontrado' });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error eliminando bloqueo:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
 // ==================== TRATAMIENTOS ====================
 
 router.get('/tratamientos', async (req, res) => {
@@ -201,7 +244,15 @@ router.get('/turnos', async (req, res) => {
 router.get('/turnos/fecha/:fecha', async (req, res) => {
   try {
     const { fecha } = req.params;
-    const result = await pool.query(`
+    
+    // Obtener bloqueos del día
+    const bloqueosResult = await pool.query(
+      'SELECT * FROM bloqueos WHERE fecha = $1 AND activo = TRUE',
+      [fecha]
+    );
+    
+    // Obtener turnos del día
+    const turnosResult = await pool.query(`
       SELECT 
         t.hora,
         tr.duracion as tratamiento_duracion,
@@ -213,7 +264,11 @@ router.get('/turnos/fecha/:fecha', async (req, res) => {
       WHERE t.fecha = $1 AND t.estado != 'cancelado'
       ORDER BY t.hora
     `, [fecha]);
-    res.json(result.rows);
+    
+    res.json({
+      turnos: turnosResult.rows,
+      bloqueos: bloqueosResult.rows
+    });
   } catch (error) {
     console.error('Error obteniendo horarios ocupados:', error);
     res.status(500).json({ error: 'Error del servidor' });
@@ -233,6 +288,26 @@ router.post('/turnos', async (req, res) => {
     const tratResult = await pool.query('SELECT nombre, duracion FROM tratamientos WHERE id = $1', [tratamiento_id]);
     if (tratResult.rows.length === 0) {
       return res.status(400).json({ error: 'Tratamiento no encontrado' });
+    }
+    
+    // Verificar bloqueos
+    const bloqueos = await pool.query(
+      'SELECT * FROM bloqueos WHERE fecha = $1 AND activo = TRUE',
+      [fecha]
+    );
+    
+    const bloqueoTotal = bloqueos.rows.find(b => b.todo_el_dia);
+    if (bloqueoTotal) {
+      return res.status(400).json({ 
+        error: 'No se puede agendar turno: ' + (bloqueoTotal.motivo || 'Día bloqueado por el administrador')
+      });
+    }
+    
+    const bloqueoHora = bloqueos.rows.find(b => b.hora === hora);
+    if (bloqueoHora) {
+      return res.status(400).json({ 
+        error: 'No se puede agendar turno: ' + (bloqueoHora.motivo || 'Horario bloqueado por el administrador')
+      });
     }
     
     // Verificar que no haya conflicto de horarios (solo mismo horario)

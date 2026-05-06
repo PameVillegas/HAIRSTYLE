@@ -155,6 +155,16 @@ async function createTables(client) {
       FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
     )`,
     
+    `CREATE TABLE IF NOT EXISTS bloqueos (
+      id SERIAL PRIMARY KEY,
+      fecha DATE,
+      hora TIME,
+      todo_el_dia BOOLEAN DEFAULT FALSE,
+      motivo VARCHAR(255),
+      activo BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+    
     `CREATE TABLE IF NOT EXISTS testimonios (
       id SERIAL PRIMARY KEY,
       cliente_id INTEGER NOT NULL,
