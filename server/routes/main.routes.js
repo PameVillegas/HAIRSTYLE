@@ -310,16 +310,37 @@ router.post('/turnos', async (req, res) => {
       });
     }
     
-    // Verificar que no haya conflicto de horarios (solo mismo horario)
-    const existentes = await pool.query(`
-      SELECT t.id, t.hora
-      FROM turnos t
-      WHERE t.fecha = $1 AND t.hora = $2 AND t.estado != 'cancelado'
-    `, [fecha, hora]);
+    // Verificar que no haya conflicto de horarios (por duración del tratamiento)
+    const duracionTurno = parseInt(tratResult.rows[0].duracion || 60);
     
-    if (existentes.rows.length > 0) {
+    const existentes = await pool.query(`
+      SELECT t.id, t.hora, tr.duracion as tratamiento_duracion
+      FROM turnos t
+      JOIN tratamientos tr ON t.tratamiento_id = tr.id
+      WHERE t.fecha = $1 AND t.estado != 'cancelado'
+    `, [fecha]);
+    
+    function toMin(h) {
+      if (!h) return 0;
+      var parts = h.split(':');
+      return parseInt(parts[0]) * 60 + parseInt(parts[1] || 0);
+    }
+    
+    var inicioNuevo = toMin(hora);
+    var finNuevo = inicioNuevo + duracionTurno;
+    var conflicto = false;
+    
+    existentes.rows.forEach(function(e) {
+      var inicioExist = toMin(e.hora);
+      var finExist = inicioExist + parseInt(e.tratamiento_duracion || 60);
+      if (inicioNuevo < finExist && finNuevo > inicioExist) {
+        conflicto = true;
+      }
+    });
+    
+    if (conflicto) {
       return res.status(400).json({ 
-        error: 'Ya hay un turno agendado a esa hora.'
+        error: 'Ya hay un turno agendado en ese horario.'
       });
     }
 
