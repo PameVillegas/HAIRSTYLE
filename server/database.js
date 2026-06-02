@@ -1,4 +1,4 @@
-import pkg from 'pg';
+﻿import pkg from 'pg';
 const { Pool } = pkg;
 import dotenv from 'dotenv';
 
@@ -221,7 +221,8 @@ if (parseInt(clienteTest.rows[0].count) === 0) {
       { nombre: 'Alisados', precio: 0, duracion: 180, descripcion: 'Consultar precio' },
       { nombre: 'Peinados', precio: 0, duracion: 60, descripcion: 'Consultar precio' },
       { nombre: 'Baños de crema', precio: 15000, duracion: 60, descripcion: 'Tratamiento nutritivo' },
-      { nombre: 'Limpiezas faciales', precio: 20000, duracion: 75, descripcion: 'Limpieza facial profunda', imagen_url: '/fotos/facial.jpg' }
+      { nombre: 'Limpiezas faciales', precio: 20000, duracion: 75, descripcion: 'Limpieza facial profunda', imagen_url: '/fotos/facial.jpg' },
+      { nombre: 'Cortes de puntas', precio: 10000, duracion: 30, descripcion: 'Corte de puntas' }
     ];
 
     for (const t of tratamientos) {
@@ -232,6 +233,16 @@ if (parseInt(clienteTest.rows[0].count) === 0) {
     }
     
     console.log('Tratamientos cargados');
+  }
+
+  // Agregar 'Cortes de puntas' si no existe
+  const cortesExist = await client.query("SELECT COUNT(*) as count FROM tratamientos WHERE nombre ILIKE '%cortes de puntas%'");
+  if (parseInt(cortesExist.rows[0].count) === 0) {
+    await client.query(
+      'INSERT INTO tratamientos (nombre, precio, duracion, descripcion, activo) VALUES ($1, $2, $3, $4, $5)',
+      ['Cortes de puntas', 10000, 30, 'Corte de puntas', true]
+    );
+    console.log('Tratamiento "Cortes de puntas" agregado');
   }
 }
 

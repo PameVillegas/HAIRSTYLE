@@ -215,13 +215,13 @@
       var nombreUpper = nombre.toUpperCase();
       var esAlisado = nombreUpper.indexOf("ALISADO") >= 0 || nombreUpper.indexOf("BOTOX") >= 0 || nombreUpper.indexOf("CAPILAR") >= 0 || nombreUpper.indexOf("TRATAMIENTO") >= 0 || nombreUpper.indexOf("LISS") >= 0;
       if (esAlisado) {
-        var html = '<div class="form-group"><label>Largo del cabello *</label><select id="turno-cm" required><option value="">Seleccionar</option><option value="0-30">0-30 cm - $30.000</option><option value="30-40">30-40 cm - $32.000</option><option value="40-50">40-50 cm - $34.000</option><option value="50-60">50-60 cm - $36.000</option><option value="60-70">60-70 cm - $38.000</option><option value="70-80">70-80 cm - $40.000</option><option value="80-90">80-90 cm - $42.000</option></select></div><div id="precio-mostrado" style="display:none;background:#e8f5e9;padding:10px;border-radius:8px;text-align:center;font-weight:700;color:#4caf50;">Precio: <span id="precio-turno"></span></div>';
+        var html = '<div class="form-group"><label>Largo del cabello *</label><select id="turno-cm" required><option value="">Seleccionar</option><option value="0-30">0-30 cm - $32.000</option><option value="30-40">30-40 cm - $34.000</option><option value="40-50">40-50 cm - $36.000</option><option value="50-60">50-60 cm - $38.000</option><option value="60-70">60-70 cm - $40.000</option><option value="70-80">70-80 cm - $42.000</option><option value="80-90">80-90 cm - $44.000</option></select></div><div id="precio-mostrado" style="display:none;background:#e8f5e9;padding:10px;border-radius:8px;text-align:center;font-weight:700;color:#4caf50;">Precio: <span id="precio-turno"></span></div>';
         var container = document.getElementById("cm-options-admin");
         if (container) {
           container.innerHTML = html;
           container.style.display = "block";
           document.getElementById("turno-cm").onchange = function() {
-            var precios = {"0-30":30000,"30-40":32000,"40-50":34000,"50-60":36000,"60-70":38000,"70-80":40000,"80-90":42000};
+            var precios = {"0-30":32000,"30-40":34000,"40-50":36000,"50-60":38000,"60-70":40000,"70-80":42000,"80-90":44000};
             var p = precios[this.value] || 0;
             var precioMostrado = document.getElementById("precio-mostrado");
             var precioTurno = document.getElementById("precio-turno");
@@ -680,10 +680,10 @@
             'var nombreUpper = nombre.toUpperCase();' +
             'var esAlisado = nombreUpper.indexOf("ALISADO") >= 0 || nombreUpper.indexOf("BOTOX") >= 0 || nombreUpper.indexOf("CAPILAR") >= 0 || nombreUpper.indexOf("TRATAMIENTO") >= 0 || nombreUpper.indexOf("LISS") >= 0;' +
             'if (esAlisado) {' +
-              'document.getElementById("cm-options-admin").innerHTML = \'<div class="form-group"><label>Largo del cabello *</label><select id="turno-cm" required><option value="">Seleccionar</option><option value="0-30">0-30 cm - $30.000</option><option value="30-40">30-40 cm - $32.000</option><option value="40-50">40-50 cm - $34.000</option><option value="50-60">50-60 cm - $36.000</option><option value="60-70">60-70 cm - $38.000</option><option value="70-80">70-80 cm - $40.000</option><option value="80-90">80-90 cm - $42.000</option></select></div><div id="precio-mostrado" style="display:none;background:#e8f5e9;padding:10px;border-radius:8px;text-align:center;font-weight:700;color:#4caf50;">Precio: <span id="precio-turno"></span></div>\';' +
+              'document.getElementById("cm-options-admin").innerHTML = \'<div class="form-group"><label>Largo del cabello *</label><select id="turno-cm" required><option value="">Seleccionar</option><option value="0-30">0-30 cm - $32.000</option><option value="30-40">30-40 cm - $34.000</option><option value="40-50">40-50 cm - $36.000</option><option value="50-60">50-60 cm - $38.000</option><option value="60-70">60-70 cm - $40.000</option><option value="70-80">70-80 cm - $42.000</option><option value="80-90">80-90 cm - $44.000</option></select></div><div id="precio-mostrado" style="display:none;background:#e8f5e9;padding:10px;border-radius:8px;text-align:center;font-weight:700;color:#4caf50;">Precio: <span id="precio-turno"></span></div>\';' +
               'document.getElementById("cm-options-admin").style.display = "block";' +
               'document.getElementById("turno-cm").onchange = function() {' +
-                'var precios = {"0-30":30000,"30-40":32000,"40-50":34000,"50-60":36000,"60-70":38000,"70-80":40000,"80-90":42000};' +
+                'var precios = {"0-30":32000,"30-40":34000,"40-50":36000,"50-60":38000,"60-70":40000,"70-80":42000,"80-90":44000};' +
                 'var p = precios[this.value] || 0;' +
                 'if (p > 0) { document.getElementById("precio-mostrado").style.display = "block"; document.getElementById("precio-turno").textContent = "$" + p.toLocaleString("es-AR"); document.getElementById("turno-precio").value = p; }' +
               '};' +
@@ -817,7 +817,8 @@ document.getElementById('turno-form').onsubmit = async function(e) {
         { nombre: 'DISEÑO Y PERFILADO DE CEJAS', precio: 12000, duracion: 45, descripcion: 'Diseño personalizado de cejas', imagen_url: '/fotos/perfilaydisenocejas.jpg' },
         { nombre: 'TRATAMIENTOS Y ALISADOS', precio: 0, duracion: 180, descripcion: 'Baños de crema y alisados', imagen_url: '/fotos/tratamientosyalisados.jpg' },
         { nombre: 'PEINADOS', precio: 0, duracion: 60, descripcion: 'Peinados para eventos', imagen_url: '/fotos/peinado.jpg' },
-        { nombre: 'LIMPIEZA FACIAL', precio: 25000, duracion: 75, descripcion: 'Limpieza facial profunda', imagen_url: '/fotos/facial.jpg' }
+        { nombre: 'LIMPIEZA FACIAL', precio: 25000, duracion: 75, descripcion: 'Limpieza facial profunda', imagen_url: '/fotos/facial.jpg' },
+        { nombre: 'CORTES DE PUNTAS', precio: 10000, duracion: 30, descripcion: 'Corte de puntas' }
       ];
       
       for (var j = 0; j < tratamientos.length; j++) {
