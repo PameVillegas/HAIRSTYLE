@@ -261,6 +261,7 @@
             '<div class="menu-item secondary" onclick="showSection(\'nuevo-legajo\')"><span class="icon">📋</span><span class="label">Nueva Planilla</span><span class="desc">Anamnesis</span></div>' +
              '<div class="menu-item" onclick="showSection(\'ingresos\')"><span class="icon">💰</span><span class="label">Ingresos</span><span class="desc">Detalles</span></div>' +
              '<div class="menu-item secondary" onclick="showSection(\'bloqueos\')"><span class="icon">🚫</span><span class="label">Bloqueos</span><span class="desc">Días/horarios</span></div>' +
+             '<div class="menu-item secondary" onclick="showSection(\'contraseñas\')"><span class="icon">🔑</span><span class="label">Contraseñas</span><span class="desc">Clientes</span></div>' +
            '</div>' +
         '</div>';
       
@@ -333,6 +334,7 @@
         case 'ingresos': showIngresos(); break;
         case 'testimonios': showTestimoniosAdmin(); break;
         case 'bloqueos': showBloqueos(); break;
+        case 'contraseñas': showContrasenas(); break;
       }
     }
     
@@ -430,6 +432,61 @@
       }
     }
     
+    // CONTRASEÑAS DE CLIENTES
+    function showContrasenas() {
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="card">' +
+          '<h2>🔑 Contraseñas de Clientes</h2>' +
+          '<p style="color:#666;font-size:13px;margin-bottom:15px;">Consultá la contraseña de un cliente cuando la olvidó</p>' +
+          '<input type="text" id="buscar-pass" placeholder="🔍 Buscar por nombre..." oninput="filtrarContrasenas()" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;margin-bottom:15px;font-size:14px;">' +
+          '<div id="passwords-list"><div class="loading">Cargando...</div></div>' +
+        '</div>';
+      
+      loadContrasenas();
+    }
+    
+    var clientesPasswords = [];
+    
+    async function loadContrasenas() {
+      try {
+        var res = await fetch(API + '/clientes/passwords');
+        clientesPasswords = await res.json();
+        renderContrasenas(clientesPasswords);
+      } catch(err) {
+        document.getElementById('passwords-list').innerHTML = '<div class="empty-state">Error cargando datos</div>';
+      }
+    }
+    
+    function filtrarContrasenas() {
+      var busqueda = document.getElementById('buscar-pass').value.toLowerCase();
+      var filtrados = clientesPasswords.filter(function(c) {
+        return (c.nombre || '').toLowerCase().indexOf(busqueda) >= 0 || (c.username || '').toLowerCase().indexOf(busqueda) >= 0;
+      });
+      renderContrasenas(filtrados);
+    }
+    
+    function renderContrasenas(lista) {
+      if (lista.length === 0) {
+        document.getElementById('passwords-list').innerHTML = '<div class="empty-state">No se encontraron clientes</div>';
+        return;
+      }
+      var html = '';
+      lista.forEach(function(c) {
+        html += '<div class="list-item" style="flex-direction:column;align-items:flex-start;gap:5px;">' +
+          '<div style="display:flex;justify-content:space-between;width:100%;align-items:center;">' +
+            '<div class="name" style="font-weight:600;">' + (c.nombre || c.username) + '</div>' +
+            '<div style="font-size:12px;color:#666;">' + (c.telefono || '') + '</div>' +
+          '</div>' +
+          '<div style="display:flex;align-items:center;gap:10px;width:100%;">' +
+            '<span style="font-size:12px;color:#888;">Usuario:</span> <span style="font-weight:500;">' + (c.username || '-') + '</span>' +
+            '<span style="font-size:12px;color:#888;margin-left:10px;">Contraseña:</span> <span style="background:#fce4ec;padding:4px 10px;border-radius:6px;font-weight:600;color:#c2185b;">' + (c.password || '-') + '</span>' +
+          '</div>' +
+        '</div>';
+      });
+      document.getElementById('passwords-list').innerHTML = html;
+    }
+
     // VER CLIENTE
     async function verCliente(id) {
       try {

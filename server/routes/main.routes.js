@@ -21,6 +21,22 @@ router.get('/clientes', async (req, res) => {
   }
 });
 
+// Obtener clientes con contraseñas (solo para admin)
+router.get('/clientes/passwords', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT id, COALESCE(username, '') as username, nombre, telefono, password 
+      FROM clientes 
+      WHERE activo = TRUE 
+      ORDER BY nombre
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error obteniendo clientes con passwords:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
 // Crear nuevo cliente
 router.post('/clientes', async (req, res) => {
   try {
