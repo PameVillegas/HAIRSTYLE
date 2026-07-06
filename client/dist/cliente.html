@@ -412,13 +412,14 @@
             for (var i = 1; i < opciones.length; i++) {
               var horaOpt = opciones[i].value;
               var minutosOpt = horaToMinutos(horaOpt);
+              var finOpt = minutosOpt + duracion;
               var bloqueado = false;
               
               for (var j = 0; j < turnos.length; j++) {
                 var ini = horaToMinutos(turnos[j].hora);
                 var durTurno = turnos[j].tratamiento_duracion || 60;
                 var finTurno = ini + durTurno;
-                if (minutosOpt >= ini && minutosOpt < finTurno) {
+                if (minutosOpt < finTurno && finOpt > ini) {
                   bloqueado = true;
                   break;
                 }
@@ -922,7 +923,7 @@
                 var ini = horaToMinutos(turnos[j].hora);
                 var durTurno = turnos[j].tratamiento_duracion || 60;
                 var finTurno = ini + durTurno;
-                if (minutosOpt >= ini && minutosOpt < finTurno) {
+                if (minutosOpt < finTurno && finOpt > ini) {
                   bloqueado = true;
                   break;
                 }
