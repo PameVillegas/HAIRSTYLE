@@ -217,7 +217,7 @@ if (parseInt(clienteTest.rows[0].count) === 0) {
   if (parseInt(tratamientosResult.rows[0].count) === 0) {
     const tratamientos = [
       { nombre: 'LIFTING DE PESTAÑAS', precio: 14000, duracion: 90, descripcion: 'Lifting profesional de pestañas' },
-      { nombre: 'Diseño y perfilado de cejas', precio: 10000, duracion: 45, descripcion: 'Diseño personalizado de cejas' },
+      { nombre: 'Diseño y perfilado de cejas', precio: 10000, duracion: 30, descripcion: 'Diseño personalizado de cejas' },
       { nombre: 'Alisados', precio: 0, duracion: 180, descripcion: 'Consultar precio' },
       { nombre: 'Peinados', precio: 0, duracion: 60, descripcion: 'Consultar precio' },
       { nombre: 'Baños de crema', precio: 15000, duracion: 60, descripcion: 'Tratamiento nutritivo' },
@@ -244,6 +244,9 @@ if (parseInt(clienteTest.rows[0].count) === 0) {
     );
     console.log('Tratamiento "Cortes de puntas" agregado');
   }
+
+  // Actualizar duración del perfilado a 30 minutos
+  await client.query("UPDATE tratamientos SET duracion = 30 WHERE nombre ILIKE '%perfilado%' AND duracion != 30");
 }
 
 export const db = {
