@@ -216,12 +216,12 @@ if (parseInt(clienteTest.rows[0].count) === 0) {
   const tratamientosResult = await client.query('SELECT COUNT(*) as count FROM tratamientos');
   if (parseInt(tratamientosResult.rows[0].count) === 0) {
     const tratamientos = [
-      { nombre: 'LIFTING DE PESTAÑAS', precio: 14000, duracion: 90, descripcion: 'Lifting profesional de pestañas' },
+      { nombre: 'LIFTING DE PESTAÑAS', precio: 14000, duracion: 60, descripcion: 'Lifting profesional de pestañas' },
       { nombre: 'Diseño y perfilado de cejas', precio: 10000, duracion: 30, descripcion: 'Diseño personalizado de cejas' },
-      { nombre: 'Alisados', precio: 0, duracion: 180, descripcion: 'Consultar precio' },
+      { nombre: 'Alisados', precio: 0, duracion: 120, descripcion: 'Consultar precio' },
       { nombre: 'Peinados', precio: 0, duracion: 60, descripcion: 'Consultar precio' },
       { nombre: 'Baños de crema', precio: 15000, duracion: 60, descripcion: 'Tratamiento nutritivo' },
-      { nombre: 'Limpiezas faciales', precio: 20000, duracion: 75, descripcion: 'Limpieza facial profunda', imagen_url: '/fotos/facial.jpg' },
+      { nombre: 'Limpiezas faciales', precio: 20000, duracion: 90, descripcion: 'Limpieza facial profunda', imagen_url: '/fotos/facial.jpg' },
       { nombre: 'Cortes de puntas', precio: 10000, duracion: 30, descripcion: 'Corte de puntas' }
     ];
 
@@ -245,8 +245,12 @@ if (parseInt(clienteTest.rows[0].count) === 0) {
     console.log('Tratamiento "Cortes de puntas" agregado');
   }
 
-  // Actualizar duración del perfilado a 30 minutos
+  // Actualizar duraciones correctas
   await client.query("UPDATE tratamientos SET duracion = 30 WHERE nombre ILIKE '%perfilado%' AND duracion != 30");
+  await client.query("UPDATE tratamientos SET duracion = 120 WHERE nombre ILIKE '%alisado%' AND duracion != 120");
+  await client.query("UPDATE tratamientos SET duracion = 60 WHERE nombre ILIKE '%lifting%' AND nombre ILIKE '%pestaña%' AND duracion != 60");
+  await client.query("UPDATE tratamientos SET duracion = 90 WHERE nombre ILIKE '%facial%' AND duracion != 90");
+  await client.query("UPDATE tratamientos SET duracion = 30 WHERE nombre ILIKE '%corte%punta%' AND duracion != 30");
 }
 
 export const db = {

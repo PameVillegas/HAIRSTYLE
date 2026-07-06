@@ -262,6 +262,7 @@
              '<div class="menu-item" onclick="showSection(\'ingresos\')"><span class="icon">💰</span><span class="label">Ingresos</span><span class="desc">Detalles</span></div>' +
              '<div class="menu-item secondary" onclick="showSection(\'bloqueos\')"><span class="icon">🚫</span><span class="label">Bloqueos</span><span class="desc">Días/horarios</span></div>' +
              '<div class="menu-item secondary" onclick="showSection(\'contraseñas\')"><span class="icon">🔑</span><span class="label">Contraseñas</span><span class="desc">Clientes</span></div>' +
+             '<div class="menu-item secondary" onclick="showSection(\'backup\')"><span class="icon">📦</span><span class="label">Backup</span><span class="desc">Respaldar datos</span></div>' +
            '</div>' +
         '</div>';
       
@@ -335,6 +336,7 @@
         case 'testimonios': showTestimoniosAdmin(); break;
         case 'bloqueos': showBloqueos(); break;
         case 'contraseñas': showContrasenas(); break;
+        case 'backup': showBackup(); break;
       }
     }
     
@@ -485,6 +487,75 @@
         '</div>';
       });
       document.getElementById('passwords-list').innerHTML = html;
+    }
+
+    // BACKUP Y RESTAURAR
+    function showBackup() {
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="card">' +
+          '<h2>📦 Backup de Datos</h2>' +
+          '<p style="color:#666;font-size:13px;margin-bottom:20px;">Descargá una copia de seguridad de todos los datos de la app</p>' +
+          '<div style="display:flex;flex-direction:column;gap:15px;">' +
+            '<button onclick="descargarBackup()" class="btn" style="background:#4caf50;color:white;padding:15px;border:none;border-radius:10px;font-size:16px;cursor:pointer;">📥 Descargar Backup</button>' +
+            '<div id="backup-msg"></div>' +
+            '<hr style="border:none;border-top:1px solid #eee;margin:10px 0;">' +
+            '<h3 style="font-size:14px;color:#666;">🔄 Restaurar desde backup</h3>' +
+            '<p style="font-size:12px;color:#999;">Solo usá esto si perdiste los datos y tenés un archivo de backup</p>' +
+            '<input type="file" id="backup-file" accept=".json" style="font-size:14px;">' +
+            '<button onclick="restaurarBackup()" class="btn" style="background:#ff9800;color:white;padding:12px;border:none;border-radius:10px;font-size:14px;cursor:pointer;">🔄 Restaurar</button>' +
+            '<div id="restaurar-msg"></div>' +
+          '</div>' +
+        '</div>';
+    }
+
+    async function descargarBackup() {
+      var msg = document.getElementById('backup-msg');
+      msg.innerHTML = '<div class="msg">⏳ Generando backup...</div>';
+      try {
+        var res = await fetch(API + '/backup');
+        var blob = await res.blob();
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'backup-hairstyle-' + new Date().toISOString().split('T')[0] + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        msg.innerHTML = '<div class="msg success">✅ Backup descargado correctamente</div>';
+      } catch(err) {
+        msg.innerHTML = '<div class="msg error">❌ Error descargando backup</div>';
+      }
+    }
+
+    async function restaurarBackup() {
+      var msg = document.getElementById('restaurar-msg');
+      var file = document.getElementById('backup-file').files[0];
+      if (!file) {
+        msg.innerHTML = '<div class="msg error">Seleccioná un archivo de backup primero</div>';
+        return;
+      }
+      if (!confirm('⚠️ ATENCIÓN: Esto reemplazará TODOS los datos actuales con los del backup. ¿Estás segura?')) return;
+      
+      msg.innerHTML = '<div class="msg">⏳ Restaurando...</div>';
+      try {
+        var text = await file.text();
+        var backup = JSON.parse(text);
+        var res = await fetch(API + '/backup/restaurar', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(backup)
+        });
+        var result = await res.json();
+        if (result.success) {
+          msg.innerHTML = '<div class="msg success">✅ Datos restaurados correctamente</div>';
+        } else {
+          msg.innerHTML = '<div class="msg error">❌ ' + (result.error || 'Error restaurando') + '</div>';
+        }
+      } catch(err) {
+        msg.innerHTML = '<div class="msg error">❌ Error: archivo inválido o problema de conexión</div>';
+      }
     }
 
     // VER CLIENTE

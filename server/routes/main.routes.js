@@ -3,6 +3,144 @@ import { pool } from '../database.js';
 
 const router = express.Router();
 
+// ==================== BACKUP & RESTAURAR ====================
+
+// Descargar backup completo de la base de datos
+router.get('/backup', async (req, res) => {
+  try {
+    const [clientes, tratamientos, turnos, promociones, bloqueos, legajos, testimonios] = await Promise.all([
+      pool.query('SELECT * FROM clientes ORDER BY id'),
+      pool.query('SELECT * FROM tratamientos ORDER BY id'),
+      pool.query('SELECT * FROM turnos ORDER BY id'),
+      pool.query('SELECT * FROM promociones ORDER BY id'),
+      pool.query('SELECT * FROM bloqueos ORDER BY id'),
+      pool.query('SELECT * FROM legajos ORDER BY id'),
+      pool.query('SELECT * FROM testimonios ORDER BY id')
+    ]);
+
+    const backup = {
+      fecha: new Date().toISOString(),
+      version: '1.0',
+      datos: {
+        clientes: clientes.rows,
+        tratamientos: tratamientos.rows,
+        turnos: turnos.rows,
+        promociones: promociones.rows,
+        bloqueos: bloqueos.rows,
+        legajos: legajos.rows,
+        testimonios: testimonios.rows
+      }
+    };
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', 'attachment; filename=backup-hairstyle-' + new Date().toISOString().split('T')[0] + '.json');
+    res.json(backup);
+  } catch (error) {
+    console.error('Error generando backup:', error);
+    res.status(500).json({ error: 'Error generando backup' });
+  }
+});
+
+// Restaurar backup
+router.post('/backup/restaurar', async (req, res) => {
+  try {
+    const { datos } = req.body;
+    if (!datos || !datos.clientes) {
+      return res.status(400).json({ error: 'Archivo de backup inválido' });
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // Limpiar tablas en orden (respetar foreign keys)
+      await client.query('DELETE FROM testimonios');
+      await client.query('DELETE FROM legajos');
+      await client.query('DELETE FROM turnos');
+      await client.query('DELETE FROM bloqueos');
+      await client.query('DELETE FROM promociones');
+      await client.query('DELETE FROM clientes');
+      await client.query('DELETE FROM tratamientos');
+
+      // Restaurar tratamientos
+      for (const t of datos.tratamientos) {
+        await client.query(
+          'INSERT INTO tratamientos (id, nombre, precio, duracion, descripcion, imagen_url, activo, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT (id) DO NOTHING',
+          [t.id, t.nombre, t.precio, t.duracion, t.descripcion, t.imagen_url, t.activo, t.created_at, t.updated_at]
+        );
+      }
+
+      // Restaurar clientes
+      for (const c of datos.clientes) {
+        await client.query(
+          'INSERT INTO clientes (id, username, nombre, telefono, email, password, activo, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT (id) DO NOTHING',
+          [c.id, c.username, c.nombre, c.telefono, c.email, c.password, c.activo, c.created_at, c.updated_at]
+        );
+      }
+
+      // Restaurar turnos
+      for (const t of datos.turnos) {
+        await client.query(
+          'INSERT INTO turnos (id, cliente_id, tratamiento_id, fecha, hora, estado, notas, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT (id) DO NOTHING',
+          [t.id, t.cliente_id, t.tratamiento_id, t.fecha, t.hora, t.estado, t.notas, t.created_at, t.updated_at]
+        );
+      }
+
+      // Restaurar promociones
+      for (const p of datos.promociones || []) {
+        await client.query(
+          'INSERT INTO promociones (id, titulo, descripcion, descuento, precio_especial, fecha_inicio, fecha_fin, imagen_url, activo, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT (id) DO NOTHING',
+          [p.id, p.titulo, p.descripcion, p.descuento, p.precio_especial, p.fecha_inicio, p.fecha_fin, p.imagen_url, p.activo, p.created_at, p.updated_at]
+        );
+      }
+
+      // Restaurar bloqueos
+      for (const b of datos.bloqueos || []) {
+        await client.query(
+          'INSERT INTO bloqueos (id, fecha, hora, todo_el_dia, motivo, activo, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (id) DO NOTHING',
+          [b.id, b.fecha, b.hora, b.todo_el_dia, b.motivo, b.activo, b.created_at]
+        );
+      }
+
+      // Restaurar legajos
+      for (const l of datos.legajos || []) {
+        await client.query(
+          'INSERT INTO legajos (id, cliente_id, tratamiento, tipo, fecha, datos, activo, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (id) DO NOTHING',
+          [l.id, l.cliente_id, l.tratamiento, l.tipo, l.fecha, l.datos, l.activo, l.created_at]
+        );
+      }
+
+      // Restaurar testimonios
+      for (const t of datos.testimonios || []) {
+        await client.query(
+          'INSERT INTO testimonios (id, cliente_id, texto, calificacion, aprobado, activo, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (id) DO NOTHING',
+          [t.id, t.cliente_id, t.texto, t.calificacion, t.aprobado, t.activo, t.created_at]
+        );
+      }
+
+      // Actualizar secuencias
+      await client.query("SELECT setval('clientes_id_seq', (SELECT COALESCE(MAX(id),0) FROM clientes))");
+      await client.query("SELECT setval('tratamientos_id_seq', (SELECT COALESCE(MAX(id),0) FROM tratamientos))");
+      await client.query("SELECT setval('turnos_id_seq', (SELECT COALESCE(MAX(id),0) FROM turnos))");
+      await client.query("SELECT setval('promociones_id_seq', (SELECT COALESCE(MAX(id),0) FROM promociones))");
+      await client.query("SELECT setval('bloqueos_id_seq', (SELECT COALESCE(MAX(id),0) FROM bloqueos))");
+      await client.query("SELECT setval('legajos_id_seq', (SELECT COALESCE(MAX(id),0) FROM legajos))");
+      await client.query("SELECT setval('testimonios_id_seq', (SELECT COALESCE(MAX(id),0) FROM testimonios))");
+
+      await client.query('COMMIT');
+      res.json({ success: true, message: 'Backup restaurado correctamente' });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error restaurando backup:', error);
+    res.status(500).json({ error: 'Error restaurando backup: ' + error.message });
+  }
+});
+
 // ==================== CLIENTES ====================
 
 // Obtener todos los clientes
