@@ -216,8 +216,8 @@ if (parseInt(clienteTest.rows[0].count) === 0) {
   const tratamientosResult = await client.query('SELECT COUNT(*) as count FROM tratamientos');
   if (parseInt(tratamientosResult.rows[0].count) === 0) {
     const tratamientos = [
-      { nombre: 'LIFTING DE PESTAÑAS', precio: 14000, duracion: 60, descripcion: 'Lifting profesional de pestañas' },
-      { nombre: 'Diseño y perfilado de cejas', precio: 10000, duracion: 30, descripcion: 'Diseño personalizado de cejas' },
+      { nombre: 'LIFTING DE PESTANAS', precio: 14000, duracion: 60, descripcion: 'Lifting profesional de pestanas' },
+      { nombre: 'Diseno y perfilado de cejas', precio: 10000, duracion: 30, descripcion: 'Diseno personalizado de cejas' },
       { nombre: 'Alisados', precio: 0, duracion: 120, descripcion: 'Consultar precio' },
       { nombre: 'Peinados', precio: 0, duracion: 60, descripcion: 'Consultar precio' },
       { nombre: 'Baños de crema', precio: 15000, duracion: 60, descripcion: 'Tratamiento nutritivo' },
@@ -248,9 +248,13 @@ if (parseInt(clienteTest.rows[0].count) === 0) {
   // Actualizar duraciones correctas
   await client.query("UPDATE tratamientos SET duracion = 30 WHERE nombre ILIKE '%perfilado%' AND duracion != 30");
   await client.query("UPDATE tratamientos SET duracion = 120 WHERE nombre ILIKE '%alisado%' AND duracion != 120");
-  await client.query("UPDATE tratamientos SET duracion = 60 WHERE nombre ILIKE '%lifting%' AND nombre ILIKE '%pestaña%' AND duracion != 60");
+  await client.query("UPDATE tratamientos SET duracion = 60 WHERE nombre ILIKE '%lifting%' AND nombre ILIKE '%pesta%' AND duracion != 60");
   await client.query("UPDATE tratamientos SET duracion = 90 WHERE nombre ILIKE '%facial%' AND duracion != 90");
   await client.query("UPDATE tratamientos SET duracion = 30 WHERE nombre ILIKE '%corte%punta%' AND duracion != 30");
+
+  // Corregir nombres con caracteres rotos (ñ)
+  await client.query("UPDATE tratamientos SET nombre = 'LIFTING DE PESTANAS' WHERE nombre ILIKE '%pesta%' AND nombre ILIKE '%lifting%'");
+  await client.query("UPDATE tratamientos SET nombre = 'Diseno y perfilado de cejas' WHERE nombre ILIKE '%perfilado%' AND nombre ILIKE '%cejas%'");
 }
 
 export const db = {
