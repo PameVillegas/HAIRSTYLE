@@ -687,56 +687,201 @@
         showBackButton() +
         '<div class="card">' +
           '<h2>📅 Turnos</h2>' +
+          '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:15px;">' +
+            '<button class="btn small" style="font-size:12px;" onclick="showTurnosVista(\'hoy\')">📌 Hoy</button>' +
+            '<button class="btn small secondary" style="font-size:12px;" onclick="showTurnosVista(\'recientes\')">🕐 Recientes</button>' +
+            '<button class="btn small secondary" style="font-size:12px;" onclick="showTurnosVista(\'todos\')">📋 Todos</button>' +
+            '<button class="btn small secondary" style="font-size:12px;" onclick="showTurnosVista(\'calendario\')">📆 Calendario</button>' +
+          '</div>' +
           '<div class="menu" style="grid-template-columns:1fr;gap:10px;">' +
-            '<div class="menu-item secondary" onclick="showSection(\'nuevo-turno\')"><span class="icon">➕</span><span class="label">Nuevo Turno</span><span class="desc">Crear nuevo turno</span></div>' +
+            '<div class="menu-item secondary" onclick="showSection(\'nuevo-turno\')"><span class="icon">➕</span><span class="label">Nuevo Turno</span><span class="desc">Crear turno manual</span></div>' +
           '</div>' +
         '</div>' +
-        '<div class="card"><h2>Lista de Turnos</h2><div id="turnos-list"><div class="loading">Cargando...</div></div></div>';
+        '<div id="turnos-container"></div>';
       
-      loadTurnos();
+      showTurnosVista('hoy');
     }
     
-    async function loadTurnos() {
+    var turnosGlobal = [];
+    
+    async function cargarTurnosGlobal() {
+      var res = await fetch(API + '/turnos');
+      turnosGlobal = await res.json();
+      return turnosGlobal;
+    }
+    
+    async function showTurnosVista(vista) {
+      var container = document.getElementById('turnos-container');
+      container.innerHTML = '<div class="loading">Cargando...</div>';
+      
       try {
-        var res = await fetch(API + '/turnos');
-        var turnos = await res.json();
+        await cargarTurnosGlobal();
         
-        if (turnos.length === 0) {
-          document.getElementById('turnos-list').innerHTML = '<div class="empty-state">No hay turnos registrados</div>';
-        } else {
-          // Ordenar por fecha (más recientes primero)
-          turnos.sort(function(a, b) { return new Date(b.fecha) - new Date(a.fecha); });
-          
-          var html = '';
-          turnos.forEach(function(t) {
-            var badgeClass = t.estado === 'pendiente' ? 'pendiente' : (t.estado === 'completado' ? 'completado' : 'cancelado');
-            var precio = parseFloat(t.tratamiento_precio || 0);
-            html += '<div class="turno-detail">' +
-              '<div class="row"><span class="label">Cliente:</span><span class="value">' + (t.cliente_nombre || 'Cliente') + '</span></div>' +
-              '<div class="row"><span class="label">Teléfono:</span><span class="value">' + (t.cliente_telefono || '-') + '</span></div>' +
-              '<div class="row"><span class="label">Servicio:</span><span class="value">' + (t.tratamiento_nombre || 'Tratamiento') + '</span></div>' +
-              '<div class="row"><span class="label">Fecha:</span><span class="value">' + t.fecha + ' ' + t.hora + '</span></div>' +
-              '<div class="row"><span class="label">Precio:</span><span class="value">$' + (precio > 0 ? precio.toLocaleString('es-AR') : 'Consultar') + '</span></div>' +
-              '<div class="row"><span class="label">Estado:</span><span class="badge ' + badgeClass + '">' + (t.estado || 'pendiente') + '</span></div>';
-            
-            if (t.notas) {
-              html += '<div class="row"><span class="label">Notas:</span><span class="value" style="font-size:12px;">' + t.notas + '</span></div>';
-            }
-            
-            if (t.estado === 'pendiente') {
-              html += '<div class="turno-actions">' +
-                '<button class="btn-completar" onclick="completarTurno(' + t.id + ')">✅ Completar</button>' +
-                '<button class="btn-cancelar" onclick="cancelarTurno(' + t.id + ')">❌ Cancelar</button>' +
-              '</div>';
-            }
-            
-            html += '</div>';
-          });
-          document.getElementById('turnos-list').innerHTML = html;
+        switch(vista) {
+          case 'hoy':
+            renderTurnosHoy();
+            break;
+          case 'recientes':
+            renderTurnosRecientes();
+            break;
+          case 'todos':
+            renderTurnosTodos();
+            break;
+          case 'calendario':
+            renderCalendario();
+            break;
         }
       } catch(err) {
-        document.getElementById('turnos-list').innerHTML = '<div class="empty-state">Error cargando turnos</div>';
+        container.innerHTML = '<div class="empty-state">Error cargando turnos</div>';
       }
+    }
+    
+    function renderTurnoCard(t) {
+      var badgeClass = t.estado === 'pendiente' ? 'pendiente' : (t.estado === 'completado' ? 'completado' : 'cancelado');
+      var precio = parseFloat(t.tratamiento_precio || 0);
+      var html = '<div class="turno-detail">' +
+        '<div class="row"><span class="label">Cliente:</span><span class="value">' + (t.cliente_nombre || 'Cliente') + '</span></div>' +
+        '<div class="row"><span class="label">Servicio:</span><span class="value">' + (t.tratamiento_nombre || 'Tratamiento') + '</span></div>' +
+        '<div class="row"><span class="label">Fecha:</span><span class="value">' + t.fecha + ' ' + t.hora + '</span></div>' +
+        '<div class="row"><span class="label">Estado:</span><span class="badge ' + badgeClass + '">' + (t.estado || 'pendiente') + '</span></div>';
+      if (t.notas) {
+        html += '<div class="row"><span class="label">Notas:</span><span class="value" style="font-size:12px;">' + t.notas + '</span></div>';
+      }
+      if (t.estado === 'pendiente') {
+        html += '<div class="turno-actions">' +
+          '<button class="btn-completar" onclick="completarTurno(' + t.id + ')">✅</button>' +
+          '<button class="btn-cancelar" onclick="cancelarTurno(' + t.id + ')">❌</button>' +
+        '</div>';
+      }
+      html += '</div>';
+      return html;
+    }
+    
+    function renderTurnosHoy() {
+      var container = document.getElementById('turnos-container');
+      var hoy = new Date().toISOString().split('T')[0];
+      var turnosHoy = turnosGlobal.filter(function(t) {
+        return t.fecha && t.fecha.substring(0, 10) === hoy && t.estado !== 'cancelado';
+      });
+      turnosHoy.sort(function(a, b) { return a.hora.localeCompare(b.hora); });
+      
+      var html = '<div class="card"><h2>📌 Turnos de Hoy</h2>';
+      if (turnosHoy.length === 0) {
+        html += '<div class="empty-state">No hay turnos para hoy</div>';
+      } else {
+        html += '<p style="color:#666;font-size:13px;margin-bottom:10px;">' + turnosHoy.length + ' turno(s)</p>';
+        turnosHoy.forEach(function(t) { html += renderTurnoCard(t); });
+      }
+      html += '</div>';
+      container.innerHTML = html;
+    }
+    
+    function renderTurnosRecientes() {
+      var container = document.getElementById('turnos-container');
+      var hoy = new Date();
+      var turnosRecientes = turnosGlobal.filter(function(t) {
+        var fechaT = new Date(t.fecha);
+        var diff = (fechaT - hoy) / (1000 * 60 * 60 * 24);
+        return diff >= -7 && diff <= 7;
+      });
+      turnosRecientes.sort(function(a, b) { return new Date(a.fecha + ' ' + a.hora) - new Date(b.fecha + ' ' + b.hora); });
+      
+      var html = '<div class="card"><h2>🕐 Turnos Recientes</h2><p style="color:#666;font-size:12px;margin-bottom:10px;">Ultimos 7 dias y proximos 7 dias</p>';
+      if (turnosRecientes.length === 0) {
+        html += '<div class="empty-state">No hay turnos recientes</div>';
+      } else {
+        turnosRecientes.forEach(function(t) { html += renderTurnoCard(t); });
+      }
+      html += '</div>';
+      container.innerHTML = html;
+    }
+    
+    function renderTurnosTodos() {
+      var container = document.getElementById('turnos-container');
+      var turnosOrdenados = turnosGlobal.slice().sort(function(a, b) { return new Date(b.fecha) - new Date(a.fecha); });
+      
+      var html = '<div class="card"><h2>📋 Todos los Turnos</h2><p style="color:#666;font-size:12px;margin-bottom:10px;">' + turnosOrdenados.length + ' turno(s) total</p>';
+      if (turnosOrdenados.length === 0) {
+        html += '<div class="empty-state">No hay turnos</div>';
+      } else {
+        turnosOrdenados.forEach(function(t) { html += renderTurnoCard(t); });
+      }
+      html += '</div>';
+      container.innerHTML = html;
+    }
+    
+    function renderCalendario() {
+      var container = document.getElementById('turnos-container');
+      var hoy = new Date();
+      var mes = hoy.getMonth();
+      var anio = hoy.getFullYear();
+      
+      var primerDia = new Date(anio, mes, 1).getDay();
+      var diasEnMes = new Date(anio, mes + 1, 0).getDate();
+      var nombreMes = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][mes];
+      
+      // Contar turnos por día
+      var turnosPorDia = {};
+      turnosGlobal.forEach(function(t) {
+        if (t.estado === 'cancelado') return;
+        var fecha = t.fecha ? t.fecha.substring(0, 10) : '';
+        var fechaObj = new Date(fecha);
+        if (fechaObj.getMonth() === mes && fechaObj.getFullYear() === anio) {
+          var dia = fechaObj.getDate();
+          turnosPorDia[dia] = (turnosPorDia[dia] || 0) + 1;
+        }
+      });
+      
+      var html = '<div class="card"><h2>📆 Calendario - ' + nombreMes + ' ' + anio + '</h2>';
+      html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;margin-top:10px;">';
+      
+      // Headers
+      ['Do','Lu','Ma','Mi','Ju','Vi','Sa'].forEach(function(d) {
+        html += '<div style="font-weight:700;font-size:11px;color:#666;padding:5px;">' + d + '</div>';
+      });
+      
+      // Espacios antes del primer día
+      for (var i = 0; i < primerDia; i++) {
+        html += '<div></div>';
+      }
+      
+      // Días del mes
+      for (var dia = 1; dia <= diasEnMes; dia++) {
+        var esHoy = dia === hoy.getDate();
+        var cantTurnos = turnosPorDia[dia] || 0;
+        var bgColor = esHoy ? '#e91e63' : (cantTurnos > 0 ? '#f8f8f8' : 'transparent');
+        var textColor = esHoy ? 'white' : '#333';
+        
+        html += '<div onclick="verTurnosDia(' + anio + ',' + (mes+1) + ',' + dia + ')" style="padding:6px 2px;border-radius:8px;background:' + bgColor + ';color:' + textColor + ';cursor:pointer;position:relative;">';
+        html += '<div style="font-size:13px;font-weight:' + (esHoy ? '700' : '400') + ';">' + dia + '</div>';
+        if (cantTurnos > 0) {
+          html += '<div style="position:absolute;top:-2px;right:-2px;background:#ff5722;color:white;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;">' + cantTurnos + '</div>';
+        }
+        html += '</div>';
+      }
+      
+      html += '</div></div>';
+      html += '<div id="turnos-dia-detalle"></div>';
+      container.innerHTML = html;
+    }
+    
+    function verTurnosDia(anio, mes, dia) {
+      var fechaBuscar = anio + '-' + String(mes).padStart(2,'0') + '-' + String(dia).padStart(2,'0');
+      var turnosDia = turnosGlobal.filter(function(t) {
+        return t.fecha && t.fecha.substring(0, 10) === fechaBuscar && t.estado !== 'cancelado';
+      });
+      turnosDia.sort(function(a, b) { return a.hora.localeCompare(b.hora); });
+      
+      var detalle = document.getElementById('turnos-dia-detalle');
+      var html = '<div class="card" style="margin-top:10px;"><h2>📅 ' + dia + '/' + mes + '/' + anio + '</h2>';
+      if (turnosDia.length === 0) {
+        html += '<div class="empty-state">Sin turnos este dia</div>';
+      } else {
+        html += '<p style="color:#666;font-size:12px;margin-bottom:10px;">' + turnosDia.length + ' turno(s)</p>';
+        turnosDia.forEach(function(t) { html += renderTurnoCard(t); });
+      }
+      html += '</div>';
+      detalle.innerHTML = html;
     }
     
     async function completarTurno(id) {
@@ -747,7 +892,7 @@
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({estado: 'completado'})
         });
-        loadTurnos();
+        showTurnos();
       } catch(err) { alert('Error'); }
     }
     
@@ -759,7 +904,7 @@
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({estado: 'cancelado'})
         });
-        loadTurnos();
+        showTurnos();
       } catch(err) { alert('Error'); }
     }
     
