@@ -233,10 +233,13 @@
           '<p style="color:rgba(255,255,255,0.8);font-size:14px;margin-top:5px;">Bienvenida a tu cuenta</p>' +
         '</div>' +
         
+        '<div id="recordatorio-banner"></div>' +
+        
         '<div class="menu-grid">' +
           '<div class="menu-box" onclick="showServicios()"><span class="menu-icon">💅</span><span class="menu-label">Servicios</span></div>' +
           '<div class="menu-box" onclick="showGaleriaCliente()"><span class="menu-icon">📸</span><span class="menu-label">Galería</span></div>' +
           '<div class="menu-box" onclick="showMisTurnos()"><span class="menu-icon">📅</span><span class="menu-label">Mis Turnos</span></div>' +
+          '<div class="menu-box" onclick="showHistorial()"><span class="menu-icon">📊</span><span class="menu-label">Mi Historial</span></div>' +
           '<div class="menu-box" onclick="showTestimonios()"><span class="menu-icon">⭐</span><span class="menu-label">Reseñas</span></div>' +
           '<div class="menu-box" onclick="showPromociones()"><span class="menu-icon">🎉</span><span class="menu-label">Promos</span></div>' +
           '<div class="menu-box" onclick="showSobreNosotros()"><span class="menu-icon">✨</span><span class="menu-label">Sobre Mí</span></div>' +
@@ -253,6 +256,134 @@
         '</div>' +
         
         '<button class="back-btn" style="background:rgba(255,255,255,0.2);width:100%;text-align:center;margin-top:20px;" onclick="logout()">🚪 Cerrar sesión</button>';
+      
+      // Mostrar banner de recordatorio si hay turno próximo
+      mostrarBannerRecordatorio();
+    }
+    
+    async function mostrarBannerRecordatorio() {
+      try {
+        var res = await fetch(API + '/cliente/' + user.id);
+        var data = await res.json();
+        if (!data.success || !data.turnos) return;
+        
+        var ahora = new Date();
+        var turnoProximo = null;
+        
+        data.turnos.forEach(function(t) {
+          if (t.estado !== 'pendiente') return;
+          var fechaTurno = new Date(t.fecha + 'T' + t.hora);
+          var diff = fechaTurno - ahora;
+          var horas = diff / (1000 * 60 * 60);
+          if (horas > 0 && horas <= 24 && !turnoProximo) {
+            turnoProximo = t;
+            turnoProximo._horas = Math.round(horas);
+          }
+        });
+        
+        var banner = document.getElementById('recordatorio-banner');
+        if (!banner) return;
+        
+        if (turnoProximo) {
+          var horasTexto = turnoProximo._horas <= 1 ? 'menos de 1 hora' : turnoProximo._horas + ' horas';
+          banner.innerHTML = 
+            '<div class="card" style="background:linear-gradient(135deg,#ff9800,#f57c00);color:white;text-align:center;padding:20px;">' +
+              '<div style="font-size:2rem;margin-bottom:10px;">⏰</div>' +
+              '<h3 style="margin:0 0 8px 0;font-size:16px;">¡Tu turno es en ' + horasTexto + '!</h3>' +
+              '<p style="margin:0;font-size:14px;opacity:0.9;">📅 ' + turnoProximo.fecha + ' a las ' + turnoProximo.hora + '</p>' +
+              '<p style="margin:5px 0 0 0;font-size:14px;opacity:0.9;">💅 ' + (turnoProximo.tratamiento || 'Servicio') + '</p>' +
+            '</div>';
+        }
+      } catch(e) {}
+    }
+    
+    // HISTORIAL DE SERVICIOS
+    async function showHistorial() {
+      document.getElementById('app').innerHTML = 
+        '<button class="back-btn" onclick="showClienteHome()">← Volver</button>' +
+        '<div class="header"><h1>📊 Mi Historial</h1></div>' +
+        '<div id="historial-content"><div class="loading">Cargando...</div></div>';
+      
+      try {
+        var res = await fetch(API + '/cliente/' + user.id);
+        var data = await res.json();
+        
+        if (!data.success || !data.turnos || data.turnos.length === 0) {
+          document.getElementById('historial-content').innerHTML = '<div class="card"><div class="empty-state">Todavia no tenes historial de servicios</div></div>';
+          return;
+        }
+        
+        var turnos = data.turnos.filter(function(t) { return t.estado === 'completado'; });
+        
+        if (turnos.length === 0) {
+          document.getElementById('historial-content').innerHTML = '<div class="card"><div class="empty-state">No hay servicios completados aun</div></div>';
+          return;
+        }
+        
+        // Agrupar por tratamiento
+        var servicios = {};
+        turnos.forEach(function(t) {
+          var nombre = t.tratamiento || 'Servicio';
+          if (!servicios[nombre]) {
+            servicios[nombre] = { cantidad: 0, ultimaVez: null, fechas: [] };
+          }
+          servicios[nombre].cantidad++;
+          servicios[nombre].fechas.push(t.fecha);
+          if (!servicios[nombre].ultimaVez || t.fecha > servicios[nombre].ultimaVez) {
+            servicios[nombre].ultimaVez = t.fecha;
+          }
+        });
+        
+        var html = '';
+        
+        // Resumen
+        html += '<div class="card">' +
+          '<h2>✨ Tu Resumen</h2>' +
+          '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;text-align:center;">' +
+            '<div style="background:#fce4ec;padding:15px;border-radius:12px;"><div style="font-size:2rem;font-weight:700;color:#e91e63;">' + turnos.length + '</div><div style="font-size:12px;color:#666;">Visitas totales</div></div>' +
+            '<div style="background:#e8f5e9;padding:15px;border-radius:12px;"><div style="font-size:2rem;font-weight:700;color:#4caf50;">' + Object.keys(servicios).length + '</div><div style="font-size:12px;color:#666;">Servicios distintos</div></div>' +
+          '</div>' +
+        '</div>';
+        
+        // Detalle por servicio con sugerencia
+        html += '<div class="card"><h2>💇 Tus Servicios</h2>';
+        var ahora = new Date();
+        
+        Object.keys(servicios).forEach(function(nombre) {
+          var s = servicios[nombre];
+          var ultimaFecha = new Date(s.ultimaVez);
+          var diasDesde = Math.round((ahora - ultimaFecha) / (1000 * 60 * 60 * 24));
+          
+          var sugerencia = '';
+          var nombreLower = nombre.toLowerCase();
+          if (nombreLower.indexOf('perfilado') >= 0 || nombreLower.indexOf('cejas') >= 0) {
+            if (diasDesde >= 21) sugerencia = '💡 Ya pasaron ' + diasDesde + ' dias. Te toca un retoque!';
+          } else if (nombreLower.indexOf('pesta') >= 0 || nombreLower.indexOf('lifting') >= 0) {
+            if (diasDesde >= 30) sugerencia = '💡 Hace ' + diasDesde + ' dias del ultimo lifting. Es momento de renovar!';
+          } else if (nombreLower.indexOf('alisado') >= 0 || nombreLower.indexOf('tratamiento') >= 0) {
+            if (diasDesde >= 60) sugerencia = '💡 Hace ' + diasDesde + ' dias. Tu cabello podria necesitar un retoque!';
+          } else if (nombreLower.indexOf('facial') >= 0 || nombreLower.indexOf('limpieza') >= 0) {
+            if (diasDesde >= 30) sugerencia = '💡 Hace ' + diasDesde + ' dias de tu ultima limpieza. Tu piel te lo va a agradecer!';
+          }
+          
+          html += '<div style="background:#f8f8f8;border-radius:10px;padding:15px;margin-bottom:10px;">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+              '<div><div style="font-weight:600;color:#333;">' + nombre + '</div>' +
+              '<div style="font-size:12px;color:#888;">Ultima vez: hace ' + diasDesde + ' dias</div></div>' +
+              '<div style="background:#e91e63;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">' + s.cantidad + '</div>' +
+            '</div>';
+          if (sugerencia) {
+            html += '<div style="margin-top:8px;padding:8px;background:#fff3e0;border-radius:8px;font-size:12px;color:#e65100;">' + sugerencia + '</div>';
+          }
+          html += '</div>';
+        });
+        
+        html += '</div>';
+        
+        document.getElementById('historial-content').innerHTML = html;
+      } catch(err) {
+        document.getElementById('historial-content').innerHTML = '<div class="card"><div class="empty-state">Error cargando historial</div></div>';
+      }
     }
     
     // SERVICIOS
