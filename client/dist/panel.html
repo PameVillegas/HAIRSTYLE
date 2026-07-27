@@ -263,6 +263,7 @@
              '<div class="menu-item secondary" onclick="showSection(\'bloqueos\')"><span class="icon">🚫</span><span class="label">Bloqueos</span><span class="desc">Días/horarios</span></div>' +
              '<div class="menu-item secondary" onclick="showSection(\'contraseñas\')"><span class="icon">🔑</span><span class="label">Contraseñas</span><span class="desc">Clientes</span></div>' +
              '<div class="menu-item secondary" onclick="showSection(\'backup\')"><span class="icon">📦</span><span class="label">Backup</span><span class="desc">Respaldar datos</span></div>' +
+             '<div class="menu-item" onclick="showSection(\'recordatorios\')"><span class="icon">📲</span><span class="label">Recordatorios</span><span class="desc">WhatsApp</span></div>' +
            '</div>' +
         '</div>';
       
@@ -337,6 +338,7 @@
         case 'bloqueos': showBloqueos(); break;
         case 'contraseñas': showContrasenas(); break;
         case 'backup': showBackup(); break;
+        case 'recordatorios': showRecordatorios(); break;
       }
     }
     
@@ -556,6 +558,97 @@
       } catch(err) {
         msg.innerHTML = '<div class="msg error">❌ Error: archivo inválido o problema de conexión</div>';
       }
+    }
+
+    // RECORDATORIOS WHATSAPP
+    async function showRecordatorios() {
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="card">' +
+          '<h2>📲 Recordatorios por WhatsApp</h2>' +
+          '<p style="color:#666;font-size:13px;margin-bottom:15px;">Turnos de hoy pendientes de recordatorio. Toca "Enviar" para abrir WhatsApp con el mensaje listo.</p>' +
+          '<div id="recordatorios-list"><div class="loading">Cargando...</div></div>' +
+        '</div>';
+      
+      loadRecordatorios();
+    }
+    
+    async function loadRecordatorios() {
+      try {
+        var res = await fetch(API + '/turnos');
+        var turnos = await res.json();
+        
+        var hoy = new Date().toISOString().split('T')[0];
+        var manana = new Date(Date.now() + 24*60*60*1000).toISOString().split('T')[0];
+        
+        // Filtrar turnos de hoy y mañana que estén pendientes
+        var turnosHoy = turnos.filter(function(t) {
+          return t.fecha && t.fecha.substring(0,10) === hoy && t.estado === 'pendiente';
+        });
+        var turnosManana = turnos.filter(function(t) {
+          return t.fecha && t.fecha.substring(0,10) === manana && t.estado === 'pendiente';
+        });
+        
+        turnosHoy.sort(function(a,b) { return a.hora.localeCompare(b.hora); });
+        turnosManana.sort(function(a,b) { return a.hora.localeCompare(b.hora); });
+        
+        var html = '';
+        
+        if (turnosHoy.length > 0) {
+          html += '<h3 style="color:#e91e63;font-size:14px;margin-bottom:10px;">📌 Turnos de HOY (' + turnosHoy.length + ')</h3>';
+          turnosHoy.forEach(function(t) {
+            html += crearCardRecordatorio(t, 'hoy');
+          });
+        }
+        
+        if (turnosManana.length > 0) {
+          html += '<h3 style="color:#2196f3;font-size:14px;margin:20px 0 10px;">📅 Turnos de MANANA (' + turnosManana.length + ')</h3>';
+          turnosManana.forEach(function(t) {
+            html += crearCardRecordatorio(t, 'manana');
+          });
+        }
+        
+        if (turnosHoy.length === 0 && turnosManana.length === 0) {
+          html = '<div class="empty-state">No hay turnos pendientes para hoy ni manana</div>';
+        }
+        
+        // Botón para enviar todos de una vez
+        if (turnosHoy.length > 0 || turnosManana.length > 0) {
+          html += '<hr style="border:none;border-top:1px solid #eee;margin:20px 0;">';
+          html += '<p style="font-size:12px;color:#888;text-align:center;">Toca cada boton verde para abrir WhatsApp con el mensaje listo para esa clienta</p>';
+        }
+        
+        document.getElementById('recordatorios-list').innerHTML = html;
+      } catch(err) {
+        document.getElementById('recordatorios-list').innerHTML = '<div class="empty-state">Error cargando turnos</div>';
+      }
+    }
+    
+    function crearCardRecordatorio(t, cuando) {
+      var telefono = (t.cliente_telefono || '').replace(/[^0-9]/g, '');
+      if (telefono.length === 10) telefono = '54' + telefono;
+      if (!telefono.startsWith('54')) telefono = '54' + telefono;
+      
+      var fechaFormateada = t.fecha ? t.fecha.substring(0,10) : '';
+      var mensaje = encodeURIComponent(
+        'Hola ' + (t.cliente_nombre || '') + '! 💇‍♀️\n\n' +
+        'Te recordamos tu turno:\n' +
+        '📅 ' + (cuando === 'hoy' ? 'Hoy' : 'Manana') + ' a las ' + t.hora + '\n' +
+        '💅 Servicio: ' + (t.tratamiento_nombre || 'Tratamiento') + '\n\n' +
+        'Te esperamos en HairStyle! ✨\n' +
+        'Si no podes asistir, avisanos con tiempo 🙏'
+      );
+      
+      var whatsappUrl = 'https://wa.me/' + telefono + '?text=' + mensaje;
+      
+      return '<div style="background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">' +
+        '<div>' +
+          '<div style="font-weight:600;color:#333;font-size:14px;">' + (t.cliente_nombre || 'Cliente') + '</div>' +
+          '<div style="font-size:12px;color:#666;">' + t.hora + ' - ' + (t.tratamiento_nombre || '') + '</div>' +
+          '<div style="font-size:11px;color:#888;">' + (t.cliente_telefono || 'Sin tel') + '</div>' +
+        '</div>' +
+        '<a href="' + whatsappUrl + '" target="_blank" style="background:#25D366;color:white;padding:10px 15px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap;">📲 Enviar</a>' +
+      '</div>';
     }
 
     // VER CLIENTE
