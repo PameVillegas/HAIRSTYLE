@@ -645,6 +645,34 @@ router.get('/promociones', async (req, res) => {
   }
 });
 
+router.post('/promociones', async (req, res) => {
+  try {
+    const { titulo, descripcion, precio_especial, fecha_inicio, fecha_fin, imagen_url } = req.body;
+    if (!titulo) {
+      return res.status(400).json({ error: 'Titulo es requerido' });
+    }
+    const result = await pool.query(
+      'INSERT INTO promociones (titulo, descripcion, precio_especial, fecha_inicio, fecha_fin, imagen_url, activo) VALUES ($1, $2, $3, $4, $5, $6, TRUE) RETURNING *',
+      [titulo, descripcion || null, precio_especial || null, fecha_inicio || null, fecha_fin || null, imagen_url || null]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creando promocion:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.delete('/promociones/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('UPDATE promociones SET activo = FALSE WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error eliminando promocion:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
 // ==================== GALERIA ====================
 
 router.get('/galeria', async (req, res) => {

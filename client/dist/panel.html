@@ -1392,26 +1392,113 @@ document.getElementById('turno-form').onsubmit = async function(e) {
     async function showPromociones() {
       document.getElementById('app').innerHTML = 
         showBackButton() +
-        '<div class="card"><h2>🎉 Promociones</h2><div id="promo-list"><div class="loading">Cargando...</div></div></div>';
+        '<div class="card">' +
+          '<h2>🎉 Promociones</h2>' +
+          '<button class="btn" onclick="showAgregarPromocion()" style="margin-bottom:15px;">➕ Agregar Promocion</button>' +
+          '<div id="promo-list"><div class="loading">Cargando...</div></div>' +
+        '</div>';
       
+      loadPromociones();
+    }
+    
+    async function loadPromociones() {
       try {
         var res = await fetch(API + '/promociones');
         var promos = await res.json();
         
         if (promos.length === 0) {
-          document.getElementById('promo-list').innerHTML = '<div class="empty-state">No hay promociones activas</div>';
+          document.getElementById('promo-list').innerHTML = '<div class="empty-state">No hay promociones activas. Agrega una!</div>';
         } else {
           var html = '';
           promos.forEach(function(p) {
-            html += '<div class="list-item">' +
-              '<div class="info"><div class="name">' + p.titulo + '</div><div class="detail">' + (p.descripcion || '') + '</div></div>' +
-            '</div>';
+            html += '<div style="background:#f8f8f8;border-radius:12px;padding:15px;margin-bottom:12px;position:relative;">';
+            if (p.imagen_url) {
+              html += '<div style="width:100%;height:120px;border-radius:8px;overflow:hidden;margin-bottom:10px;background:#eee;display:flex;align-items:center;justify-content:center;">' +
+                '<img src="' + p.imagen_url + '" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.parentElement.innerHTML=\'<span style=color:#999>Error de imagen</span>\'">' +
+              '</div>';
+            }
+            html += '<div style="font-weight:600;color:#e91e63;font-size:16px;">' + p.titulo + '</div>';
+            if (p.descripcion) html += '<div style="font-size:13px;color:#666;margin-top:5px;">' + p.descripcion + '</div>';
+            if (p.precio_especial) html += '<div style="font-weight:700;color:#4caf50;margin-top:5px;">$' + parseFloat(p.precio_especial).toLocaleString('es-AR') + '</div>';
+            if (p.fecha_fin) html += '<div style="font-size:11px;color:#888;margin-top:5px;">Hasta: ' + p.fecha_fin.substring(0,10) + '</div>';
+            html += '<button onclick="eliminarPromocion(' + p.id + ')" style="position:absolute;top:10px;right:10px;background:#f44336;color:white;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;">X</button>';
+            html += '</div>';
           });
           document.getElementById('promo-list').innerHTML = html;
         }
       } catch(err) {
         document.getElementById('promo-list').innerHTML = '<div class="empty-state">Error cargando promociones</div>';
       }
+    }
+    
+    function showAgregarPromocion() {
+      document.getElementById('modal-container').innerHTML = 
+        '<div class="modal" onclick="closeModal()">' +
+          '<div class="modal-content" onclick="event.stopPropagation()">' +
+            '<h3>➕ Nueva Promocion</h3>' +
+            '<div id="promo-msg"></div>' +
+            '<form id="promo-form">' +
+              '<div class="form-group"><label>Titulo *</label><input type="text" id="promo-titulo" required placeholder="Ej: 2x1 en perfilado"></div>' +
+              '<div class="form-group"><label>Descripcion</label><textarea id="promo-desc" rows="3" placeholder="Detalle de la promo..."></textarea></div>' +
+              '<div class="form-group"><label>Precio especial</label><input type="number" id="promo-precio" placeholder="Dejar vacio si no aplica"></div>' +
+              '<div class="form-group"><label>Fecha fin (opcional)</label><input type="date" id="promo-fecha-fin"></div>' +
+              '<div class="form-group"><label>Foto de la promo</label>' +
+                '<div id="promo-foto-preview" style="width:100%;height:100px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;overflow:hidden;">' +
+                  '<span style="color:#999;font-size:13px;">Sin foto</span>' +
+                '</div>' +
+                '<input type="file" id="promo-foto-input" accept="image/*" onchange="previewFoto(this, \'promo-foto-preview\')" style="font-size:14px;">' +
+              '</div>' +
+              '<button type="submit" class="btn">Publicar Promocion</button>' +
+              '<button type="button" class="btn secondary" onclick="closeModal()">Cancelar</button>' +
+            '</form>' +
+          '</div>' +
+        '</div>';
+      
+      document.getElementById('promo-form').onsubmit = async function(e) {
+        e.preventDefault();
+        var msg = document.getElementById('promo-msg');
+        msg.innerHTML = '<div class="msg">⏳ Guardando...</div>';
+        
+        var imgUrl = null;
+        var fileInput = document.getElementById('promo-foto-input');
+        if (fileInput.files[0]) {
+          imgUrl = await fileToBase64(fileInput.files[0]);
+        }
+        
+        var data = {
+          titulo: document.getElementById('promo-titulo').value,
+          descripcion: document.getElementById('promo-desc').value || null,
+          precio_especial: parseFloat(document.getElementById('promo-precio').value) || null,
+          fecha_fin: document.getElementById('promo-fecha-fin').value || null,
+          imagen_url: imgUrl
+        };
+        
+        try {
+          var res = await fetch(API + '/promociones', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+          });
+          var result = await res.json();
+          
+          if (result.id) {
+            msg.innerHTML = '<div class="msg success">¡Promocion publicada!</div>';
+            setTimeout(function() { closeModal(); loadPromociones(); }, 1000);
+          } else {
+            msg.innerHTML = '<div class="msg error">' + (result.error || 'Error') + '</div>';
+          }
+        } catch(err) {
+          msg.innerHTML = '<div class="msg error">Error de conexion</div>';
+        }
+      };
+    }
+    
+    async function eliminarPromocion(id) {
+      if (!confirm('¿Eliminar esta promocion?')) return;
+      try {
+        await fetch(API + '/promociones/' + id, { method: 'DELETE' });
+        loadPromociones();
+      } catch(err) { alert('Error'); }
     }
     
     function showGaleria() {
