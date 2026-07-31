@@ -407,7 +407,7 @@
       document.getElementById('app').innerHTML = 
         '<button class="back-btn" onclick="showClienteHome()">← Volver</button>' +
         '<div class="header"><h1>💅 Servicios</h1></div>' +
-        '<div class="card"><div id="serv-content"><div class="loading">Cargando...</div></div></div>';
+        '<div id="serv-content"><div class="loading">Cargando...</div></div>';
       
       try {
         var res = await fetch(API + '/tratamientos');
@@ -416,51 +416,59 @@
         if (tratamientos.length > 0) {
           var html = '<div class="trat-grid">';
           tratamientos.forEach(function(t) {
-            var precio = parseFloat(t.precio || 0);
             var img = t.imagen_url || '/fotos/logo.png';
             var nombre = t.nombre || '';
-            var descripcion = t.descripcion || '';
-            // No mostrar descripcion si es un JSON de config
-            if (descripcion.indexOf('{') === 0 || descripcion.indexOf('"0-30"') >= 0) descripcion = '';
-            var esLimpieza = nombre.toUpperCase().indexOf('LIMPIEZA') >= 0;
-            var nombreUpper = nombre.toUpperCase();
-            var esAlisado = nombreUpper.indexOf('ALISADO') >= 0 || nombreUpper.indexOf('BOTOX') >= 0 || nombreUpper.indexOf('CAPILAR') >= 0 || nombreUpper.indexOf('TRATAMIENTO') >= 0 || nombreUpper.indexOf('LISS') >= 0 || nombreUpper.indexOf('BRUSHING') >= 0 || nombreUpper.indexOf('PLANCHA') >= 0;
-            
-            var mostrarCM = esAlisado || precio === 0;
-            
-            html += '<div class="trat-card">' +
-              '<img src="' + img + '" class="trat-image" onerror="this.src=\'/fotos/logo.png\'">' +
-              '<div class="trat-content">' +
-                '<div class="name">' + nombre + '</div>';
-            
-            if (esLimpieza) {
-              html += '<div class="detail" style="font-size:12px;color:#555;margin:5px 0;">' + descripcion + '</div>';
-              html += '<div style="font-size:11px;color:#888;margin:5px 0;">💛 Todas incluyen alta frecuencia</div>';
-            } else {
-              html += '<div class="detail">' + t.duracion + ' min' + (descripcion ? ' - ' + descripcion : '') + '</div>';
-            }
-            
-            html += '<div class="precio">' + (precio > 0 ? '$' + precio.toLocaleString('es-AR') : 'Consultar precio') + '</div>';
-            
-            if (esAlisado) {
-              html += '<button class="solicitar" onclick="solicitarTurnoTratamiento(' + t.id + ', \'' + nombre.replace(/'/g, "\\'") + '\')">📅 Solicitar Turno</button>';
-              html += '<div style="font-size:10px;color:#999;margin-top:5px;">Seleccioná largo del cabello</div>';
-            } else if (precio === 0) {
-              var mensaje = encodeURIComponent('Hola! Quiero consultar por el tratamiento: ' + nombre);
-              html += '<a href="https://wa.me/543388673804?text=' + mensaje + '" class="solicitar" style="display:block;text-align:center;text-decoration:none;background:#128C7E;">💬 Consultar</a>';
-            } else {
-              html += '<button class="solicitar" onclick="solicitarTurnoTratamiento(' + t.id + ', \'' + nombre.replace(/'/g, "\\'") + '\')">📅 Solicitar Turno</button>';
-            }
-            
-            html += '</div></div>';
+            html += '<div class="trat-card" style="position:relative;overflow:hidden;border-radius:12px;cursor:pointer;" onclick="verDetalleTratamiento(' + t.id + ')">' +
+              '<img src="' + img + '" style="width:100%;height:140px;object-fit:cover;display:block;" onerror="this.src=\'/fotos/logo.png\'">' +
+              '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent, rgba(0,0,0,0.8));padding:15px 10px 10px;">' +
+                '<div style="color:white;font-weight:700;font-size:14px;text-shadow:0 1px 3px rgba(0,0,0,0.5);">' + nombre + '</div>' +
+              '</div>' +
+              '<div style="padding:8px;text-align:center;">' +
+                '<button style="background:#e91e63;color:white;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">Ver detalles</button>' +
+              '</div>' +
+            '</div>';
           });
           html += '</div>';
           document.getElementById('serv-content').innerHTML = html;
         } else {
-          document.getElementById('serv-content').innerHTML = '<div class="empty-state">No hay servicios disponibles</div>';
+          document.getElementById('serv-content').innerHTML = '<div class="card"><div class="empty-state">No hay servicios disponibles</div></div>';
         }
       } catch(err) {
-        document.getElementById('serv-content').innerHTML = '<div class="empty-state">Error cargando</div>';
+        document.getElementById('serv-content').innerHTML = '<div class="card"><div class="empty-state">Error cargando</div></div>';
+      }
+    }
+    
+    async function verDetalleTratamiento(id) {
+      try {
+        var res = await fetch(API + '/tratamientos');
+        var tratamientos = await res.json();
+        var t = tratamientos.find(function(x) { return x.id === id; });
+        if (!t) { alert('Servicio no encontrado'); return; }
+        
+        var precio = parseFloat(t.precio || 0);
+        var img = t.imagen_url || '/fotos/logo.png';
+        var nombre = t.nombre || '';
+        var descripcion = t.descripcion || '';
+        if (descripcion.indexOf('{') === 0 || descripcion.indexOf('"0-30"') >= 0) descripcion = '';
+        var nombreUpper = nombre.toUpperCase();
+        var esAlisado = nombreUpper.indexOf('ALISADO') >= 0 || nombreUpper.indexOf('BOTOX') >= 0 || nombreUpper.indexOf('CAPILAR') >= 0 || nombreUpper.indexOf('TRATAMIENTO') >= 0 || nombreUpper.indexOf('LISS') >= 0;
+        
+        document.getElementById('app').innerHTML = 
+          '<button class="back-btn" onclick="showServicios()">← Volver</button>' +
+          '<div class="card" style="overflow:hidden;padding:0;">' +
+            '<img src="' + img + '" style="width:100%;height:200px;object-fit:cover;" onerror="this.src=\'/fotos/logo.png\'">' +
+            '<div style="padding:20px;">' +
+              '<h2 style="color:#e91e63;margin:0 0 15px 0;font-size:20px;">' + nombre + '</h2>' +
+              (descripcion ? '<p style="color:#666;font-size:14px;margin-bottom:12px;">' + descripcion + '</p>' : '') +
+              '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">' +
+                '<div class="info-item"><span class="label">⏱️ Duracion</span><span class="value">' + (t.duracion || 60) + ' minutos</span></div>' +
+                '<div class="info-item"><span class="label">💰 Precio</span><span class="value" style="color:#4caf50;font-size:18px;">' + (precio > 0 ? '$' + precio.toLocaleString('es-AR') : (esAlisado ? 'Segun largo de cabello' : 'Consultar')) + '</span></div>' +
+              '</div>' +
+              '<button class="btn" onclick="solicitarTurnoTratamiento(' + t.id + ', \'' + nombre.replace(/'/g, "\\'") + '\')">📅 Solicitar Turno</button>' +
+            '</div>' +
+          '</div>';
+      } catch(err) {
+        alert('Error cargando detalle');
       }
     }
     
