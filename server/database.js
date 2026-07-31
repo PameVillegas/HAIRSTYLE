@@ -258,23 +258,26 @@ if (parseInt(clienteTest.rows[0].count) === 0) {
 
   // Asegurar que existan todos los servicios base
   const serviciosBase = [
-    { nombre: 'LIFTING DE PESTANAS', precio: 14000, duracion: 60, descripcion: 'Lifting profesional de pestanas' },
-    { nombre: 'Diseno y perfilado de cejas', precio: 10000, duracion: 30, descripcion: 'Diseno personalizado de cejas' },
-    { nombre: 'Alisados', precio: 0, duracion: 120, descripcion: '' },
-    { nombre: 'Peinados', precio: 0, duracion: 60, descripcion: 'Peinados para eventos' },
-    { nombre: 'Banos de crema', precio: 15000, duracion: 60, descripcion: 'Tratamiento nutritivo' },
-    { nombre: 'Limpiezas faciales', precio: 20000, duracion: 90, descripcion: 'Limpieza facial profunda' },
-    { nombre: 'Cortes de puntas', precio: 10000, duracion: 30, descripcion: 'Corte de puntas' }
+    { nombre: 'LIFTING DE PESTANAS', precio: 14000, duracion: 60, descripcion: 'Lifting profesional de pestanas', imagen_url: '/fotos/liftingpestanas.jpg' },
+    { nombre: 'Diseno y perfilado de cejas', precio: 10000, duracion: 30, descripcion: 'Diseno personalizado de cejas', imagen_url: '/fotos/perfilaydisenocejas.jpg' },
+    { nombre: 'Alisados', precio: 0, duracion: 120, descripcion: '', imagen_url: '/fotos/tratamientosyalisados.jpg' },
+    { nombre: 'Peinados', precio: 0, duracion: 60, descripcion: 'Peinados para eventos', imagen_url: '/fotos/peinado.jpg' },
+    { nombre: 'Banos de crema', precio: 15000, duracion: 60, descripcion: 'Tratamiento nutritivo', imagen_url: '/fotos/tratamientosyalisados.jpg' },
+    { nombre: 'Limpiezas faciales', precio: 20000, duracion: 90, descripcion: 'Limpieza facial profunda', imagen_url: '/fotos/facial.jpg' },
+    { nombre: 'Cortes de puntas', precio: 10000, duracion: 30, descripcion: 'Corte de puntas', imagen_url: '/fotos/logo.png' }
   ];
 
   for (const s of serviciosBase) {
     const existe = await client.query("SELECT id FROM tratamientos WHERE nombre ILIKE $1 AND activo = TRUE", ['%' + s.nombre.substring(0, 8) + '%']);
     if (existe.rows.length === 0) {
       await client.query(
-        'INSERT INTO tratamientos (nombre, precio, duracion, descripcion, activo) VALUES ($1, $2, $3, $4, TRUE)',
-        [s.nombre, s.precio, s.duracion, s.descripcion]
+        'INSERT INTO tratamientos (nombre, precio, duracion, descripcion, imagen_url, activo) VALUES ($1, $2, $3, $4, $5, TRUE)',
+        [s.nombre, s.precio, s.duracion, s.descripcion, s.imagen_url]
       );
       console.log('Servicio "' + s.nombre + '" recreado');
+    } else {
+      // Si existe pero no tiene imagen, ponerle la imagen
+      await client.query("UPDATE tratamientos SET imagen_url = $1 WHERE id = $2 AND (imagen_url IS NULL OR imagen_url = '')", [s.imagen_url, existe.rows[0].id]);
     }
   }
 }
