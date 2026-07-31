@@ -269,6 +269,17 @@ if (parseInt(clienteTest.rows[0].count) === 0) {
   await client.query("UPDATE tratamientos SET nombre = 'LIFTING DE PESTANAS' WHERE nombre ILIKE '%pesta%' AND nombre ILIKE '%lifting%'");
   await client.query("UPDATE tratamientos SET nombre = 'Diseno y perfilado de cejas' WHERE nombre ILIKE '%perfilado%' AND nombre ILIKE '%cejas%'");
 
+  // Eliminar duplicado de Banos de crema si hay mas de uno
+  try {
+    const banos = await client.query("SELECT id FROM tratamientos WHERE nombre ILIKE '%ban%crema%' OR nombre ILIKE '%ba_o%crema%' ORDER BY id");
+    if (banos.rows.length > 1) {
+      for (let i = 1; i < banos.rows.length; i++) {
+        await client.query("DELETE FROM tratamientos WHERE id = $1", [banos.rows[i].id]);
+      }
+      console.log('Duplicados de Banos de crema eliminados');
+    }
+  } catch(e) {}
+
   // Asegurar que existan todos los servicios base
   const serviciosBase = [
     { nombre: 'LIFTING DE PESTANAS', precio: 14000, duracion: 60, descripcion: 'Lifting profesional de pestanas', imagen_url: '/fotos/liftingpestanas.jpg' },
@@ -281,7 +292,9 @@ if (parseInt(clienteTest.rows[0].count) === 0) {
   ];
 
   for (const s of serviciosBase) {
-    const existe = await client.query("SELECT id FROM tratamientos WHERE nombre ILIKE $1 AND activo = TRUE", ['%' + s.nombre.substring(0, 8) + '%']);
+    // Buscar por nombre flexible (sin acentos, parcial)
+    const busqueda = s.nombre.substring(0, 6).replace(/[aeiou]/gi, '_');
+    const existe = await client.query("SELECT id FROM tratamientos WHERE nombre ILIKE $1 AND activo = TRUE", ['%' + busqueda + '%']);
     if (existe.rows.length === 0) {
       await client.query(
         'INSERT INTO tratamientos (nombre, precio, duracion, descripcion, imagen_url, activo) VALUES ($1, $2, $3, $4, $5, TRUE)',
