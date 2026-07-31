@@ -62,6 +62,19 @@ async function createTables(client) {
     console.log('Columna imagen_url ya existe o no se pudo agregar');
   }
 
+  // Cambiar imagen_url a TEXT para soportar base64
+  try {
+    await client.query(`ALTER TABLE tratamientos ALTER COLUMN imagen_url TYPE TEXT`);
+  } catch (err) {
+    console.log('imagen_url ya es TEXT o no se pudo cambiar');
+  }
+
+  try {
+    await client.query(`ALTER TABLE promociones ALTER COLUMN imagen_url TYPE TEXT`);
+  } catch (err) {
+    console.log('promociones imagen_url ya es TEXT');
+  }
+
   const tables = [
     `CREATE TABLE IF NOT EXISTS usuarios (
       id SERIAL PRIMARY KEY,
