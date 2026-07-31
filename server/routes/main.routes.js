@@ -679,11 +679,11 @@ router.delete('/promociones/:id', async (req, res) => {
 
 router.get('/config/precios-alisados', async (req, res) => {
   try {
-    const result = await pool.query("SELECT descripcion FROM tratamientos WHERE nombre ILIKE '%alisado%' LIMIT 1");
+    const result = await pool.query("SELECT descripcion FROM tratamientos WHERE nombre ILIKE '%alisado%' OR nombre ILIKE '%tratamiento%' LIMIT 1");
     if (result.rows.length > 0 && result.rows[0].descripcion) {
       try {
         var precios = JSON.parse(result.rows[0].descripcion);
-        return res.json(precios);
+        if (precios['0-30']) return res.json(precios);
       } catch(e) {}
     }
     // Default prices
@@ -696,7 +696,13 @@ router.get('/config/precios-alisados', async (req, res) => {
 router.put('/config/precios-alisados', async (req, res) => {
   try {
     const precios = req.body;
-    await pool.query("UPDATE tratamientos SET descripcion = $1 WHERE nombre ILIKE '%alisado%'", [JSON.stringify(precios)]);
+    const preciosStr = JSON.stringify(precios);
+    // Intentar actualizar
+    const result = await pool.query("UPDATE tratamientos SET descripcion = $1 WHERE nombre ILIKE '%alisado%' OR nombre ILIKE '%tratamiento%'", [preciosStr]);
+    if (result.rowCount === 0) {
+      // Si no hay registro de alisados, crear uno
+      await pool.query("INSERT INTO tratamientos (nombre, precio, duracion, descripcion, activo) VALUES ('Alisados', 0, 120, $1, TRUE)", [preciosStr]);
+    }
     res.json({ success: true });
   } catch (error) {
     console.error('Error guardando precios alisados:', error);
