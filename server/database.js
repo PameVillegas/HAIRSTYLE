@@ -256,15 +256,27 @@ if (parseInt(clienteTest.rows[0].count) === 0) {
   await client.query("UPDATE tratamientos SET nombre = 'LIFTING DE PESTANAS' WHERE nombre ILIKE '%pesta%' AND nombre ILIKE '%lifting%'");
   await client.query("UPDATE tratamientos SET nombre = 'Diseno y perfilado de cejas' WHERE nombre ILIKE '%perfilado%' AND nombre ILIKE '%cejas%'");
 
-  // Eliminar duplicados: mantener solo el ID mas bajo de cada nombre similar
-  try {
-    await client.query(`
-      DELETE FROM tratamientos WHERE id NOT IN (
-        SELECT MIN(id) FROM tratamientos WHERE activo = TRUE GROUP BY LOWER(TRIM(nombre))
-      ) AND activo = TRUE
-    `);
-    console.log('Duplicados eliminados');
-  } catch(e) { console.log('Sin duplicados para limpiar'); }
+  // Asegurar que existan todos los servicios base
+  const serviciosBase = [
+    { nombre: 'LIFTING DE PESTANAS', precio: 14000, duracion: 60, descripcion: 'Lifting profesional de pestanas' },
+    { nombre: 'Diseno y perfilado de cejas', precio: 10000, duracion: 30, descripcion: 'Diseno personalizado de cejas' },
+    { nombre: 'Alisados', precio: 0, duracion: 120, descripcion: '' },
+    { nombre: 'Peinados', precio: 0, duracion: 60, descripcion: 'Peinados para eventos' },
+    { nombre: 'Banos de crema', precio: 15000, duracion: 60, descripcion: 'Tratamiento nutritivo' },
+    { nombre: 'Limpiezas faciales', precio: 20000, duracion: 90, descripcion: 'Limpieza facial profunda' },
+    { nombre: 'Cortes de puntas', precio: 10000, duracion: 30, descripcion: 'Corte de puntas' }
+  ];
+
+  for (const s of serviciosBase) {
+    const existe = await client.query("SELECT id FROM tratamientos WHERE nombre ILIKE $1 AND activo = TRUE", ['%' + s.nombre.substring(0, 8) + '%']);
+    if (existe.rows.length === 0) {
+      await client.query(
+        'INSERT INTO tratamientos (nombre, precio, duracion, descripcion, activo) VALUES ($1, $2, $3, $4, TRUE)',
+        [s.nombre, s.precio, s.duracion, s.descripcion]
+      );
+      console.log('Servicio "' + s.nombre + '" recreado');
+    }
+  }
 }
 
 export const db = {
