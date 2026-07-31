@@ -420,6 +420,8 @@
             var img = t.imagen_url || '/fotos/logo.png';
             var nombre = t.nombre || '';
             var descripcion = t.descripcion || '';
+            // No mostrar descripcion si es un JSON de config
+            if (descripcion.indexOf('{') === 0 || descripcion.indexOf('"0-30"') >= 0) descripcion = '';
             var esLimpieza = nombre.toUpperCase().indexOf('LIMPIEZA') >= 0;
             var nombreUpper = nombre.toUpperCase();
             var esAlisado = nombreUpper.indexOf('ALISADO') >= 0 || nombreUpper.indexOf('BOTOX') >= 0 || nombreUpper.indexOf('CAPILAR') >= 0 || nombreUpper.indexOf('TRATAMIENTO') >= 0 || nombreUpper.indexOf('LISS') >= 0 || nombreUpper.indexOf('BRUSHING') >= 0 || nombreUpper.indexOf('PLANCHA') >= 0;

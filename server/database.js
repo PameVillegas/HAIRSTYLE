@@ -255,6 +255,16 @@ if (parseInt(clienteTest.rows[0].count) === 0) {
   // Corregir nombres con caracteres rotos (ñ)
   await client.query("UPDATE tratamientos SET nombre = 'LIFTING DE PESTANAS' WHERE nombre ILIKE '%pesta%' AND nombre ILIKE '%lifting%'");
   await client.query("UPDATE tratamientos SET nombre = 'Diseno y perfilado de cejas' WHERE nombre ILIKE '%perfilado%' AND nombre ILIKE '%cejas%'");
+
+  // Eliminar duplicados: mantener solo el ID mas bajo de cada nombre similar
+  try {
+    await client.query(`
+      DELETE FROM tratamientos WHERE id NOT IN (
+        SELECT MIN(id) FROM tratamientos WHERE activo = TRUE GROUP BY LOWER(TRIM(nombre))
+      ) AND activo = TRUE
+    `);
+    console.log('Duplicados eliminados');
+  } catch(e) { console.log('Sin duplicados para limpiar'); }
 }
 
 export const db = {
