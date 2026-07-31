@@ -675,6 +675,37 @@ router.delete('/promociones/:id', async (req, res) => {
 
 // ==================== GALERIA ====================
 
+// ==================== CONFIG PRECIOS ALISADOS ====================
+
+router.get('/config/precios-alisados', async (req, res) => {
+  try {
+    const result = await pool.query("SELECT descripcion FROM tratamientos WHERE nombre ILIKE '%alisado%' LIMIT 1");
+    if (result.rows.length > 0 && result.rows[0].descripcion) {
+      try {
+        var precios = JSON.parse(result.rows[0].descripcion);
+        return res.json(precios);
+      } catch(e) {}
+    }
+    // Default prices
+    res.json({"0-30":32000,"30-40":34000,"40-50":36000,"50-60":38000,"60-70":40000,"70-80":42000,"80-90":44000});
+  } catch (error) {
+    res.json({"0-30":32000,"30-40":34000,"40-50":36000,"50-60":38000,"60-70":40000,"70-80":42000,"80-90":44000});
+  }
+});
+
+router.put('/config/precios-alisados', async (req, res) => {
+  try {
+    const precios = req.body;
+    await pool.query("UPDATE tratamientos SET descripcion = $1 WHERE nombre ILIKE '%alisado%'", [JSON.stringify(precios)]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error guardando precios alisados:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// ==================== GALERIA ====================
+
 router.get('/galeria', async (req, res) => {
   try {
     const result = await pool.query(

@@ -191,6 +191,22 @@
       window.location.href = '/entrar.html';
     }
     
+    // Cargar opciones de CM dinamicamente desde el servidor
+    function cargarOpcionesCM(selectId) {
+      fetch(API + '/config/precios-alisados').then(function(res) { return res.json(); }).then(function(precios) {
+        var select = document.getElementById(selectId);
+        if (!select) return;
+        var rangos = ['0-30','30-40','40-50','50-60','60-70','70-80','80-90'];
+        rangos.forEach(function(rango) {
+          var precio = precios[rango] || 0;
+          var opt = document.createElement('option');
+          opt.value = rango;
+          opt.text = rango.replace('-', ' a ') + ' cm - $' + precio.toLocaleString('es-AR');
+          select.appendChild(opt);
+        });
+      });
+    }
+    
     // Recordatorio de turno 2 horas antes
     async function verificarRecordatorio() {
       try {
@@ -467,13 +483,6 @@
         cmOptions = '<div class="form-group"><label>Largo del cabello *</label>' +
           '<select id="sol-cm" required onchange="actualizarPrecioCM(this.value); cargarHorariosOcupados();">' +
             '<option value="">Seleccionar largo</option>' +
-            '<option value="0-30">0 a 30 cm - $32.000</option>' +
-            '<option value="30-40">30 a 40 cm - $34.000</option>' +
-            '<option value="40-50">40 a 50 cm - $36.000</option>' +
-            '<option value="50-60">50 a 60 cm - $38.000</option>' +
-            '<option value="60-70">60 a 70 cm - $40.000</option>' +
-            '<option value="70-80">70 a 80 cm - $42.000</option>' +
-            '<option value="80-90">80 a 90 cm - $44.000</option>' +
           '</select></div>' +
           '<div id="precio-mostrado" style="background:#e8f5e9;padding:10px;border-radius:8px;text-align:center;font-weight:700;color:#4caf50;display:none;">Precio: <span id="precio-turno"></span></div>';
       }
@@ -503,6 +512,8 @@
           extraField +
           '<button type="submit" class="btn">📨 Solicitar Turno</button>' +
         '</form>';
+        
+        if (requiereCM) cargarOpcionesCM('sol-cm');
         
         var duracionGlobal = 60;
         
@@ -580,16 +591,14 @@
         }
       
       window.actualizarPrecioCM = function(valor) {
-        var precios = {
-          '0-30': 32000, '30-40': 34000, '40-50': 36000,
-          '50-60': 38000, '60-70': 40000, '70-80': 42000, '80-90': 44000
-        };
-        var precio = precios[valor] || 0;
-        if (precio > 0) {
-          document.getElementById('precio-mostrado').style.display = 'block';
-          document.getElementById('precio-turno').textContent = '$' + precio.toLocaleString('es-AR');
-          document.getElementById('sol-precio-extra').value = precio;
-        }
+        fetch(API + '/config/precios-alisados').then(function(res) { return res.json(); }).then(function(precios) {
+          var precio = precios[valor] || 0;
+          if (precio > 0) {
+            document.getElementById('precio-mostrado').style.display = 'block';
+            document.getElementById('precio-turno').textContent = '$' + precio.toLocaleString('es-AR');
+            document.getElementById('sol-precio-extra').value = precio;
+          }
+        });
       };
       
       document.getElementById('solicitar-turno-form').onsubmit = async function(e) {
@@ -946,29 +955,24 @@
               '<div class="form-group" style="background:#f8f9fa;padding:10px;border-radius:8px;margin:10px 0;"><label style="display:block;margin-bottom:5px;font-weight:600;">💇 Largo del cabello *</label>' +
               '<select id="sol-cm" required style="width:100%;padding:10px;border-radius:5px;border:1px solid #ddd;" onchange="actualizarPrecioCM(this.value); cargarHorariosBloqueados();">' +
                 '<option value="">Seleccionar largo</option>' +
-                '<option value="0-30">0 a 30 cm - $32.000</option>' +
-                '<option value="30-40">30 a 40 cm - $34.000</option>' +
-                '<option value="40-50">40 a 50 cm - $36.000</option>' +
-                '<option value="50-60">50 a 60 cm - $38.000</option>' +
-                '<option value="60-70">60 a 70 cm - $40.000</option>' +
-                '<option value="70-80">70 a 80 cm - $42.000</option>' +
-                '<option value="80-90">80 a 90 cm - $44.000</option>' +
               '</select></div>' +
               '<div id="precio-mostrado" style="display:none;background:#e8f5e9;padding:10px;border-radius:8px;text-align:center;font-weight:700;color:#4caf50;">Precio: <span id="precio-turno"></span></div>';
             document.getElementById('cm-options').style.display = 'block';
+            cargarOpcionesCM('sol-cm');
           } else {
             document.getElementById('cm-options').style.display = 'none';
           }
         }
         
         window.actualizarPrecioCM = function(valor) {
-          var precios = { '0-30': 32000, '30-40': 34000, '40-50': 36000, '50-60': 38000, '60-70': 40000, '70-80': 42000, '80-90': 44000 };
-          var precio = precios[valor] || 0;
-          if (precio > 0) {
-            document.getElementById('precio-mostrado').style.display = 'block';
-            document.getElementById('precio-turno').textContent = '$' + precio.toLocaleString('es-AR');
-            document.getElementById('sol-precio-extra').value = precio;
-          }
+          fetch(API + '/config/precios-alisados').then(function(res) { return res.json(); }).then(function(precios) {
+            var precio = precios[valor] || 0;
+            if (precio > 0) {
+              document.getElementById('precio-mostrado').style.display = 'block';
+              document.getElementById('precio-turno').textContent = '$' + precio.toLocaleString('es-AR');
+              document.getElementById('sol-precio-extra').value = precio;
+            }
+          });
         }
         
         function horaToMinutos(hora) {

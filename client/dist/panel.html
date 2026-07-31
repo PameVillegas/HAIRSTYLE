@@ -252,22 +252,37 @@
       var nombreUpper = nombre.toUpperCase();
       var esAlisado = nombreUpper.indexOf("ALISADO") >= 0 || nombreUpper.indexOf("BOTOX") >= 0 || nombreUpper.indexOf("CAPILAR") >= 0 || nombreUpper.indexOf("TRATAMIENTO") >= 0 || nombreUpper.indexOf("LISS") >= 0;
       if (esAlisado) {
-        var html = '<div class="form-group"><label>Largo del cabello *</label><select id="turno-cm" required><option value="">Seleccionar</option><option value="0-30">0-30 cm - $32.000</option><option value="30-40">30-40 cm - $34.000</option><option value="40-50">40-50 cm - $36.000</option><option value="50-60">50-60 cm - $38.000</option><option value="60-70">60-70 cm - $40.000</option><option value="70-80">70-80 cm - $42.000</option><option value="80-90">80-90 cm - $44.000</option></select></div><div id="precio-mostrado" style="display:none;background:#e8f5e9;padding:10px;border-radius:8px;text-align:center;font-weight:700;color:#4caf50;">Precio: <span id="precio-turno"></span></div>';
+        var html = '<div class="form-group"><label>Largo del cabello *</label><select id="turno-cm" required><option value="">Seleccionar</option></select></div><div id="precio-mostrado" style="display:none;background:#e8f5e9;padding:10px;border-radius:8px;text-align:center;font-weight:700;color:#4caf50;">Precio: <span id="precio-turno"></span></div>';
         var container = document.getElementById("cm-options-admin");
         if (container) {
           container.innerHTML = html;
           container.style.display = "block";
+          // Cargar opciones dinamicamente
+          fetch(API + '/config/precios-alisados').then(function(r){return r.json();}).then(function(precios) {
+            var select = document.getElementById("turno-cm");
+            if (!select) return;
+            var rangos = ['0-30','30-40','40-50','50-60','60-70','70-80','80-90'];
+            rangos.forEach(function(rango) {
+              var precio = precios[rango] || 0;
+              var opt = document.createElement('option');
+              opt.value = rango;
+              opt.text = rango + ' cm - $' + precio.toLocaleString('es-AR');
+              select.appendChild(opt);
+            });
+          });
           document.getElementById("turno-cm").onchange = function() {
-            var precios = {"0-30":32000,"30-40":34000,"40-50":36000,"50-60":38000,"60-70":40000,"70-80":42000,"80-90":44000};
-            var p = precios[this.value] || 0;
-            var precioMostrado = document.getElementById("precio-mostrado");
-            var precioTurno = document.getElementById("precio-turno");
-            if (precioMostrado && precioTurno && p > 0) {
-              precioMostrado.style.display = "block";
-              precioTurno.textContent = "$" + p.toLocaleString("es-AR");
-              var inputPrecio = document.getElementById("turno-precio");
-              if (inputPrecio) inputPrecio.value = p;
-            }
+            var cmVal = this.value;
+            fetch(API + '/config/precios-alisados').then(function(r){return r.json();}).then(function(precios) {
+              var p = precios[cmVal] || 0;
+              var precioMostrado = document.getElementById("precio-mostrado");
+              var precioTurno = document.getElementById("precio-turno");
+              if (precioMostrado && precioTurno && p > 0) {
+                precioMostrado.style.display = "block";
+                precioTurno.textContent = "$" + p.toLocaleString("es-AR");
+                var inputPrecio = document.getElementById("turno-precio");
+                if (inputPrecio) inputPrecio.value = p;
+              }
+            });
           };
         }
       } else {
@@ -301,6 +316,7 @@
              '<div class="menu-item secondary" onclick="showSection(\'contraseñas\')"><span class="icon">🔑</span><span class="label">Contraseñas</span><span class="desc">Clientes</span></div>' +
              '<div class="menu-item secondary" onclick="showSection(\'backup\')"><span class="icon">📦</span><span class="label">Backup</span><span class="desc">Respaldar datos</span></div>' +
              '<div class="menu-item" onclick="showSection(\'recordatorios\')"><span class="icon">📲</span><span class="label">Recordatorios</span><span class="desc">WhatsApp</span></div>' +
+             '<div class="menu-item secondary" onclick="showSection(\'precios-alisados\')"><span class="icon">💰</span><span class="label">Precios Alisados</span><span class="desc">Por largo</span></div>' +
            '</div>' +
         '</div>';
       
@@ -376,6 +392,7 @@
         case 'contraseñas': showContrasenas(); break;
         case 'backup': showBackup(); break;
         case 'recordatorios': showRecordatorios(); break;
+        case 'precios-alisados': showPreciosAlisados(); break;
       }
     }
     
@@ -685,6 +702,66 @@
         '</div>' +
         '<a href="' + whatsappUrl + '" target="_blank" style="background:#25D366;color:white;padding:10px 15px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap;">📲 Enviar</a>' +
       '</div>';
+    }
+
+    // PRECIOS ALISADOS
+    async function showPreciosAlisados() {
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="card">' +
+          '<h2>💰 Precios de Alisados por Largo</h2>' +
+          '<p style="color:#666;font-size:13px;margin-bottom:15px;">Modifica los precios segun el largo del cabello. Estos precios se muestran a las clientas al solicitar turno.</p>' +
+          '<div id="precios-form"><div class="loading">Cargando...</div></div>' +
+        '</div>';
+      
+      try {
+        var res = await fetch(API + '/config/precios-alisados');
+        var precios = await res.json();
+        
+        var rangos = ['0-30', '30-40', '40-50', '50-60', '60-70', '70-80', '80-90'];
+        var html = '<form id="form-precios-alisados">';
+        rangos.forEach(function(rango) {
+          var precio = precios[rango] || 0;
+          html += '<div class="form-group" style="display:flex;align-items:center;gap:10px;">' +
+            '<label style="min-width:80px;font-weight:600;">' + rango + ' cm</label>' +
+            '<input type="number" id="precio-' + rango + '" value="' + precio + '" style="flex:1;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:16px;">' +
+          '</div>';
+        });
+        html += '<div id="precios-msg"></div>';
+        html += '<button type="submit" class="btn" style="margin-top:15px;">💾 Guardar Precios</button>';
+        html += '</form>';
+        
+        document.getElementById('precios-form').innerHTML = html;
+        
+        document.getElementById('form-precios-alisados').onsubmit = async function(e) {
+          e.preventDefault();
+          var msg = document.getElementById('precios-msg');
+          msg.innerHTML = '<div class="msg">⏳ Guardando...</div>';
+          
+          var nuevosPrecios = {};
+          rangos.forEach(function(rango) {
+            nuevosPrecios[rango] = parseInt(document.getElementById('precio-' + rango).value) || 0;
+          });
+          
+          try {
+            var res = await fetch(API + '/config/precios-alisados', {
+              method: 'PUT',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify(nuevosPrecios)
+            });
+            var result = await res.json();
+            if (result.success) {
+              msg.innerHTML = '<div class="msg success">✅ Precios actualizados! Las clientas veran los nuevos precios al solicitar turno.</div>';
+            } else {
+              msg.innerHTML = '<div class="msg error">Error guardando</div>';
+            }
+          } catch(err) {
+            msg.innerHTML = '<div class="msg error">Error de conexion</div>';
+          }
+        };
+      } catch(err) {
+        document.getElementById('precios-form').innerHTML = '<div class="empty-state">Error cargando precios</div>';
+      }
     }
 
     // VER CLIENTE
@@ -1082,12 +1159,20 @@
             'var nombreUpper = nombre.toUpperCase();' +
             'var esAlisado = nombreUpper.indexOf("ALISADO") >= 0 || nombreUpper.indexOf("BOTOX") >= 0 || nombreUpper.indexOf("CAPILAR") >= 0 || nombreUpper.indexOf("TRATAMIENTO") >= 0 || nombreUpper.indexOf("LISS") >= 0;' +
             'if (esAlisado) {' +
-              'document.getElementById("cm-options-admin").innerHTML = \'<div class="form-group"><label>Largo del cabello *</label><select id="turno-cm" required><option value="">Seleccionar</option><option value="0-30">0-30 cm - $32.000</option><option value="30-40">30-40 cm - $34.000</option><option value="40-50">40-50 cm - $36.000</option><option value="50-60">50-60 cm - $38.000</option><option value="60-70">60-70 cm - $40.000</option><option value="70-80">70-80 cm - $42.000</option><option value="80-90">80-90 cm - $44.000</option></select></div><div id="precio-mostrado" style="display:none;background:#e8f5e9;padding:10px;border-radius:8px;text-align:center;font-weight:700;color:#4caf50;">Precio: <span id="precio-turno"></span></div>\';' +
+              'document.getElementById("cm-options-admin").innerHTML = \'<div class="form-group"><label>Largo del cabello *</label><select id="turno-cm" required><option value="">Seleccionar</option></select></div><div id="precio-mostrado" style="display:none;background:#e8f5e9;padding:10px;border-radius:8px;text-align:center;font-weight:700;color:#4caf50;">Precio: <span id="precio-turno"></span></div>\';' +
               'document.getElementById("cm-options-admin").style.display = "block";' +
+              'fetch("/api/config/precios-alisados").then(function(r){return r.json();}).then(function(precios){' +
+                'var select = document.getElementById("turno-cm");' +
+                '["0-30","30-40","40-50","50-60","60-70","70-80","80-90"].forEach(function(rango){' +
+                  'var opt = document.createElement("option"); opt.value = rango; opt.text = rango + " cm - $" + (precios[rango]||0).toLocaleString("es-AR"); select.appendChild(opt);' +
+                '});' +
+              '});' +
               'document.getElementById("turno-cm").onchange = function() {' +
-                'var precios = {"0-30":32000,"30-40":34000,"40-50":36000,"50-60":38000,"60-70":40000,"70-80":42000,"80-90":44000};' +
-                'var p = precios[this.value] || 0;' +
-                'if (p > 0) { document.getElementById("precio-mostrado").style.display = "block"; document.getElementById("precio-turno").textContent = "$" + p.toLocaleString("es-AR"); document.getElementById("turno-precio").value = p; }' +
+                'var cmVal = this.value;' +
+                'fetch("/api/config/precios-alisados").then(function(r){return r.json();}).then(function(precios){' +
+                  'var p = precios[cmVal] || 0;' +
+                  'if (p > 0) { document.getElementById("precio-mostrado").style.display = "block"; document.getElementById("precio-turno").textContent = "$" + p.toLocaleString("es-AR"); document.getElementById("turno-precio").value = p; }' +
+                '});' +
               '};' +
             '} else {' +
               'document.getElementById("cm-options-admin").style.display = "none";' +
