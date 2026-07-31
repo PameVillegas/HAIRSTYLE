@@ -316,7 +316,6 @@
              '<div class="menu-item secondary" onclick="showSection(\'contraseñas\')"><span class="icon">🔑</span><span class="label">Contraseñas</span><span class="desc">Clientes</span></div>' +
              '<div class="menu-item secondary" onclick="showSection(\'backup\')"><span class="icon">📦</span><span class="label">Backup</span><span class="desc">Respaldar datos</span></div>' +
              '<div class="menu-item" onclick="showSection(\'recordatorios\')"><span class="icon">📲</span><span class="label">Recordatorios</span><span class="desc">WhatsApp</span></div>' +
-             '<div class="menu-item secondary" onclick="showSection(\'precios-alisados\')"><span class="icon">💰</span><span class="label">Precios Alisados</span><span class="desc">Por largo</span></div>' +
            '</div>' +
         '</div>';
       
@@ -1229,10 +1228,10 @@ document.getElementById('turno-form').onsubmit = async function(e) {
           '<h2>💅 Servicios</h2>' +
           '<div class="menu" style="grid-template-columns:repeat(2,1fr);gap:10px;">' +
             '<div class="menu-item secondary" onclick="showAgregarTratamiento()"><span class="icon">➕</span><span class="label">Agregar Nuevo</span></div>' +
-            '<div class="menu-item secondary" onclick="inicializarTratamientos()"><span class="icon">🔄</span><span class="label">Actualizar Default</span></div>' +
+            '<div class="menu-item secondary" onclick="showSection(\'precios-alisados\')"><span class="icon">💰</span><span class="label">Precios Alisados</span></div>' +
           '</div>' +
         '</div>' +
-        '<div class="card"><h2>Lista de Servicios</h2><div id="trat-list"><div class="loading">Cargando...</div></div></div>';
+        '<div class="card"><h2>Lista de Servicios</h2><p style="color:#666;font-size:12px;margin-bottom:10px;">Toca un servicio para editar su precio, nombre o foto</p><div id="trat-list"><div class="loading">Cargando...</div></div></div>';
       
       loadTratamientos();
     }
