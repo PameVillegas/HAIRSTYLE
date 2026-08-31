@@ -1,4 +1,4 @@
-ï»¿import pkg from 'pg';
+import pkg from 'pg';
 const { Pool } = pkg;
 import dotenv from 'dotenv';
 
@@ -16,7 +16,7 @@ const dbConfig = process.env.DATABASE_URL
       user: process.env.DB_USER || 'postgres',
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME || 'hairstyle_db',
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
       options: '-c client_encoding=UTF8'
     };
 
@@ -233,7 +233,7 @@ if (parseInt(clienteTest.rows[0].count) === 0) {
       { nombre: 'Diseno y perfilado de cejas', precio: 10000, duracion: 30, descripcion: 'Diseno personalizado de cejas' },
       { nombre: 'Alisados', precio: 0, duracion: 120, descripcion: 'Consultar precio' },
       { nombre: 'Peinados', precio: 0, duracion: 60, descripcion: 'Consultar precio' },
-      { nombre: 'BaÃ±os de crema', precio: 15000, duracion: 60, descripcion: 'Tratamiento nutritivo' },
+      { nombre: 'Baños de crema', precio: 15000, duracion: 60, descripcion: 'Tratamiento nutritivo' },
       { nombre: 'Limpiezas faciales', precio: 20000, duracion: 90, descripcion: 'Limpieza facial profunda', imagen_url: '/fotos/facial.jpg' },
       { nombre: 'Cortes de puntas', precio: 10000, duracion: 30, descripcion: 'Corte de puntas' }
     ];
@@ -265,7 +265,7 @@ if (parseInt(clienteTest.rows[0].count) === 0) {
   await client.query("UPDATE tratamientos SET duracion = 90 WHERE nombre ILIKE '%facial%' AND duracion != 90");
   await client.query("UPDATE tratamientos SET duracion = 30 WHERE nombre ILIKE '%corte%punta%' AND duracion != 30");
 
-  // Corregir nombres con caracteres rotos (Ã±)
+  // Corregir nombres con caracteres rotos (ñ)
   await client.query("UPDATE tratamientos SET nombre = 'LIFTING DE PESTANAS' WHERE nombre ILIKE '%pesta%' AND nombre ILIKE '%lifting%'");
   await client.query("UPDATE tratamientos SET nombre = 'Diseno y perfilado de cejas' WHERE nombre ILIKE '%perfilado%' AND nombre ILIKE '%cejas%'");
 
@@ -340,5 +340,6 @@ export const db = {
 };
 
 export default db;
+
 
 
