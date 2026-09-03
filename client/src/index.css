@@ -2625,3 +2625,34 @@ input, select {
     grid-template-columns: 1fr;
   }
 }
+
+.app-footer {
+  width: 100%;
+  text-align: center;
+  padding: 18px 16px;
+  margin-top: 30px;
+  background: rgba(255, 255, 255, 0.15);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.app-footer a {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  transition: color 0.2s ease;
+}
+
+.app-footer a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.app-footer-light a {
+  color: #7a2a4a;
+}
+
+.app-footer-light a:hover {
+  color: #e91e63;
+}

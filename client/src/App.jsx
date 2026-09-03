@@ -13,6 +13,7 @@ import EditarTurnoModal from './components/auth/EditarTurnoModal';
 import GestionPromociones from './components/auth/GestionPromociones';
 import GestionGaleria from './components/auth/GestionGaleria';
 import LegajosList from './components/auth/LegajosList';
+import Footer from './components/auth/Footer';
 import useIsMobile from './hooks/useIsMobile';
 
 const API_URL = import.meta.env.PROD ? '/api' : '/api';
@@ -317,7 +318,12 @@ function App() {
 
   // Si no hay usuario logueado, mostrar login
   if (!usuario) {
-    return <Login onLogin={handleLogin} />;
+    return (
+      <>
+        <Login onLogin={handleLogin} />
+        <Footer />
+      </>
+    );
   }
 
   // Si es cliente, mostrar portal de cliente
@@ -363,6 +369,7 @@ function App() {
             />
           </div>
         )}
+        <Footer />
       </div>
     );
   }
@@ -557,10 +564,11 @@ function App() {
           <LegajosList />
         </div>
       )}
+          </div>
         </div>
+        <Footer />
       </div>
-    </div>
-  );
-}
+    );
+  }
 
 export default App;
