@@ -29,6 +29,10 @@ function App() {
     document.documentElement.scrollTop = 0;
   }, []);
 
+  // Estado de autenticación
+  const [usuario, setUsuario] = useState(null);
+  const [tipoUsuario, setTipoUsuario] = useState(null); // 'admin' o 'cliente'
+
   // Reset scroll when user logs in
   useEffect(() => {
     if (usuario) {
@@ -39,10 +43,6 @@ function App() {
       }, 100);
     }
   }, [usuario]);
-
-  // Estado de autenticación
-  const [usuario, setUsuario] = useState(null);
-  const [tipoUsuario, setTipoUsuario] = useState(null); // 'admin' o 'cliente'
 
   // Restaurar sesión desde localStorage al cargar
   useEffect(() => {
