@@ -19,6 +19,15 @@ const app = express();
 app.use(cors());
 app.use(express.json({ extended: true, limit: '10mb' }));
 
+// La raíz del dominio lleva al portal de acceso (login unificado)
+app.get('/', (req, res) => {
+  res.redirect('/entrar.html');
+});
+
+app.get('/index.html', (req, res) => {
+  res.redirect('/entrar.html');
+});
+
 let clientDistPath, clientPublicPath;
 
 if (process.env.VERCEL) {
@@ -49,15 +58,13 @@ app.get('/cliente.html', (req, res) => {
 app.get('/registro.html', (req, res) => {
   res.sendFile(join(clientDistPath, 'registro.html'));
 });
-app.get('/index.html', (req, res) => {
-  res.sendFile(join(clientDistPath, 'index.html'));
-});
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api', mainRoutes);
 
+// Cualquier ruta no conocida lleva al portal de acceso
 app.get('*', (req, res) => {
-  res.sendFile(join(clientDistPath, 'index.html'));
+  res.redirect('/entrar.html');
 });
 
 const PORT = process.env.PORT || 3000;
