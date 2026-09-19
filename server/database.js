@@ -187,6 +187,58 @@ async function createTables(client) {
       activo BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS muro_publicaciones (
+      id SERIAL PRIMARY KEY,
+      titulo VARCHAR(255) NOT NULL,
+      descripcion TEXT,
+      tipo VARCHAR(50) DEFAULT 'Novedad',
+      imagen_url TEXT,
+      enlace VARCHAR(500),
+      texto_boton VARCHAR(100),
+      activo BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS muro_reacciones (
+      id SERIAL PRIMARY KEY,
+      publicacion_id INTEGER NOT NULL,
+      cliente_id INTEGER NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(publicacion_id, cliente_id),
+      FOREIGN KEY (publicacion_id) REFERENCES muro_publicaciones(id) ON DELETE CASCADE,
+      FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS encuestas (
+      id SERIAL PRIMARY KEY,
+      pregunta VARCHAR(255) NOT NULL,
+      activo BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS encuesta_opciones (
+      id SERIAL PRIMARY KEY,
+      encuesta_id INTEGER NOT NULL,
+      texto VARCHAR(255) NOT NULL,
+      posicion INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (encuesta_id) REFERENCES encuestas(id) ON DELETE CASCADE
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS encuesta_votos (
+      id SERIAL PRIMARY KEY,
+      encuesta_id INTEGER NOT NULL,
+      opcion_id INTEGER NOT NULL,
+      cliente_id INTEGER NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(encuesta_id, cliente_id),
+      FOREIGN KEY (encuesta_id) REFERENCES encuestas(id) ON DELETE CASCADE,
+      FOREIGN KEY (opcion_id) REFERENCES encuesta_opciones(id) ON DELETE CASCADE,
+      FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
     )`
   ];
 
@@ -233,7 +285,7 @@ if (parseInt(clienteTest.rows[0].count) === 0) {
       { nombre: 'Diseno y perfilado de cejas', precio: 10000, duracion: 30, descripcion: 'Diseno personalizado de cejas' },
       { nombre: 'Alisados', precio: 0, duracion: 120, descripcion: 'Consultar precio' },
       { nombre: 'Peinados', precio: 0, duracion: 60, descripcion: 'Consultar precio' },
-      { nombre: 'Baños de crema', precio: 15000, duracion: 60, descripcion: 'Tratamiento nutritivo' },
+      { nombre: 'Baï¿½os de crema', precio: 15000, duracion: 60, descripcion: 'Tratamiento nutritivo' },
       { nombre: 'Limpiezas faciales', precio: 20000, duracion: 90, descripcion: 'Limpieza facial profunda', imagen_url: '/fotos/facial.jpg' },
       { nombre: 'Cortes de puntas', precio: 10000, duracion: 30, descripcion: 'Corte de puntas' }
     ];
@@ -265,7 +317,7 @@ if (parseInt(clienteTest.rows[0].count) === 0) {
   await client.query("UPDATE tratamientos SET duracion = 90 WHERE nombre ILIKE '%facial%' AND duracion != 90");
   await client.query("UPDATE tratamientos SET duracion = 30 WHERE nombre ILIKE '%corte%punta%' AND duracion != 30");
 
-  // Corregir nombres con caracteres rotos (ñ)
+  // Corregir nombres con caracteres rotos (ï¿½)
   await client.query("UPDATE tratamientos SET nombre = 'LIFTING DE PESTANAS' WHERE nombre ILIKE '%pesta%' AND nombre ILIKE '%lifting%'");
   await client.query("UPDATE tratamientos SET nombre = 'Diseno y perfilado de cejas' WHERE nombre ILIKE '%perfilado%' AND nombre ILIKE '%cejas%'");
 

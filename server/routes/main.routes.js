@@ -1184,4 +1184,417 @@ router.get('/horario-bloqueado/:fecha/:hora', async (req, res) => {
   }
 });
 
+// ==================== MURO HAIRSTYLE ====================
+
+const MURO_TIPOS = ['Novedad', 'Promoción', 'Nuevo servicio', 'Consejo', 'Sorteo', 'Información'];
+
+// Ver si una reaccion existe
+async function existeReaccion(publicacionId, clienteId) {
+  const res = await pool.query(
+    'SELECT id FROM muro_reacciones WHERE publicacion_id = $1 AND cliente_id = $2',
+    [publicacionId, clienteId]
+  );
+  return res.rows.length > 0;
+}
+
+async function contarLikes(publicacionId) {
+  const res = await pool.query(
+    'SELECT COUNT(*) as likes FROM muro_reacciones WHERE publicacion_id = $1',
+    [publicacionId]
+  );
+  return parseInt(res.rows[0].likes || 0);
+}
+
+// Publicaciones activas para clientes (con likes y si el cliente ya reacciono)
+router.get('/muro', async (req, res) => {
+  try {
+    const clienteId = parseInt(req.query.cliente_id) || null;
+    const result = await pool.query(
+      'SELECT p.*, COUNT(r.id)::int AS likes FROM muro_publicaciones p LEFT JOIN muro_reacciones r ON r.publicacion_id = p.id WHERE p.activo = TRUE GROUP BY p.id ORDER BY p.created_at DESC'
+    );
+
+    let publicaciones = result.rows;
+    if (clienteId) {
+      for (const pub of publicaciones) {
+        pub.me_gusta = await existeReaccion(pub.id, clienteId);
+      }
+    }
+    res.json(publicaciones);
+  } catch (error) {
+    console.error('Error obteniendo muro:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// Todas las publicaciones para el panel admin (activas e inactivas)
+router.get('/muro/admin', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT p.*, COUNT(r.id)::int AS likes FROM muro_publicaciones p LEFT JOIN muro_reacciones r ON r.publicacion_id = p.id GROUP BY p.id ORDER BY p.created_at DESC'
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error obteniendo muro admin:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.post('/muro', async (req, res) => {
+  try {
+    const { titulo, descripcion, tipo, imagen_url, enlace, texto_boton, activo } = req.body;
+    if (!titulo) {
+      return res.status(400).json({ error: 'Titulo es requerido' });
+    }
+    const tipoOk = tipo && MURO_TIPOS.includes(tipo) ? tipo : 'Novedad';
+    const result = await pool.query(
+      'INSERT INTO muro_publicaciones (titulo, descripcion, tipo, imagen_url, enlace, texto_boton, activo) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [titulo, descripcion || null, tipoOk, imagen_url || null, enlace || null, texto_boton || null, activo !== undefined ? !!activo : true]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creando publicacion de muro:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.put('/muro/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { titulo, descripcion, tipo, imagen_url, enlace, texto_boton, activo } = req.body;
+    if (!titulo) {
+      return res.status(400).json({ error: 'Titulo es requerido' });
+    }
+    const tipoOk = tipo && MURO_TIPOS.includes(tipo) ? tipo : 'Novedad';
+    const result = await pool.query(
+      'UPDATE muro_publicaciones SET titulo = $1, descripcion = $2, tipo = $3, imagen_url = $4, enlace = $5, texto_boton = $6, activo = $7, updated_at = CURRENT_TIMESTAMP WHERE id = $8 RETURNING *',
+      [titulo, descripcion || null, tipoOk, imagen_url || null, enlace || null, texto_boton || null, activo !== undefined ? !!activo : true, id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Publicacion no encontrada' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error actualizando publicacion de muro:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+router.delete('/muro/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM muro_publicaciones WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error eliminando publicacion de muro:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// Toggle "Me gusta" (reaccion de una clienta)
+router.post('/muro/:id/reaccion', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const clienteId = parseInt(req.body.cliente_id);
+    if (!clienteId) {
+      return res.status(400).json({ error: 'cliente_id es requerido' });
+    }
+
+    const existe = await existeReaccion(id, clienteId);
+    if (existe) {
+      await pool.query(
+        'DELETE FROM muro_reacciones WHERE publicacion_id = $1 AND cliente_id = $2',
+        [id, clienteId]
+      );
+    } else {
+      await pool.query(
+        'INSERT INTO muro_reacciones (publicacion_id, cliente_id) VALUES ($1, $2)',
+        [id, clienteId]
+      );
+    }
+
+    const likes = await contarLikes(id);
+    res.json({ success: true, liked: !existe, likes_count: likes });
+  } catch (error) {
+    console.error('Error en reaccion de muro:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// ==================== ENCUESTAS HAIRSTYLE ====================
+
+async function encuestaOpciones(encuestaId) {
+  const res = await pool.query(
+    'SELECT * FROM encuesta_opciones WHERE encuesta_id = $1 ORDER BY posicion, id',
+    [encuestaId]
+  );
+  return res.rows;
+}
+
+async function encuestaResultados(encuestaId) {
+  const res = await pool.query(
+    'SELECT opcion_id, COUNT(*)::int AS votos FROM encuesta_votos WHERE encuesta_id = $1 GROUP BY opcion_id',
+    [encuestaId]
+  );
+  const total = await pool.query('SELECT COUNT(*)::int AS total FROM encuesta_votos WHERE encuesta_id = $1', [encuestaId]);
+  return { por_opcion: res.rows, total: parseInt(total.rows[0].total || 0) };
+}
+
+// Encuestas activas para clientas (con deteccion de si ya voto)
+router.get('/encuestas', async (req, res) => {
+  try {
+    const clienteId = parseInt(req.query.cliente_id) || null;
+    const encuestasRes = await pool.query(
+      'SELECT * FROM encuestas WHERE activo = TRUE ORDER BY created_at DESC'
+    );
+    const resultado = [];
+    for (const encuesta of encuestasRes.rows) {
+      const opciones = await encuestaOpciones(encuesta.id);
+      const resultados = await encuestaResultados(encuesta.id);
+
+      let opcionElegida = null;
+      if (clienteId) {
+        const voto = await pool.query(
+          'SELECT opcion_id FROM encuesta_votos WHERE encuesta_id = $1 AND cliente_id = $2',
+          [encuesta.id, clienteId]
+        );
+        opcionElegida = voto.rows.length > 0 ? voto.rows[0].opcion_id : null;
+      }
+
+      const opcionesFinales = opciones.map(function(op) {
+        const v = resultados.por_opcion.find(function(r) { return r.opcion_id === op.id; });
+        return {
+          id: op.id,
+          texto: op.texto,
+          votos: opcionElegida !== null ? (v ? v.votos : 0) : null,
+          elegida: op.id === opcionElegida
+        };
+      });
+
+      resultado.push({
+        id: encuesta.id,
+        pregunta: encuesta.pregunta,
+        activo: encuesta.activo,
+        created_at: encuesta.created_at,
+        ya_voto: opcionElegida !== null,
+        opcion_elegida: opcionElegida,
+        total_votos: opcionElegida !== null ? resultados.total : null,
+        opciones: opcionesFinales
+      });
+    }
+    res.json(resultado);
+  } catch (error) {
+    console.error('Error obteniendo encuestas:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// Votar una encuesta (una vez por clienta)
+router.post('/encuestas/:id/votar', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const clienteId = parseInt(req.body.cliente_id);
+    const opcionId = parseInt(req.body.opcion_id);
+
+    if (!clienteId) return res.status(400).json({ error: 'cliente_id es requerido' });
+    if (!opcionId) return res.status(400).json({ error: 'opcion_id es requerido' });
+
+    const encuesta = await pool.query(
+      'SELECT * FROM encuestas WHERE id = $1 AND activo = TRUE',
+      [id]
+    );
+    if (encuesta.rows.length === 0) {
+      return res.status(404).json({ error: 'Encuesta no encontrada o inactiva' });
+    }
+
+    const opcionValida = await pool.query(
+      'SELECT id FROM encuesta_opciones WHERE id = $1 AND encuesta_id = $2',
+      [opcionId, id]
+    );
+    if (opcionValida.rows.length === 0) {
+      return res.status(400).json({ error: 'Opción inválida para esta encuesta' });
+    }
+
+    const yaVoto = await pool.query(
+      'SELECT id FROM encuesta_votos WHERE encuesta_id = $1 AND cliente_id = $2',
+      [id, clienteId]
+    );
+    if (yaVoto.rows.length > 0) {
+      return res.status(400).json({ error: 'Ya participaste en esta encuesta' });
+    }
+
+    await pool.query(
+      'INSERT INTO encuesta_votos (encuesta_id, opcion_id, cliente_id) VALUES ($1, $2, $3)',
+      [id, opcionId, clienteId]
+    );
+
+    const opciones = await encuestaOpciones(id);
+    const resultados = await encuestaResultados(id);
+    const opcionesFinales = opciones.map(function(op) {
+      const v = resultados.por_opcion.find(function(r) { return r.opcion_id === op.id; });
+      return { id: op.id, texto: op.texto, votos: v ? v.votos : 0, elegida: op.id === opcionId };
+    });
+
+    res.json({ success: true, ya_voto: true, opcion_elegida: opcionId, total_votos: resultados.total, opciones: opcionesFinales });
+  } catch (error) {
+    console.error('Error votando encuesta:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// Todas las encuestas para el panel admin (activ, inactivas e historial)
+router.get('/encuestas/admin', async (req, res) => {
+  try {
+    const encuestasRes = await pool.query(
+      'SELECT * FROM encuestas ORDER BY created_at DESC'
+    );
+    const resultado = [];
+    for (const encuesta of encuestasRes.rows) {
+      const opciones = await encuestaOpciones(encuesta.id);
+      const resultados = await encuestaResultados(encuesta.id);
+      resultado.push({
+        id: encuesta.id,
+        pregunta: encuesta.pregunta,
+        activo: encuesta.activo,
+        created_at: encuesta.created_at,
+        total_votos: resultados.total,
+        opciones: opciones.map(function(op) {
+          const v = resultados.por_opcion.find(function(r) { return r.opcion_id === op.id; });
+          return { id: op.id, texto: op.texto, votos: v ? v.votos : 0 };
+        })
+      });
+    }
+    res.json(resultado);
+  } catch (error) {
+    console.error('Error obteniendo encuestas admin:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// Crear encuesta (2 a 5 opciones)
+router.post('/encuestas', async (req, res) => {
+  try {
+    const { pregunta, opciones } = req.body;
+    const textoPregunta = (pregunta || '').trim();
+    if (!textoPregunta) return res.status(400).json({ error: 'La pregunta es requerida' });
+
+    if (!Array.isArray(opciones) || opciones.length < 2 || opciones.length > 5) {
+      return res.status(400).json({ error: 'Se requieren entre 2 y 5 opciones' });
+    }
+    const textos = opciones.map(function(o) { return (typeof o === 'string' ? o : o.texto || '').trim(); });
+    if (textos.some(function(t) { return t === ''; })) {
+      return res.status(400).json({ error: 'Todas las opciones deben tener texto' });
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const enc = await client.query(
+        'INSERT INTO encuestas (pregunta, activo) VALUES ($1, TRUE) RETURNING *',
+        [textoPregunta]
+      );
+      const encuestaId = enc.rows[0].id;
+      for (let i = 0; i < textos.length; i++) {
+        await client.query(
+          'INSERT INTO encuesta_opciones (encuesta_id, texto, posicion) VALUES ($1, $2, $3)',
+          [encuestaId, textos[i], i]
+        );
+      }
+      await client.query('COMMIT');
+      res.status(201).json({ id: encuestaId, pregunta: textoPregunta, activo: true });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error creando encuesta:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// Editar encuesta (solo si aun no tiene votos)
+router.put('/encuestas/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { pregunta, opciones } = req.body;
+    const textoPregunta = (pregunta || '').trim();
+    if (!textoPregunta) return res.status(400).json({ error: 'La pregunta es requerida' });
+
+    if (!Array.isArray(opciones) || opciones.length < 2 || opciones.length > 5) {
+      return res.status(400).json({ error: 'Se requieren entre 2 y 5 opciones' });
+    }
+    const textos = opciones.map(function(o) { return (typeof o === 'string' ? o : o.texto || '').trim(); });
+    if (textos.some(function(t) { return t === ''; })) {
+      return res.status(400).json({ error: 'Todas las opciones deben tener texto' });
+    }
+
+    const votos = await pool.query('SELECT COUNT(*)::int AS total FROM encuesta_votos WHERE encuesta_id = $1', [id]);
+    if (parseInt(votos.rows[0].total || 0) > 0) {
+      return res.status(400).json({ error: 'No se puede editar: la encuesta ya tiene votos' });
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const updated = await client.query(
+        'UPDATE encuestas SET pregunta = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+        [textoPregunta, id]
+      );
+      if (updated.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Encuesta no encontrada' });
+      }
+      await client.query('DELETE FROM encuesta_opciones WHERE encuesta_id = $1', [id]);
+      for (let i = 0; i < textos.length; i++) {
+        await client.query(
+          'INSERT INTO encuesta_opciones (encuesta_id, texto, posicion) VALUES ($1, $2, $3)',
+          [id, textos[i], i]
+        );
+      }
+      await client.query('COMMIT');
+      res.json({ success: true, id });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error editando encuesta:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// Activar / desactivar encuesta
+router.patch('/encuestas/:id/activar', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const activo = !!req.body.activo;
+    const result = await pool.query(
+      'UPDATE encuestas SET activo = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+      [activo, id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Encuesta no encontrada' });
+    }
+    res.json({ success: true, activo });
+  } catch (error) {
+    console.error('Error activando encuesta:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
+// Eliminar encuesta (sus opciones y votos caen en cascada)
+router.delete('/encuestas/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM encuestas WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error eliminando encuesta:', error);
+    res.status(500).json({ error: 'Error del servidor' });
+  }
+});
+
 export default router;

@@ -254,6 +254,8 @@
         '<div class="menu-grid">' +
           '<div class="menu-box" onclick="showServicios()"><span class="menu-icon">💅</span><span class="menu-label">Servicios</span></div>' +
           '<div class="menu-box" onclick="showGaleriaCliente()"><span class="menu-icon">📸</span><span class="menu-label">Galería</span></div>' +
+          '<div class="menu-box" onclick="showMuro()"><span class="menu-icon">📣</span><span class="menu-label">Muro</span></div>' +
+          '<div class="menu-box" onclick="showEncuestas()"><span class="menu-icon">🗳️</span><span class="menu-label">Encuestas</span></div>' +
           '<div class="menu-box" onclick="showMisTurnos()"><span class="menu-icon">📅</span><span class="menu-label">Mis Turnos</span></div>' +
           '<div class="menu-box" onclick="showHistorial()"><span class="menu-icon">📊</span><span class="menu-label">Mi Historial</span></div>' +
           '<div class="menu-box" onclick="showTestimonios()"><span class="menu-icon">⭐</span><span class="menu-label">Reseñas</span></div>' +
@@ -1314,6 +1316,230 @@
           msg.innerHTML = '<div class="msg error">Error de conexión. Intentá de nuevo.</div>';
         }
       };
+    }
+    
+    // ==================== MURO HAIRSTYLE (CLIENTE) ====================
+    
+    function muroColorTipo(tipo) {
+      switch (tipo) {
+        case 'Promoción': return '#ff9800';
+        case 'Nuevo servicio': return '#4caf50';
+        case 'Consejo': return '#2196f3';
+        case 'Sorteo': return '#9c27b0';
+        case 'Información': return '#607d8b';
+        default: return '#e91e63';
+      }
+    }
+    
+    function showMuro() {
+      document.getElementById('app').innerHTML = 
+        '<button class="back-btn" onclick="showClienteHome()">← Volver</button>' +
+        '<div class="header"><h1>📣 Muro HAIRSTYLE</h1></div>' +
+        '<div id="muro-feed"><div class="loading">Cargando...</div></div>';
+      
+      loadMuroCliente();
+    }
+    
+    async function loadMuroCliente() {
+      try {
+        var res = await fetch(API + '/muro?cliente_id=' + user.id);
+        var pubs = await res.json();
+        var container = document.getElementById('muro-feed');
+        
+        if (pubs.length === 0) {
+          container.innerHTML = '<div class="empty-state">Aún no hay publicaciones. ¡Volvé pronto!</div>';
+          return;
+        }
+        
+        var html = '';
+        pubs.forEach(function(p) {
+          var fecha = p.created_at ? new Date(p.created_at) : null;
+          var fechaStr = fecha ? fecha.toLocaleDateString('es-AR') : '';
+          var color = muroColorTipo(p.tipo);
+          html += '<div style="background:white;border-radius:16px;overflow:hidden;margin-bottom:15px;box-shadow:0 4px 15px rgba(0,0,0,0.1);">';
+          if (p.imagen_url) {
+            html += '<div style="width:100%;height:200px;background:#eee;">' +
+              '<img src="' + p.imagen_url + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.style.display=\'none\';">' +
+            '</div>';
+          }
+          html += '<div style="padding:15px;">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+              '<span style="background:' + color + ';color:white;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;">' + (p.tipo || 'Novedad') + '</span>' +
+              '<span style="font-size:11px;color:#888;">📅 ' + fechaStr + '</span>' +
+            '</div>' +
+            '<div style="font-weight:700;color:#333;font-size:16px;">' + (p.titulo || '') + '</div>';
+          if (p.descripcion) {
+            html += '<div style="color:#666;font-size:14px;margin-top:6px;line-height:1.5;white-space:pre-line;">' + p.descripcion + '</div>';
+          }
+          if (p.enlace) {
+            html += '<a href="' + p.enlace + '" target="_blank" style="display:block;text-align:center;margin-top:12px;padding:12px;background:linear-gradient(135deg,#e91e63,#9c27b0);color:white;border-radius:10px;font-weight:600;text-decoration:none;">' + (p.texto_boton || 'Ver más') + '</a>';
+          }
+          html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid #f0f0f0;">' +
+            '<button data-liked="' + (p.me_gusta ? '1' : '0') + '" onclick="toggleLikeMuro(' + p.id + ', this)" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;font-size:14px;font-weight:600;color:' + (p.me_gusta ? '#e91e63' : '#666') + ';">' +
+              (p.me_gusta ? '❤️' : '🤍') + ' <span>' + (p.likes || 0) + '</span> Me gusta' +
+            '</button>' +
+            '<span style="font-size:12px;color:#888;">HairStyle</span>' +
+          '</div>';
+          html += '</div></div>';
+        });
+        container.innerHTML = html;
+      } catch(err) {
+        document.getElementById('muro-feed').innerHTML = '<div class="empty-state">Error cargando el muro</div>';
+      }
+    }
+    
+    function toggleLikeMuro(id, btn) {
+      fetch(API + '/muro/' + id + '/reaccion', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ cliente_id: user.id })
+      }).then(function(res) { return res.json(); }).then(function(result) {
+        if (result.success) {
+          btn.innerHTML = (result.liked ? '❤️' : '🤍') + ' <span>' + result.likes_count + '</span> Me gusta';
+          btn.style.color = result.liked ? '#e91e63' : '#666';
+          btn.dataset.liked = result.liked ? '1' : '0';
+        } else {
+          alert(result.error || 'Error');
+        }
+      }).catch(function() { alert('Error de conexión'); });
+    }
+    
+    // ==================== ENCUESTAS HAIRSTYLE (CLIENTE) ====================
+    
+    function showEncuestas() {
+      document.getElementById('app').innerHTML = 
+        '<button class="back-btn" onclick="showClienteHome()">← Volver</button>' +
+        '<div class="header"><h1>🗳️ Encuestas HAIRSTYLE</h1></div>' +
+        '<div id="encuestas-feed"><div class="loading">Cargando...</div></div>';
+      
+      loadEncuestasCliente();
+    }
+    
+    async function loadEncuestasCliente() {
+      try {
+        var res = await fetch(API + '/encuestas?cliente_id=' + user.id);
+        var encuestas = await res.json();
+        var container = document.getElementById('encuestas-feed');
+        
+        if (!Array.isArray(encuestas) || encuestas.length === 0) {
+          container.innerHTML = '<div class="empty-state">No hay encuestas disponibles en este momento</div>';
+          return;
+        }
+        
+        var html = '';
+        encuestas.forEach(function(e) {
+          if (e.ya_voto) {
+            html += renderResultadosEncuesta(e);
+          } else {
+            html += renderVotarEncuesta(e);
+          }
+        });
+        container.innerHTML = html;
+      } catch(err) {
+        document.getElementById('encuestas-feed').innerHTML = '<div class="empty-state">Error cargando encuestas</div>';
+      }
+    }
+    
+    function renderVotarEncuesta(e) {
+      var fecha = e.created_at ? new Date(e.created_at) : null;
+      var fechaStr = fecha ? fecha.toLocaleDateString('es-AR') : '';
+      var html = '<div style="background:white;border-radius:16px;padding:18px;margin-bottom:15px;box-shadow:0 4px 15px rgba(0,0,0,0.1);">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+        '<span style="background:#e91e63;color:white;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;">ENCUESTA ACTIVA</span>' +
+        '<span style="font-size:11px;color:#888;">📅 ' + fechaStr + '</span>' +
+      '</div>';
+      html += '<div style="font-weight:700;color:#333;font-size:16px;margin-bottom:14px;">' + e.pregunta + '</div>';
+      html += '<div data-encuesta="' + e.id + '">';
+      e.opciones.forEach(function(op) {
+        html += '<div class="enc-opcion-select" data-opcion="' + op.id + '" onclick="seleccionarOpcionEncuesta(this)" style="display:flex;align-items:center;gap:10px;padding:12px;border:2px solid #e0e0e0;border-radius:10px;margin-bottom:8px;cursor:pointer;transition:all 0.2s;">' +
+          '<span class="enc-radio" style="width:20px;height:20px;border-radius:50%;border:2px solid #bdbdbd;flex-shrink:0;"></span>' +
+          '<span style="color:#333;font-size:14px;">' + op.texto + '</span>' +
+        '</div>';
+      });
+      html += '</div>';
+      html += '<button id="btn-votar-' + e.id + '" data-opcion="" onclick="votarEncuesta(' + e.id + ', this)" disabled style="width:100%;padding:13px;background:linear-gradient(135deg,#e91e63,#9c27b0);color:white;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;margin-top:6px;opacity:0.5;">VOTAR</button>';
+      html += '</div>';
+      return html;
+    }
+    
+    function renderResultadosEncuesta(e) {
+      var fecha = e.created_at ? new Date(e.created_at) : null;
+      var fechaStr = fecha ? fecha.toLocaleDateString('es-AR') : '';
+      var total = parseInt(e.total_votos || 0);
+      
+      var html = '<div style="background:white;border-radius:16px;padding:18px;margin-bottom:15px;box-shadow:0 4px 15px rgba(0,0,0,0.1);">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+        '<span style="background:#9c27b0;color:white;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;">RESULTADOS</span>' +
+        '<span style="font-size:11px;color:#888;">📅 ' + fechaStr + '</span>' +
+      '</div>';
+      html += '<div style="font-weight:700;color:#333;font-size:16px;margin-bottom:10px;">' + e.pregunta + '</div>';
+      html += '<div class="msg success">¡Gracias por participar! 🙌</div>';
+      
+      e.opciones.forEach(function(op) {
+        var pct = total > 0 ? Math.round((op.votos / total) * 100) : 0;
+        var resaltada = op.elegida;
+        html += '<div style="border:2px solid ' + (resaltada ? '#e91e63' : 'transparent') + ';background:#f8f8f8;border-radius:10px;padding:10px;margin-bottom:8px;">' +
+          '<div style="display:flex;justify-content:space-between;font-size:13px;color:#333;">' +
+            '<span>' + (resaltada ? '✓ ' : '') + op.texto + '</span>' +
+            '<span style="font-weight:700;color:#e91e63;">' + pct + '%</span>' +
+          '</div>' +
+          '<div style="background:#eee;border-radius:6px;height:8px;margin-top:6px;overflow:hidden;">' +
+            '<div style="width:' + pct + '%;height:100%;background:linear-gradient(135deg,#e91e63,#9c27b0);"></div>' +
+          '</div>' +
+          '<div style="font-size:11px;color:#888;margin-top:5px;">' + op.votos + ' votos</div>' +
+        '</div>';
+      });
+      
+      html += '<div style="font-size:12px;color:#888;text-align:center;margin-top:4px;">Total: ' + total + (total === 1 ? ' voto' : ' votos') + '</div>';
+      html += '</div>';
+      return html;
+    }
+    
+    function seleccionarOpcionEncuesta(el) {
+      var padre = el.parentElement;
+      var opciones = padre.querySelectorAll('.enc-opcion-select');
+      opciones.forEach(function(o) {
+        o.style.borderColor = '#e0e0e0';
+        o.style.background = 'white';
+        o.querySelector('.enc-radio').style.borderColor = '#bdbdbd';
+      });
+      el.style.borderColor = '#e91e63';
+      el.style.background = '#fce4ec';
+      el.querySelector('.enc-radio').style.borderColor = '#e91e63';
+      var btn = document.getElementById('btn-votar-' + padre.dataset.encuesta);
+      if (btn) {
+        btn.dataset.opcion = el.dataset.opcion;
+        btn.disabled = false;
+        btn.style.opacity = 1;
+      }
+    }
+    
+    function votarEncuesta(idEncuesta, btn) {
+      var opcionId = btn.dataset.opcion;
+      if (!opcionId) return;
+      
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Enviando...';
+      
+      fetch(API + '/encuestas/' + idEncuesta + '/votar', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ cliente_id: user.id, opcion_id: parseInt(opcionId) })
+      }).then(function(res) { return res.json(); }).then(function(result) {
+        if (result.success) {
+          loadEncuestasCliente();
+        } else {
+          btn.disabled = false;
+          btn.innerHTML = 'VOTAR';
+          btn.style.opacity = 1;
+          alert(result.error || 'Error al votar');
+        }
+      }).catch(function() {
+        btn.disabled = false;
+        btn.innerHTML = 'VOTAR';
+        btn.style.opacity = 1;
+        alert('Error de conexión');
+      });
     }
   </script>
 </body>

@@ -308,6 +308,8 @@
             '<div class="menu-item secondary" onclick="showSection(\'lista-clientes\')"><span class="icon">📋</span><span class="label">Clientes</span><span class="desc">Ver todos</span></div>' +
             '<div class="menu-item" onclick="showSection(\'tratamientos\')"><span class="icon">💅</span><span class="label">Servicios</span><span class="desc">Tratamientos</span></div>' +
             '<div class="menu-item" onclick="showSection(\'promociones\')"><span class="icon">🎉</span><span class="label">Promociones</span><span class="desc">Ofertas</span></div>' +
+            '<div class="menu-item" onclick="showSection(\'muro\')"><span class="icon">📣</span><span class="label">Muro</span><span class="desc">Publicaciones</span></div>' +
+            '<div class="menu-item" onclick="showSection(\'encuestas\')"><span class="icon">🗳️</span><span class="label">Encuestas</span><span class="desc">Votación</span></div>' +
             '<div class="menu-item secondary" onclick="showSection(\'galeria\')"><span class="icon">📸</span><span class="label">Galería</span><span class="desc">Fotos</span></div>' +
             '<div class="menu-item secondary" onclick="showSection(\'legajos\')"><span class="icon">📋</span><span class="label">Legajos</span><span class="desc">Anamnesis</span></div>' +
             '<div class="menu-item secondary" onclick="showSection(\'nuevo-legajo\')"><span class="icon">📋</span><span class="label">Nueva Planilla</span><span class="desc">Anamnesis</span></div>' +
@@ -382,6 +384,8 @@
         case 'lista-clientes': showListaClientes(); break;
         case 'tratamientos': showTratamientos(); break;
         case 'promociones': showPromociones(); break;
+        case 'muro': showMuro(); break;
+        case 'encuestas': showEncuestas(); break;
         case 'galeria': showGaleria(); break;
         case 'legajos': showLegajos(); break;
         case 'nuevo-legajo': showNuevaPlanilla(); break;
@@ -2141,6 +2145,456 @@ document.getElementById('ingresos-content').innerHTML = html;
       } catch(err) {
         alert('Error');
       }
+    }
+    
+    // ==================== MURO HAIRSTYLE (ADMIN) ====================
+    
+    function showMuro() {
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="card">' +
+          '<h2>📣 Muro HAIRSTYLE</h2>' +
+          '<button class="btn" onclick="showAgregarPublicacionMuro()" style="margin-bottom:15px;">➕ Nueva Publicación</button>' +
+          '<div id="muro-list"><div class="loading">Cargando...</div></div>' +
+        '</div>';
+      
+      loadPublicacionesMuro();
+    }
+    
+    async function loadPublicacionesMuro() {
+      try {
+        var res = await fetch(API + '/muro/admin');
+        var pubs = await res.json();
+        var container = document.getElementById('muro-list');
+        
+        if (pubs.length === 0) {
+          container.innerHTML = '<div class="empty-state">No hay publicaciones. ¡Creá la primera!</div>';
+          return;
+        }
+        
+        var html = '';
+        pubs.forEach(function(p) {
+          var estadoBadge = p.activo ? 
+            '<span class="badge completado">Activo</span>' : 
+            '<span class="badge pendiente">Inactivo</span>';
+          var fecha = p.created_at ? new Date(p.created_at) : null;
+          var fechaStr = fecha ? fecha.toLocaleDateString('es-AR') : '';
+          html += '<div style="background:#f8f8f8;border-radius:12px;padding:15px;margin-bottom:12px;position:relative;">';
+          html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+            '<span class="badge" style="background:' + muroColorTipo(p.tipo) + ';color:white;">' + (p.tipo || 'Novedad') + '</span>' +
+            estadoBadge +
+          '</div>';
+          if (p.imagen_url) {
+            html += '<div style="width:100%;height:120px;border-radius:8px;overflow:hidden;margin-bottom:10px;background:#eee;display:flex;align-items:center;justify-content:center;">' +
+              '<img src="' + p.imagen_url + '" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.parentElement.innerHTML=\'<span style=color:#999>Error de imagen</span>\'">' +
+            '</div>';
+          }
+          html += '<div style="font-weight:600;color:#333;font-size:15px;">' + (p.titulo || '') + '</div>';
+          if (p.descripcion) html += '<div style="font-size:13px;color:#666;margin-top:4px;">' + p.descripcion + '</div>';
+          html += '<div style="font-size:11px;color:#888;margin-top:6px;">📅 ' + fechaStr + ' &nbsp; ❤️ ' + (p.likes || 0) + '</div>';
+          if (p.enlace) html += '<div style="font-size:12px;color:#e91e63;margin-top:4px;">🔗 ' + (p.texto_boton || 'Ver más') + '</div>';
+          html += '<div style="display:flex;gap:8px;margin-top:12px;">' +
+            '<button class="btn small" style="background:#2196f3;color:white;" onclick="editarPublicacionMuro(' + p.id + ')">✏️ Editar</button>' +
+            (p.activo 
+              ? '<button class="btn small" style="background:#ff9800;color:white;" onclick="toggleActivoPublicacionMuro(' + p.id + ')">🚫 Desactivar</button>'
+              : '<button class="btn small" style="background:#4caf50;color:white;" onclick="toggleActivoPublicacionMuro(' + p.id + ')">✅ Activar</button>') +
+            '<button class="btn small danger" onclick="eliminarPublicacionMuro(' + p.id + ')">🗑️ Eliminar</button>' +
+          '</div>';
+          html += '</div>';
+        });
+        container.innerHTML = html;
+      } catch(err) {
+        document.getElementById('muro-list').innerHTML = '<div class="empty-state">Error cargando publicaciones</div>';
+      }
+    }
+    
+    function muroColorTipo(tipo) {
+      switch (tipo) {
+        case 'Promoción': return '#ff9800';
+        case 'Nuevo servicio': return '#4caf50';
+        case 'Consejo': return '#2196f3';
+        case 'Sorteo': return '#9c27b0';
+        case 'Información': return '#607d8b';
+        default: return '#e91e63';
+      }
+    }
+    
+    function showAgregarPublicacionMuro() {
+      muroEditandoId = null;
+      muroImagenActual = null;
+      renderModalPublicacionMuro('➕ Nueva Publicación', { titulo: '', descripcion: '', tipo: 'Novedad', enlace: '', texto_boton: '', activo: true });
+    }
+    
+    function editarPublicacionMuro(id) {
+      fetch(API + '/muro/admin').then(function(res) { return res.json(); }).then(function(pubs) {
+        var p = pubs.find(function(x) { return x.id === id; });
+        if (!p) { alert('No se encontró la publicación'); return; }
+        muroEditandoId = p.id;
+        muroImagenActual = p.imagen_url || null;
+        renderModalPublicacionMuro('✏️ Editar Publicación', p);
+      }).catch(function(err) { alert('Error cargando publicación'); });
+    }
+    
+    var muroEditandoId = null;
+    var muroImagenActual = null;
+    
+    function renderModalPublicacionMuro(tituloModal, p) {
+      var imgHtml = muroImagenActual
+        ? '<img src="' + muroImagenActual + '" style="max-width:100%;max-height:100%;object-fit:contain;">'
+        : '<span style="color:#999;font-size:13px;">Sin foto</span>';
+      
+      document.getElementById('modal-container').innerHTML = 
+        '<div class="modal" onclick="closeModal()">' +
+          '<div class="modal-content" onclick="event.stopPropagation()">' +
+            '<h3>' + tituloModal + '</h3>' +
+            '<div id="muro-msg"></div>' +
+            '<form id="muro-form">' +
+              '<div class="form-group"><label>Título *</label><input type="text" id="muro-titulo" required placeholder="Ej: Lanzamiento nueva promoción"></div>' +
+              '<div class="form-group"><label>Tipo</label><select id="muro-tipo">' +
+                '<option value="Novedad">Novedad</option>' +
+                '<option value="Promoción">Promoción</option>' +
+                '<option value="Nuevo servicio">Nuevo servicio</option>' +
+                '<option value="Consejo">Consejo</option>' +
+                '<option value="Sorteo">Sorteo</option>' +
+                '<option value="Información">Información</option>' +
+              '</select></div>' +
+              '<div class="form-group"><label>Descripción</label><textarea id="muro-desc" rows="3" placeholder="Texto del post..."></textarea></div>' +
+              '<div class="form-group"><label>Foto</label>' +
+                '<div id="muro-foto-preview" style="width:100%;height:100px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;overflow:hidden;">' + imgHtml + '</div>' +
+                '<input type="file" id="muro-foto-input" accept="image/*" onchange="previewFoto(this, \'muro-foto-preview\'); muroImagenActual = null;" style="font-size:14px;">' +
+              '</div>' +
+              '<div class="form-group"><label>Enlace (opcional)</label><input type="url" id="muro-enlace" placeholder="Ej: https://wa.me/... o un enlace de tu web"></div>' +
+              '<div class="form-group"><label>Texto del botón</label><input type="text" id="muro-texto-boton" placeholder="Ej: Consultar, Reservar, Ver más"></div>' +
+              '<div class="form-group"><label><input type="checkbox" id="muro-activo" style="width:auto;" checked> Publicación activa</label></div>' +
+              '<button type="submit" class="btn">💾 Guardar</button>' +
+              '<button type="button" class="btn secondary" onclick="closeModal()">Cancelar</button>' +
+            '</form>' +
+          '</div></div>';
+      
+      document.getElementById('muro-titulo').value = p.titulo || '';
+      document.getElementById('muro-tipo').value = p.tipo || 'Novedad';
+      document.getElementById('muro-desc').value = p.descripcion || '';
+      document.getElementById('muro-enlace').value = p.enlace || '';
+      document.getElementById('muro-texto-boton').value = p.texto_boton || '';
+      document.getElementById('muro-activo').checked = p.activo !== false;
+      
+      document.getElementById('muro-form').onsubmit = async function(e) {
+        e.preventDefault();
+        var msg = document.getElementById('muro-msg');
+        msg.innerHTML = '<div class="msg">⏳ Guardando...</div>';
+        
+        var imgUrl = muroImagenActual;
+        var fileInput = document.getElementById('muro-foto-input');
+        if (fileInput.files[0]) {
+          imgUrl = await fileToBase64(fileInput.files[0]);
+        }
+        
+        var data = {
+          titulo: document.getElementById('muro-titulo').value,
+          tipo: document.getElementById('muro-tipo').value,
+          descripcion: document.getElementById('muro-desc').value || null,
+          imagen_url: imgUrl,
+          enlace: document.getElementById('muro-enlace').value || null,
+          texto_boton: document.getElementById('muro-texto-boton').value || null,
+          activo: document.getElementById('muro-activo').checked
+        };
+        
+        try {
+          var url = API + '/muro' + (muroEditandoId ? '/' + muroEditandoId : '');
+          var method = muroEditandoId ? 'PUT' : 'POST';
+          var res = await fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+          });
+          var result = await res.json();
+          
+          if (result.id) {
+            msg.innerHTML = '<div class="msg success">¡Publicación guardada!</div>';
+            setTimeout(function() { closeModal(); loadPublicacionesMuro(); }, 800);
+          } else {
+            msg.innerHTML = '<div class="msg error">' + (result.error || 'Error') + '</div>';
+          }
+        } catch(err) {
+          msg.innerHTML = '<div class="msg error">Error de conexión</div>';
+        }
+      };
+    }
+    
+    async function toggleActivoPublicacionMuro(id) {
+      try {
+        var res = await fetch(API + '/muro/admin');
+        var pubs = await res.json();
+        var p = pubs.find(function(x) { return x.id === id; });
+        if (!p) return;
+        
+        var res2 = await fetch(API + '/muro/' + id, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            titulo: p.titulo,
+            tipo: p.tipo,
+            descripcion: p.descripcion,
+            imagen_url: p.imagen_url,
+            enlace: p.enlace,
+            texto_boton: p.texto_boton,
+            activo: !p.activo
+          })
+        });
+        var result = await res2.json();
+        if (result.id) {
+          loadPublicacionesMuro();
+        }
+      } catch(err) { alert('Error'); }
+    }
+    
+    async function eliminarPublicacionMuro(id) {
+      if (!confirm('¿Eliminar esta publicación? Las reacciones de las clientas también se eliminarán.')) return;
+      try {
+        var res = await fetch(API + '/muro/' + id, { method: 'DELETE' });
+        var result = await res.json();
+        if (result.success) {
+          loadPublicacionesMuro();
+        }
+      } catch(err) { alert('Error'); }
+    }
+    
+    // ==================== ENCUESTAS HAIRSTYLE (ADMIN) ====================
+    
+    var encuestaEditandoId = null;
+    
+    function showEncuestas() {
+      document.getElementById('app').innerHTML = 
+        showBackButton() +
+        '<div class="card">' +
+          '<h2>🗳️ Encuestas HAIRSTYLE</h2>' +
+          '<button class="btn" onclick="mostrarModalEncuesta()" style="margin-bottom:15px;">➕ Nueva Encuesta</button>' +
+          '<div id="encuestas-list"><div class="loading">Cargando...</div></div>' +
+        '</div>';
+      
+      loadEncuestasAdmin();
+    }
+    
+    async function loadEncuestasAdmin() {
+      try {
+        var res = await fetch(API + '/encuestas/admin');
+        var encuestas = await res.json();
+        var container = document.getElementById('encuestas-list');
+        
+        if (encuestas.length === 0) {
+          container.innerHTML = '<div class="empty-state">No hay encuestas. ¡Creá la primera!</div>';
+          return;
+        }
+        
+        var html = '';
+        encuestas.forEach(function(e) {
+          var estadoBadge = e.activo
+            ? '<span class="badge completado">Activa</span>'
+            : '<span class="badge pendiente">Finalizada</span>';
+          var fecha = e.created_at ? new Date(e.created_at) : null;
+          var fechaStr = fecha ? fecha.toLocaleDateString('es-AR') : '';
+          
+          html += '<div style="background:#f8f8f8;border-radius:12px;padding:15px;margin-bottom:12px;">';
+          html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+            estadoBadge + '<span style="font-size:11px;color:#888;">📅 ' + fechaStr + '</span>' +
+          '</div>';
+          html += '<div style="font-weight:600;color:#333;font-size:15px;margin-bottom:10px;">' + e.pregunta + '</div>';
+          
+          e.opciones.forEach(function(op) {
+            var total = parseInt(e.total_votos || 0);
+            var pct = total > 0 ? Math.round((op.votos / total) * 100) : 0;
+            html += '<div style="margin-bottom:8px;">' +
+              '<div style="display:flex;justify-content:space-between;font-size:13px;color:#333;">' +
+                '<span>' + op.texto + '</span>' +
+                '<span style="color:#888;">' + pct + '%' + (total > 0 ? ' — ' + op.votos + ' votos' : '') + '</span>' +
+              '</div>' +
+              '<div style="background:#eee;border-radius:6px;height:8px;margin-top:4px;overflow:hidden;">' +
+                '<div style="width:' + pct + '%;height:100%;background:linear-gradient(135deg,#e91e63,#9c27b0);"></div>' +
+              '</div>' +
+            '</div>';
+          });
+          
+          html += '<div style="font-size:12px;color:#888;margin:8px 0 10px;">Total: ' + (e.total_votos || 0) + ' votos</div>';
+          html += '<div style="display:flex;gap:8px;">' +
+            (e.total_votos == 0
+              ? '<button class="btn small" style="background:#2196f3;color:white;" onclick="editarEncuesta(' + e.id + ')">✏️ Editar</button>'
+              : '<span style="font-size:11px;color:#999;padding:6px 0;">Con votos no se puede editar</span>') +
+            (e.activo
+              ? '<button class="btn small" style="background:#ff9800;color:white;" onclick="toggleActivoEncuesta(' + e.id + ')">🚫 Finalizar</button>'
+              : '<button class="btn small" style="background:#4caf50;color:white;" onclick="toggleActivoEncuesta(' + e.id + ')">✅ Activar</button>') +
+            '<button class="btn small danger" onclick="eliminarEncuesta(' + e.id + ')">🗑️ Eliminar</button>' +
+          '</div>';
+          html += '</div>';
+        });
+        container.innerHTML = html;
+      } catch(err) {
+        document.getElementById('encuestas-list').innerHTML = '<div class="empty-state">Error cargando encuestas</div>';
+      }
+    }
+    
+    function mostrarModalEncuesta() {
+      encuestaEditandoId = null;
+      renderModalEncuesta('➕ Nueva Encuesta', { pregunta: '', opciones: ['', ''] });
+    }
+    
+    function editarEncuesta(id) {
+      fetch(API + '/encuestas/admin').then(function(res) { return res.json(); }).then(function(encuestas) {
+        var e = encuestas.find(function(x) { return x.id === id; });
+        if (!e) { alert('No se encontró la encuesta'); return; }
+        if (e.total_votos > 0) { alert('No se puede editar: la encuesta ya tiene votos'); return; }
+        encuestaEditandoId = e.id;
+        renderModalEncuesta('✏️ Editar Encuesta', { pregunta: e.pregunta, opciones: e.opciones.map(function(o) { return o.texto; }) });
+      }).catch(function() { alert('Error cargando encuesta'); });
+    }
+    
+    function renderModalEncuesta(tituloModal, datos) {
+      document.getElementById('modal-container').innerHTML = 
+        '<div class="modal" onclick="closeModal()">' +
+          '<div class="modal-content" onclick="event.stopPropagation()">' +
+            '<h3>' + tituloModal + '</h3>' +
+            '<div id="enc-msg"></div>' +
+            '<form id="enc-form">' +
+              '<div class="form-group"><label>Pregunta *</label><input type="text" id="enc-pregunta" required placeholder="Ej: ¿Qué promo te gustaría esta semana?"></div>' +
+              '<div class="form-group"><label>Opciones (2 a 5)</label>' +
+                '<div id="enc-opciones-container"></div>' +
+                '<button type="button" class="btn small secondary" onclick="agregarOpcionModal()" style="margin-top:8px;">➕ Agregar opción</button>' +
+              '</div>' +
+              '<button type="submit" class="btn">💾 Guardar Encuesta</button>' +
+              '<button type="button" class="btn secondary" onclick="closeModal()">Cancelar</button>' +
+            '</form>' +
+          '</div></div>';
+      
+      document.getElementById('enc-pregunta').value = datos.pregunta || '';
+      datos.opciones.forEach(function(texto) {
+        agregarOpcionModal(texto);
+      });
+      
+      document.getElementById('enc-form').onsubmit = async function(e) {
+        e.preventDefault();
+        var msg = document.getElementById('enc-msg');
+        
+        var inputs = document.querySelectorAll('.enc-opcion-input');
+        var opciones = [];
+        inputs.forEach(function(input) {
+          var valor = input.value.trim();
+          if (valor) opciones.push(valor);
+        });
+        
+        if (opciones.length < 2) {
+          msg.innerHTML = '<div class="msg error">Necesitás al menos 2 opciones con texto</div>';
+          return;
+        }
+        if (opciones.length > 5) {
+          msg.innerHTML = '<div class="msg error">Máximo 5 opciones</div>';
+          return;
+        }
+        
+        msg.innerHTML = '<div class="msg">⏳ Guardando...</div>';
+        var data = {
+          pregunta: document.getElementById('enc-pregunta').value,
+          opciones: opciones
+        };
+        
+        try {
+          var url = API + '/encuestas' + (encuestaEditandoId ? '/' + encuestaEditandoId : '');
+          var method = encuestaEditandoId ? 'PUT' : 'POST';
+          var res = await fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+          });
+          var result = await res.json();
+          
+          if (result.id || result.success) {
+            msg.innerHTML = '<div class="msg success">¡Encuesta guardada!</div>';
+            setTimeout(function() { closeModal(); loadEncuestasAdmin(); }, 800);
+          } else {
+            msg.innerHTML = '<div class="msg error">' + (result.error || 'Error') + '</div>';
+          }
+        } catch(err) {
+          msg.innerHTML = '<div class="msg error">Error de conexión</div>';
+        }
+      };
+    }
+    
+    function agregarOpcionModal(texto) {
+      var container = document.getElementById('enc-opciones-container');
+      if (!container) return;
+      var count = container.querySelectorAll('.enc-opcion-input').length;
+      if (count >= 5) return;
+      
+      var div = document.createElement('div');
+      div.style.display = 'flex';
+      div.style.gap = '8px';
+      div.style.marginBottom = '8px';
+      div.style.alignItems = 'center';
+      
+      var input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'enc-opcion-input';
+      input.placeholder = 'Opción ' + (count + 1);
+      input.maxLength = 255;
+      input.value = texto || '';
+      input.style.flex = '1';
+      input.style.padding = '12px';
+      input.style.border = '2px solid #e0e0e0';
+      input.style.borderRadius = '10px';
+      input.style.fontSize = '16px';
+      
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.innerHTML = 'X';
+      btn.style.background = '#f44336';
+      btn.style.color = 'white';
+      btn.style.border = 'none';
+      btn.style.borderRadius = '50%';
+      btn.style.width = '30px';
+      btn.style.height = '30px';
+      btn.style.cursor = 'pointer';
+      btn.style.flexShrink = '0';
+      btn.onclick = function() {
+        if (container.querySelectorAll('.enc-opcion-input').length > 2) {
+          div.remove();
+        } else {
+          alert('Una encuesta necesita al menos 2 opciones');
+        }
+      };
+      
+      div.appendChild(input);
+      div.appendChild(btn);
+      container.appendChild(div);
+    }
+    
+    async function toggleActivoEncuesta(id) {
+      try {
+        var res = await fetch(API + '/encuestas/admin');
+        var encuestas = await res.json();
+        var e = encuestas.find(function(x) { return x.id === id; });
+        if (!e) return;
+        
+        var res2 = await fetch(API + '/encuestas/' + id + '/activar', {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ activo: !e.activo })
+        });
+        var result = await res2.json();
+        if (result.success) {
+          loadEncuestasAdmin();
+        } else {
+          alert(result.error || 'Error');
+        }
+      } catch(err) { alert('Error'); }
+    }
+    
+    async function eliminarEncuesta(id) {
+      if (!confirm('¿Eliminar esta encuesta? Sus opciones y votos también se eliminarán.')) return;
+      try {
+        var res = await fetch(API + '/encuestas/' + id, { method: 'DELETE' });
+        var result = await res.json();
+        if (result.success) {
+          loadEncuestasAdmin();
+        }
+      } catch(err) { alert('Error'); }
     }
   </script>
 </body>
