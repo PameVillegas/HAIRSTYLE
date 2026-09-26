@@ -1184,142 +1184,6 @@ router.get('/horario-bloqueado/:fecha/:hora', async (req, res) => {
   }
 });
 
-// ==================== MURO HAIRSTYLE ====================
-
-const MURO_TIPOS = ['Novedad', 'Promoción', 'Nuevo servicio', 'Consejo', 'Sorteo', 'Información'];
-
-// Ver si una reaccion existe
-async function existeReaccion(publicacionId, clienteId) {
-  const res = await pool.query(
-    'SELECT id FROM muro_reacciones WHERE publicacion_id = $1 AND cliente_id = $2',
-    [publicacionId, clienteId]
-  );
-  return res.rows.length > 0;
-}
-
-async function contarLikes(publicacionId) {
-  const res = await pool.query(
-    'SELECT COUNT(*) as likes FROM muro_reacciones WHERE publicacion_id = $1',
-    [publicacionId]
-  );
-  return parseInt(res.rows[0].likes || 0);
-}
-
-// Publicaciones activas para clientes (con likes y si el cliente ya reacciono)
-router.get('/muro', async (req, res) => {
-  try {
-    const clienteId = parseInt(req.query.cliente_id) || null;
-    const result = await pool.query(
-      'SELECT p.*, COUNT(r.id)::int AS likes FROM muro_publicaciones p LEFT JOIN muro_reacciones r ON r.publicacion_id = p.id WHERE p.activo = TRUE GROUP BY p.id ORDER BY p.created_at DESC'
-    );
-
-    let publicaciones = result.rows;
-    if (clienteId) {
-      for (const pub of publicaciones) {
-        pub.me_gusta = await existeReaccion(pub.id, clienteId);
-      }
-    }
-    res.json(publicaciones);
-  } catch (error) {
-    console.error('Error obteniendo muro:', error);
-    res.status(500).json({ error: 'Error del servidor' });
-  }
-});
-
-// Todas las publicaciones para el panel admin (activas e inactivas)
-router.get('/muro/admin', async (req, res) => {
-  try {
-    const result = await pool.query(
-      'SELECT p.*, COUNT(r.id)::int AS likes FROM muro_publicaciones p LEFT JOIN muro_reacciones r ON r.publicacion_id = p.id GROUP BY p.id ORDER BY p.created_at DESC'
-    );
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error obteniendo muro admin:', error);
-    res.status(500).json({ error: 'Error del servidor' });
-  }
-});
-
-router.post('/muro', async (req, res) => {
-  try {
-    const { titulo, descripcion, tipo, imagen_url, enlace, texto_boton, activo } = req.body;
-    if (!titulo) {
-      return res.status(400).json({ error: 'Titulo es requerido' });
-    }
-    const tipoOk = tipo && MURO_TIPOS.includes(tipo) ? tipo : 'Novedad';
-    const result = await pool.query(
-      'INSERT INTO muro_publicaciones (titulo, descripcion, tipo, imagen_url, enlace, texto_boton, activo) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [titulo, descripcion || null, tipoOk, imagen_url || null, enlace || null, texto_boton || null, activo !== undefined ? !!activo : true]
-    );
-    res.status(201).json(result.rows[0]);
-  } catch (error) {
-    console.error('Error creando publicacion de muro:', error);
-    res.status(500).json({ error: 'Error del servidor' });
-  }
-});
-
-router.put('/muro/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { titulo, descripcion, tipo, imagen_url, enlace, texto_boton, activo } = req.body;
-    if (!titulo) {
-      return res.status(400).json({ error: 'Titulo es requerido' });
-    }
-    const tipoOk = tipo && MURO_TIPOS.includes(tipo) ? tipo : 'Novedad';
-    const result = await pool.query(
-      'UPDATE muro_publicaciones SET titulo = $1, descripcion = $2, tipo = $3, imagen_url = $4, enlace = $5, texto_boton = $6, activo = $7, updated_at = CURRENT_TIMESTAMP WHERE id = $8 RETURNING *',
-      [titulo, descripcion || null, tipoOk, imagen_url || null, enlace || null, texto_boton || null, activo !== undefined ? !!activo : true, id]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Publicacion no encontrada' });
-    }
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error('Error actualizando publicacion de muro:', error);
-    res.status(500).json({ error: 'Error del servidor' });
-  }
-});
-
-router.delete('/muro/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    await pool.query('DELETE FROM muro_publicaciones WHERE id = $1', [id]);
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error eliminando publicacion de muro:', error);
-    res.status(500).json({ error: 'Error del servidor' });
-  }
-});
-
-// Toggle "Me gusta" (reaccion de una clienta)
-router.post('/muro/:id/reaccion', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const clienteId = parseInt(req.body.cliente_id);
-    if (!clienteId) {
-      return res.status(400).json({ error: 'cliente_id es requerido' });
-    }
-
-    const existe = await existeReaccion(id, clienteId);
-    if (existe) {
-      await pool.query(
-        'DELETE FROM muro_reacciones WHERE publicacion_id = $1 AND cliente_id = $2',
-        [id, clienteId]
-      );
-    } else {
-      await pool.query(
-        'INSERT INTO muro_reacciones (publicacion_id, cliente_id) VALUES ($1, $2)',
-        [id, clienteId]
-      );
-    }
-
-    const likes = await contarLikes(id);
-    res.json({ success: true, liked: !existe, likes_count: likes });
-  } catch (error) {
-    console.error('Error en reaccion de muro:', error);
-    res.status(500).json({ error: 'Error del servidor' });
-  }
-});
-
 // ==================== ENCUESTAS HAIRSTYLE ====================
 
 async function encuestaOpciones(encuestaId) {
@@ -1447,19 +1311,36 @@ router.get('/encuestas/admin', async (req, res) => {
     const encuestasRes = await pool.query(
       'SELECT * FROM encuestas ORDER BY created_at DESC'
     );
+    const votosRes = await pool.query(`
+      SELECT v.encuesta_id, v.opcion_id, v.cliente_id, c.nombre AS cliente_nombre
+      FROM encuesta_votos v
+      JOIN clientes c ON c.id = v.cliente_id
+    `);
     const resultado = [];
     for (const encuesta of encuestasRes.rows) {
       const opciones = await encuestaOpciones(encuesta.id);
       const resultados = await encuestaResultados(encuesta.id);
+      const votosEncuesta = votosRes.rows.filter(function(v) { return v.encuesta_id === encuesta.id; });
+      const votantes = votosEncuesta.map(function(v) {
+        return { cliente_id: v.cliente_id, nombre: v.cliente_nombre };
+      });
       resultado.push({
         id: encuesta.id,
         pregunta: encuesta.pregunta,
         activo: encuesta.activo,
         created_at: encuesta.created_at,
         total_votos: resultados.total,
+        votantes: votantes,
         opciones: opciones.map(function(op) {
           const v = resultados.por_opcion.find(function(r) { return r.opcion_id === op.id; });
-          return { id: op.id, texto: op.texto, votos: v ? v.votos : 0 };
+          return {
+            id: op.id,
+            texto: op.texto,
+            votos: v ? v.votos : 0,
+            votantes: votosEncuesta.filter(function(v2) { return v2.opcion_id === op.id; }).map(function(v2) {
+              return { cliente_id: v2.cliente_id, nombre: v2.cliente_nombre };
+            })
+          };
         })
       });
     }

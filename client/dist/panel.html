@@ -308,7 +308,6 @@
             '<div class="menu-item secondary" onclick="showSection(\'lista-clientes\')"><span class="icon">📋</span><span class="label">Clientes</span><span class="desc">Ver todos</span></div>' +
             '<div class="menu-item" onclick="showSection(\'tratamientos\')"><span class="icon">💅</span><span class="label">Servicios</span><span class="desc">Tratamientos</span></div>' +
             '<div class="menu-item" onclick="showSection(\'promociones\')"><span class="icon">🎉</span><span class="label">Promociones</span><span class="desc">Ofertas</span></div>' +
-            '<div class="menu-item" onclick="showSection(\'muro\')"><span class="icon">📣</span><span class="label">Muro</span><span class="desc">Publicaciones</span></div>' +
             '<div class="menu-item" onclick="showSection(\'encuestas\')"><span class="icon">🗳️</span><span class="label">Encuestas</span><span class="desc">Votación</span></div>' +
             '<div class="menu-item secondary" onclick="showSection(\'galeria\')"><span class="icon">📸</span><span class="label">Galería</span><span class="desc">Fotos</span></div>' +
             '<div class="menu-item secondary" onclick="showSection(\'legajos\')"><span class="icon">📋</span><span class="label">Legajos</span><span class="desc">Anamnesis</span></div>' +
@@ -384,7 +383,6 @@
         case 'lista-clientes': showListaClientes(); break;
         case 'tratamientos': showTratamientos(); break;
         case 'promociones': showPromociones(); break;
-        case 'muro': showMuro(); break;
         case 'encuestas': showEncuestas(); break;
         case 'galeria': showGaleria(); break;
         case 'legajos': showLegajos(); break;
@@ -2147,218 +2145,6 @@ document.getElementById('ingresos-content').innerHTML = html;
       }
     }
     
-    // ==================== MURO HAIRSTYLE (ADMIN) ====================
-    
-    function showMuro() {
-      document.getElementById('app').innerHTML = 
-        showBackButton() +
-        '<div class="card">' +
-          '<h2>📣 Muro HAIRSTYLE</h2>' +
-          '<button class="btn" onclick="showAgregarPublicacionMuro()" style="margin-bottom:15px;">➕ Nueva Publicación</button>' +
-          '<div id="muro-list"><div class="loading">Cargando...</div></div>' +
-        '</div>';
-      
-      loadPublicacionesMuro();
-    }
-    
-    async function loadPublicacionesMuro() {
-      try {
-        var res = await fetch(API + '/muro/admin');
-        var pubs = await res.json();
-        var container = document.getElementById('muro-list');
-        
-        if (pubs.length === 0) {
-          container.innerHTML = '<div class="empty-state">No hay publicaciones. ¡Creá la primera!</div>';
-          return;
-        }
-        
-        var html = '';
-        pubs.forEach(function(p) {
-          var estadoBadge = p.activo ? 
-            '<span class="badge completado">Activo</span>' : 
-            '<span class="badge pendiente">Inactivo</span>';
-          var fecha = p.created_at ? new Date(p.created_at) : null;
-          var fechaStr = fecha ? fecha.toLocaleDateString('es-AR') : '';
-          html += '<div style="background:#f8f8f8;border-radius:12px;padding:15px;margin-bottom:12px;position:relative;">';
-          html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
-            '<span class="badge" style="background:' + muroColorTipo(p.tipo) + ';color:white;">' + (p.tipo || 'Novedad') + '</span>' +
-            estadoBadge +
-          '</div>';
-          if (p.imagen_url) {
-            html += '<div style="width:100%;height:120px;border-radius:8px;overflow:hidden;margin-bottom:10px;background:#eee;display:flex;align-items:center;justify-content:center;">' +
-              '<img src="' + p.imagen_url + '" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.parentElement.innerHTML=\'<span style=color:#999>Error de imagen</span>\'">' +
-            '</div>';
-          }
-          html += '<div style="font-weight:600;color:#333;font-size:15px;">' + (p.titulo || '') + '</div>';
-          if (p.descripcion) html += '<div style="font-size:13px;color:#666;margin-top:4px;">' + p.descripcion + '</div>';
-          html += '<div style="font-size:11px;color:#888;margin-top:6px;">📅 ' + fechaStr + ' &nbsp; ❤️ ' + (p.likes || 0) + '</div>';
-          if (p.enlace) html += '<div style="font-size:12px;color:#e91e63;margin-top:4px;">🔗 ' + (p.texto_boton || 'Ver más') + '</div>';
-          html += '<div style="display:flex;gap:8px;margin-top:12px;">' +
-            '<button class="btn small" style="background:#2196f3;color:white;" onclick="editarPublicacionMuro(' + p.id + ')">✏️ Editar</button>' +
-            (p.activo 
-              ? '<button class="btn small" style="background:#ff9800;color:white;" onclick="toggleActivoPublicacionMuro(' + p.id + ')">🚫 Desactivar</button>'
-              : '<button class="btn small" style="background:#4caf50;color:white;" onclick="toggleActivoPublicacionMuro(' + p.id + ')">✅ Activar</button>') +
-            '<button class="btn small danger" onclick="eliminarPublicacionMuro(' + p.id + ')">🗑️ Eliminar</button>' +
-          '</div>';
-          html += '</div>';
-        });
-        container.innerHTML = html;
-      } catch(err) {
-        document.getElementById('muro-list').innerHTML = '<div class="empty-state">Error cargando publicaciones</div>';
-      }
-    }
-    
-    function muroColorTipo(tipo) {
-      switch (tipo) {
-        case 'Promoción': return '#ff9800';
-        case 'Nuevo servicio': return '#4caf50';
-        case 'Consejo': return '#2196f3';
-        case 'Sorteo': return '#9c27b0';
-        case 'Información': return '#607d8b';
-        default: return '#e91e63';
-      }
-    }
-    
-    function showAgregarPublicacionMuro() {
-      muroEditandoId = null;
-      muroImagenActual = null;
-      renderModalPublicacionMuro('➕ Nueva Publicación', { titulo: '', descripcion: '', tipo: 'Novedad', enlace: '', texto_boton: '', activo: true });
-    }
-    
-    function editarPublicacionMuro(id) {
-      fetch(API + '/muro/admin').then(function(res) { return res.json(); }).then(function(pubs) {
-        var p = pubs.find(function(x) { return x.id === id; });
-        if (!p) { alert('No se encontró la publicación'); return; }
-        muroEditandoId = p.id;
-        muroImagenActual = p.imagen_url || null;
-        renderModalPublicacionMuro('✏️ Editar Publicación', p);
-      }).catch(function(err) { alert('Error cargando publicación'); });
-    }
-    
-    var muroEditandoId = null;
-    var muroImagenActual = null;
-    
-    function renderModalPublicacionMuro(tituloModal, p) {
-      var imgHtml = muroImagenActual
-        ? '<img src="' + muroImagenActual + '" style="max-width:100%;max-height:100%;object-fit:contain;">'
-        : '<span style="color:#999;font-size:13px;">Sin foto</span>';
-      
-      document.getElementById('modal-container').innerHTML = 
-        '<div class="modal" onclick="closeModal()">' +
-          '<div class="modal-content" onclick="event.stopPropagation()">' +
-            '<h3>' + tituloModal + '</h3>' +
-            '<div id="muro-msg"></div>' +
-            '<form id="muro-form">' +
-              '<div class="form-group"><label>Título *</label><input type="text" id="muro-titulo" required placeholder="Ej: Lanzamiento nueva promoción"></div>' +
-              '<div class="form-group"><label>Tipo</label><select id="muro-tipo">' +
-                '<option value="Novedad">Novedad</option>' +
-                '<option value="Promoción">Promoción</option>' +
-                '<option value="Nuevo servicio">Nuevo servicio</option>' +
-                '<option value="Consejo">Consejo</option>' +
-                '<option value="Sorteo">Sorteo</option>' +
-                '<option value="Información">Información</option>' +
-              '</select></div>' +
-              '<div class="form-group"><label>Descripción</label><textarea id="muro-desc" rows="3" placeholder="Texto del post..."></textarea></div>' +
-              '<div class="form-group"><label>Foto</label>' +
-                '<div id="muro-foto-preview" style="width:100%;height:100px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;overflow:hidden;">' + imgHtml + '</div>' +
-                '<input type="file" id="muro-foto-input" accept="image/*" onchange="previewFoto(this, \'muro-foto-preview\'); muroImagenActual = null;" style="font-size:14px;">' +
-              '</div>' +
-              '<div class="form-group"><label>Enlace (opcional)</label><input type="url" id="muro-enlace" placeholder="Ej: https://wa.me/... o un enlace de tu web"></div>' +
-              '<div class="form-group"><label>Texto del botón</label><input type="text" id="muro-texto-boton" placeholder="Ej: Consultar, Reservar, Ver más"></div>' +
-              '<div class="form-group"><label><input type="checkbox" id="muro-activo" style="width:auto;" checked> Publicación activa</label></div>' +
-              '<button type="submit" class="btn">💾 Guardar</button>' +
-              '<button type="button" class="btn secondary" onclick="closeModal()">Cancelar</button>' +
-            '</form>' +
-          '</div></div>';
-      
-      document.getElementById('muro-titulo').value = p.titulo || '';
-      document.getElementById('muro-tipo').value = p.tipo || 'Novedad';
-      document.getElementById('muro-desc').value = p.descripcion || '';
-      document.getElementById('muro-enlace').value = p.enlace || '';
-      document.getElementById('muro-texto-boton').value = p.texto_boton || '';
-      document.getElementById('muro-activo').checked = p.activo !== false;
-      
-      document.getElementById('muro-form').onsubmit = async function(e) {
-        e.preventDefault();
-        var msg = document.getElementById('muro-msg');
-        msg.innerHTML = '<div class="msg">⏳ Guardando...</div>';
-        
-        var imgUrl = muroImagenActual;
-        var fileInput = document.getElementById('muro-foto-input');
-        if (fileInput.files[0]) {
-          imgUrl = await fileToBase64(fileInput.files[0]);
-        }
-        
-        var data = {
-          titulo: document.getElementById('muro-titulo').value,
-          tipo: document.getElementById('muro-tipo').value,
-          descripcion: document.getElementById('muro-desc').value || null,
-          imagen_url: imgUrl,
-          enlace: document.getElementById('muro-enlace').value || null,
-          texto_boton: document.getElementById('muro-texto-boton').value || null,
-          activo: document.getElementById('muro-activo').checked
-        };
-        
-        try {
-          var url = API + '/muro' + (muroEditandoId ? '/' + muroEditandoId : '');
-          var method = muroEditandoId ? 'PUT' : 'POST';
-          var res = await fetch(url, {
-            method: method,
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(data)
-          });
-          var result = await res.json();
-          
-          if (result.id) {
-            msg.innerHTML = '<div class="msg success">¡Publicación guardada!</div>';
-            setTimeout(function() { closeModal(); loadPublicacionesMuro(); }, 800);
-          } else {
-            msg.innerHTML = '<div class="msg error">' + (result.error || 'Error') + '</div>';
-          }
-        } catch(err) {
-          msg.innerHTML = '<div class="msg error">Error de conexión</div>';
-        }
-      };
-    }
-    
-    async function toggleActivoPublicacionMuro(id) {
-      try {
-        var res = await fetch(API + '/muro/admin');
-        var pubs = await res.json();
-        var p = pubs.find(function(x) { return x.id === id; });
-        if (!p) return;
-        
-        var res2 = await fetch(API + '/muro/' + id, {
-          method: 'PUT',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            titulo: p.titulo,
-            tipo: p.tipo,
-            descripcion: p.descripcion,
-            imagen_url: p.imagen_url,
-            enlace: p.enlace,
-            texto_boton: p.texto_boton,
-            activo: !p.activo
-          })
-        });
-        var result = await res2.json();
-        if (result.id) {
-          loadPublicacionesMuro();
-        }
-      } catch(err) { alert('Error'); }
-    }
-    
-    async function eliminarPublicacionMuro(id) {
-      if (!confirm('¿Eliminar esta publicación? Las reacciones de las clientas también se eliminarán.')) return;
-      try {
-        var res = await fetch(API + '/muro/' + id, { method: 'DELETE' });
-        var result = await res.json();
-        if (result.success) {
-          loadPublicacionesMuro();
-        }
-      } catch(err) { alert('Error'); }
-    }
-    
     // ==================== ENCUESTAS HAIRSTYLE (ADMIN) ====================
     
     var encuestaEditandoId = null;
@@ -2415,6 +2201,20 @@ document.getElementById('ingresos-content').innerHTML = html;
           });
           
           html += '<div style="font-size:12px;color:#888;margin:8px 0 10px;">Total: ' + (e.total_votos || 0) + ' votos</div>';
+          var votantesHtml = '';
+          var totalVotantes = e.votantes ? e.votantes.length : 0;
+          if (totalVotantes > 0) {
+            e.opciones.forEach(function(op) {
+              var nombres = (op.votantes || []).map(function(v) { return v.nombre; });
+              if (nombres.length > 0) {
+                votantesHtml += '<div style="margin-bottom:6px;"><b style="font-size:12px;color:#333;">' + op.texto + ':</b> <span style="font-size:12px;color:#555;">' + nombres.join(', ') + '</span></div>';
+              }
+            });
+            html += '<div style="margin-bottom:10px;">' +
+              '<a href="javascript:void(0)" onclick="document.getElementById(\'votantes-' + e.id + '\').style.display=document.getElementById(\'votantes-' + e.id + '\').style.display===\'none\'?\'block\':\'none\'" style="font-size:12px;color:#e91e63;text-decoration:none;font-weight:600;">👥 Ver quiénes votaron (' + totalVotantes + ')</a>' +
+              '<div id="votantes-' + e.id + '" style="display:none;margin-top:8px;background:white;border-radius:8px;padding:10px;">' + votantesHtml + '</div>' +
+            '</div>';
+          }
           html += '<div style="display:flex;gap:8px;">' +
             (e.total_votos == 0
               ? '<button class="btn small" style="background:#2196f3;color:white;" onclick="editarEncuesta(' + e.id + ')">✏️ Editar</button>'
