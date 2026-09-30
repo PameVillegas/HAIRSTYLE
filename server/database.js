@@ -358,6 +358,13 @@ if (parseInt(clienteTest.rows[0].count) === 0) {
       await client.query("UPDATE tratamientos SET imagen_url = $1 WHERE id = $2 AND (imagen_url IS NULL OR imagen_url = '')", [s.imagen_url, existe.rows[0].id]);
     }
   }
+
+  // Cambiar imagen_url de galeria a TEXT para soportar base64
+  try {
+    await client.query(`ALTER TABLE galeria ALTER COLUMN imagen_url TYPE TEXT`);
+  } catch (err) {
+    console.log('galeria imagen_url ya es TEXT');
+  }
 }
 
 export const db = {
